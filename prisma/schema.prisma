@@ -1,0 +1,602 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id          Int         @id @default(autoincrement())
+  catName     String      @unique @db.VarChar(100)
+  showHome    Statuses    @default(active)
+  description String?     @db.Text
+  image       String?     @db.VarChar(255)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  SubCategory SubCategory[]
+}
+
+model SubCategory {
+  id          Int      @id @default(autoincrement())
+  cat_id      Int
+  subcategory String   @db.VarChar(100)
+  description String?  @db.Text
+  image       String?  @db.VarChar(255)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  Category Category  @relation(fields: [cat_id], references: [id])
+  Product  Product[]
+}
+
+enum Statuses {
+  active
+  inactive
+}
+
+model Blog {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(255)
+  description String   @db.Text
+  image       String?  @db.VarChar(255)
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Product-related models
+
+model Product {
+  id               Int      @id @default(autoincrement())
+  cat_id           Int
+  subcat_id        Int
+  title            String   @db.VarChar(255)
+  description      String   @db.Text
+  status           Statuses @default(active)
+  featured         YesNo    @default(no)  // Added featured field
+  hasVariants      Boolean  @default(false)
+  base_price       Decimal  @db.Decimal(10, 2)
+  price_rupees     Decimal  @db.Decimal(10, 2)
+  price_dollars    Decimal  @db.Decimal(10, 2)
+  stock_count      Int      @default(0)
+  stock_status     YesNo    @default(yes)
+  quantity_limit   Int      @default(10)
+  terms_condition  String?  @db.Text
+  highlights       String?  @db.Text
+  meta_title       String?  @db.VarChar(255)
+  meta_keywords    String?  @db.Text
+  meta_description String?  @db.Text
+  hsn_code         String?  @db.VarChar(255)
+  tax              Float?
+  weight           Float?
+  free_shipping    YesNo    @default(no)
+  cod              YesNo    @default(yes)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  SubCategory       SubCategory        @relation(fields: [subcat_id], references: [id])
+  ProductVariants   ProductVariant[]
+  ProductImages     ProductImage[]
+  ProductAttributes ProductAttribute[]
+}
+
+model ProductImage {
+  id                 Int       @id @default(autoincrement())
+  product_id         Int
+  product_variant_id Int?
+  image_path         String    @db.VarChar(255)
+  image_type         ImageType @default(main)
+  display_order      Int       @default(0)
+  is_thumbnail       Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  Product        Product         @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  ProductVariant ProductVariant? @relation(fields: [product_variant_id], references: [id], onDelete: SetNull)
+}
+
+enum ImageType {
+  main
+  thumbnail
+  gallery
+  banner
+}
+
+model Attribute {
+  id            Int           @id @default(autoincrement())
+  name          String        @db.VarChar(255)
+  display_name  String        @db.VarChar(255)
+  type          AttributeType @default(text)
+  is_variant    Boolean       @default(false) // Whether this attribute can be used for variants
+  affects_price Boolean       @default(false) // Whether this attribute affects product price
+  display_order Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  AttributeValues   AttributeValue[]
+  ProductAttributes ProductAttribute[]
+}
+
+model AttributeValue {
+  id            Int      @id @default(autoincrement())
+  attribute_id  Int
+  value         String   @db.VarChar(255)
+  display_value String   @db.VarChar(255)
+  color_code    String?  @db.VarChar(50) // For color attributes
+  image_path    String?  @db.VarChar(255) // For displaying swatches
+  display_order Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  Attribute              Attribute               @relation(fields: [attribute_id], references: [id], onDelete: Cascade)
+  VariantAttributeValues VariantAttributeValue[]
+  ProductAttributeValues ProductAttributeValue[]
+}
+
+model ProductAttribute {
+  id           Int      @id @default(autoincrement())
+  product_id   Int
+  attribute_id Int
+  is_required  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  Product                Product                 @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  Attribute              Attribute               @relation(fields: [attribute_id], references: [id], onDelete: Cascade)
+  ProductAttributeValues ProductAttributeValue[]
+}
+
+model ProductAttributeValue {
+  id                       Int      @id @default(autoincrement())
+  product_attribute_id     Int
+  attribute_value_id       Int
+  price_adjustment_rupees  Decimal? @db.Decimal(10, 2)
+  price_adjustment_dollars Decimal? @db.Decimal(10, 2)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  ProductAttribute ProductAttribute @relation(fields: [product_attribute_id], references: [id], onDelete: Cascade)
+  AttributeValue   AttributeValue   @relation(fields: [attribute_value_id], references: [id], onDelete: Cascade)
+}
+
+model ProductVariant {
+  id            Int      @id @default(autoincrement())
+  product_id    Int
+  sku           String   @db.VarChar(255)
+  price_rupees  Decimal  @db.Decimal(10, 2)
+  price_dollars Decimal  @db.Decimal(10, 2)
+  stock_count   Int      @default(0)
+  stock_status  YesNo    @default(yes)
+  weight        Float?
+  is_default    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  Product                Product                 @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  VariantAttributeValues VariantAttributeValue[]
+  ProductImages          ProductImage[]
+}
+
+model VariantAttributeValue {
+  id                 Int      @id @default(autoincrement())
+  variant_id         Int
+  attribute_value_id Int
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  ProductVariant ProductVariant @relation(fields: [variant_id], references: [id], onDelete: Cascade)
+  AttributeValue AttributeValue @relation(fields: [attribute_value_id], references: [id], onDelete: Cascade)
+
+  @@unique([variant_id, attribute_value_id])
+}
+
+enum AttributeType {
+  text
+  number
+  color
+  size
+  material
+  boolean
+  select
+}
+
+enum YesNo {
+  yes
+  no
+}
+
+model Slider {
+  id        Int      @id @default(autoincrement())
+  title     String   @unique @db.VarChar(255)
+  subtitle  String?  @db.VarChar(255)
+  image     String?  @db.VarChar(255)
+  href      String?  @db.VarChar(255)
+  link      String?  @db.VarChar(255)
+  linkTitle String?  @db.VarChar(255)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Menu model to represent each menu item in the sidebar
+model Menu {
+  id           Int       @id @default(autoincrement())
+  name         String    @unique @db.VarChar(100) // Unique identifier for the menu (e.g., "products", "orders")
+  display_name String    @db.VarChar(100) // Display name (e.g., "Products", "Orders")
+  path         String    @db.VarChar(255) // URL path (e.g., "/admin/product")
+  icon         String?   @db.VarChar(50)  // Icon name (e.g., "Package")
+  parent_id    Int?      // For submenu items, reference to parent menu
+  sort_order   Int       @default(0)      // For ordering the menu items
+  is_submenu   Boolean   @default(false)  // Whether this is a submenu
+  is_header    Boolean   @default(false)  // Whether this is a section header
+  status       Statuses  @default(active) // Menu can be disabled globally
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Self-relation for parent-child menu structure
+  parent   Menu?  @relation("MenuHierarchy", fields: [parent_id], references: [id], onDelete: SetNull)
+  children Menu[] @relation("MenuHierarchy")
+  
+  // Relation to permissions
+  MenuPermissions MenuPermission[]
+}
+
+// Menu permissions model to handle role-based access control
+model MenuPermission {
+  id          Int           @id @default(autoincrement())
+  menu_id     Int
+  admin_id    Int
+  can_view    Boolean       @default(true)  // Permission to see the menu
+  can_create  Boolean       @default(false) // Permission to create new items
+  can_edit    Boolean       @default(false) // Permission to edit existing items
+  can_delete  Boolean       @default(false) // Permission to delete items
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  Menu  Menu  @relation(fields: [menu_id], references: [id], onDelete: Cascade)
+  Admin Admin @relation(fields: [admin_id], references: [id], onDelete: Cascade)
+
+  @@unique([menu_id, admin_id]) // Each admin can have only one permission record per menu
+}
+
+// Update Admin model to include the relation to MenuPermission
+model Admin {
+  id              Int             @id @default(autoincrement())
+  username        String          @unique @db.VarChar(255)
+  password        String          @db.VarChar(255)
+  user_type       AdminEnum       @default(admin)
+  status          Statuses        @default(active)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  MenuPermissions MenuPermission[]
+}
+
+enum AdminEnum {
+  admin
+  staff
+}
+
+// Enhanced Newsletter model
+model Newsletter {
+  id         Int      @id @default(autoincrement())
+  email      String   @unique(map: "newsletter_email") @db.VarChar(191)
+  name       String?  @db.VarChar(255)
+  subscribed Boolean  @default(true)
+  source     String?  @db.VarChar(100) // Where the subscription came from (footer, popup, etc.)
+  status     Statuses @default(active)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// User model with enhanced contact information
+model User {
+  id              Int      @id @default(autoincrement())
+  name            String   @db.VarChar(255)
+  email           String   @unique(map: "user_email") @db.VarChar(191)
+  password        String   @db.VarChar(255)
+  mobile          String?  @db.VarChar(20)
+  mobile_verified YesNo    @default(no)
+  profile_picture String?  @db.VarChar(255) // User profile image
+  status          Statuses @default(active)
+  newsletter_opt_in Boolean @default(false)  // Whether user has opted in to newsletter
+  last_login      DateTime? 
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  DeliveryAddresses DeliveryAddress[]
+  BillingAddresses  BillingAddress[]
+  Orders            Order[]
+  UserSession       UserSession?
+}
+
+// Company Contact Information model
+model CompanyContact {
+  id           Int     @id @default(autoincrement())
+  address_line1 String  @db.Text
+  address_line2 String? @db.Text
+  city         String  @db.VarChar(100)
+  state        String  @db.VarChar(100)
+  postal_code  String  @db.VarChar(20)
+  country      String  @db.VarChar(100)
+  email        String  @db.VarChar(191)
+  phone        String  @db.VarChar(20)
+  alt_phone    String? @db.VarChar(20)
+  whatsapp     String? @db.VarChar(20)
+  facebook_url String? @db.VarChar(255)
+  instagram_url String? @db.VarChar(255)
+  twitter_url  String? @db.VarChar(255)
+  youtube_url  String? @db.VarChar(255)
+  map_embed_url String? @db.Text
+  map_latitude  String? @db.VarChar(50)
+  map_longitude String? @db.VarChar(50)
+}
+
+// Country model (for addresses)
+model Country {
+  id             Int      @id @default(autoincrement())
+  sortname       String   @unique @db.VarChar(3)
+  country_enName String   @unique(map: "country_enName") @db.VarChar(100)
+  country_arName String?  @db.VarChar(100)
+  dial_code      String?  @db.VarChar(20)
+  currency_name  String?  @db.VarChar(50)
+  currency_code  String?  @db.VarChar(3)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  States            States[]
+  DeliveryAddresses DeliveryAddress[]
+  BillingAddresses  BillingAddress[]
+}
+
+// States model (for addresses)
+model States {
+  id         Int      @id @default(autoincrement())
+  country_id Int
+  state_en   String   @db.VarChar(100)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  Country           Country           @relation(fields: [country_id], references: [id])
+  DeliveryAddresses DeliveryAddress[]
+  BillingAddresses  BillingAddress[]
+
+  @@unique([country_id, state_en(length: 80)], map: "country_state")
+  @@index([country_id])
+}
+
+// Enhanced Delivery Address model
+model DeliveryAddress {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  name       String   @db.VarChar(255)
+  address    String   @db.Text
+  apartment  String?  @db.VarChar(255) // Apt, Suite, etc.
+  city       String   @db.VarChar(100)
+  country_id Int
+  state_id   Int
+  pin        String   @db.VarChar(20)
+  phone      String   @db.VarChar(20)
+  alt_phone  String?  @db.VarChar(20) // Alternative phone
+  landmarks  String?  @db.VarChar(255) // Nearby landmarks for delivery
+  is_default Boolean  @default(false)
+  address_type String? @db.VarChar(50) // Home, Office, etc.
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  User    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  Country Country @relation(fields: [country_id], references: [id])
+  States  States  @relation(fields: [state_id], references: [id], map: "DeliveryAddress_state_id_fkey")
+}
+
+// Enhanced Billing Address model
+model BillingAddress {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  name       String   @db.VarChar(255)
+  address    String   @db.Text
+  apartment  String?  @db.VarChar(255) // Apt, Suite, etc.
+  city       String   @db.VarChar(100)
+  country_id Int
+  state_id   Int
+  pin        String   @db.VarChar(20)
+  phone      String   @db.VarChar(20)
+  alt_phone  String?  @db.VarChar(20) // Alternative phone
+  company_name String? @db.VarChar(255) // For business billing
+  gstin      String?  @db.VarChar(50) // GST Number for Indian businesses
+  tax_id     String?  @db.VarChar(50) // Tax ID for international businesses
+  is_default Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  User    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  Country Country @relation(fields: [country_id], references: [id])
+  States  States  @relation(fields: [state_id], references: [id], map: "BillingAddress_state_id_fkey")
+}
+
+// Testimonial model
+model Testimonial {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(255)
+  location    String   @db.VarChar(255)
+  description String   @db.Text
+  rating      Int?     @default(5)
+  image       String?  @db.VarChar(255) // Profile picture of testimonial giver
+  status      Statuses @default(active)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Order model
+model Order {
+  id              Int           @id @default(autoincrement())
+  user_id         Int
+  total           Decimal       @db.Decimal(10, 2)
+  payment_method  PaymentMethod
+  payment_status  PaymentStatus @default(pending)
+  order_status    OrderStatus   @default(placed)
+  order_date      DateTime      @default(now())
+  currency        Currency      @default(INR)
+  delivery_charge Decimal       @db.Decimal(10, 2)
+  tax_amount      Decimal?      @db.Decimal(10, 2)
+  discount_amount Decimal?      @db.Decimal(10, 2)
+  coupon_code     String?       @db.VarChar(50)
+  order_notes     String?       @db.Text
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  User           User            @relation(fields: [user_id], references: [id])
+  OrderProducts  OrderProduct[]
+  ShippingDetail ShippingDetail?
+}
+
+// Order Product model (individual products in an order)
+model OrderProduct {
+  id         Int      @id @default(autoincrement())
+  order_id   Int
+  product_id Int
+  price      Decimal  @db.Decimal(10, 2)
+  quantity   Int
+  currency   Currency @default(INR)
+  variation  String?  @db.Text // JSON string containing variation details
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  Order Order @relation(fields: [order_id], references: [id], onDelete: Cascade)
+}
+
+// Shipping Details model
+model ShippingDetail {
+  id            Int            @id @default(autoincrement())
+  order_id      Int            @unique
+  courier_name  String         @db.VarChar(255)
+  tracking_id   String         @db.VarChar(255)
+  tracking_url  String?        @db.VarChar(255)
+  shipping_date DateTime?
+  status        ShippingStatus @default(processing)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  Order Order @relation(fields: [order_id], references: [id], onDelete: Cascade)
+}
+
+// Contact Form Submissions model
+model ContactSubmission {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(255)
+  email      String   @db.VarChar(255)
+  phone      String?  @db.VarChar(20)
+  subject    String?  @db.VarChar(255)
+  message    String   @db.Text
+  status     ContactStatus @default(new)
+  responded  Boolean  @default(false)
+  response   String?  @db.Text
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+enum ContactStatus {
+  new
+  read
+  responded
+  archived
+}
+
+// Additional enums
+enum Currency {
+  INR
+  USD
+}
+
+enum PaymentMethod {
+  cod
+  online
+  paypal
+  stripe
+  razorpay
+}
+
+enum PaymentStatus {
+  pending
+  completed
+  failed
+  refunded
+}
+
+enum OrderStatus {
+  placed
+  confirmed
+  processing
+  shipped
+  delivered
+  cancelled
+  returned
+}
+
+enum ShippingStatus {
+  processing
+  shipped
+  in_transit
+  delivered
+  returned
+  failed
+}
+
+model SiteContent {
+  id        Int      @id @default(autoincrement())
+  page      String   @unique @db.VarChar(50) // e.g., "about", "terms", "privacy"
+  title     String?  @db.VarChar(255)
+  content   String   @db.LongText
+  link      String   @unique @db.VarChar(255)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FooterCategory {
+  id          Int          @id @default(autoincrement())
+  title       String       @db.VarChar(100)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  FooterLinks FooterLink[]
+}
+
+model FooterLink {
+  id               Int      @id @default(autoincrement())
+  footerCategoryId Int?
+  title            String   @db.VarChar(100)
+  link             String   @db.VarChar(255)
+  description      String?  @db.LongText
+  showInFooter     Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  FooterCategory FooterCategory? @relation(fields: [footerCategoryId], references: [id], onDelete: SetNull)
+}
+
+model Enquiry {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(255)
+  email     String   @db.VarChar(255)
+  phone     String?  @db.VarChar(20) // Optional phone number
+  message   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserSession {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

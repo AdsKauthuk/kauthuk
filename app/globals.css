@@ -1,0 +1,440 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-md hover:shadow-blue-100 dark:hover:shadow-blue-900/20;
+  }
+  
+  .blue-gradient-text {
+    @apply bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent;
+  }
+}
+
+/* styles/global.css */
+/* styles/print.css */
+@media print {
+  /* Hide browser UI elements */
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+  
+  /* Hide elements not needed for printing */
+  .print-hidden, 
+  button,
+  nav,
+  footer {
+    display: none !important;
+  }
+  
+  /* Remove shadows and backgrounds for better printing */
+  body {
+    background: white !important;
+  }
+  
+  .card {
+    box-shadow: none !important;
+    border: none !important;
+  }
+  
+  /* Ensure proper page breaks */
+  table { 
+    page-break-inside: avoid;
+  }
+  
+  tr { 
+    page-break-inside: avoid; 
+  }
+  
+  /* Set text color to black for better printing */
+  * {
+    color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* Ensure tables display properly */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+  
+  td, th {
+    padding: 4px !important;
+  }
+}
+
+/* Add these styles to your global.css file */
+
+/* Font variables for reference in inline styles */
+:root {
+  --font-playfair: 'Playfair Display', serif;
+  --font-poppins: 'Poppins', sans-serif;
+}
+
+/* Mega menu dropdown hover effects */
+.mega-menu-item {
+  position: relative;
+}
+
+.mega-menu-item:hover .mega-menu-dropdown {
+  display: block !important;
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+}
+
+.mega-menu-dropdown {
+  display: none !important;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  visibility: hidden;
+  z-index: 100;
+}
+
+/* Category underline animation */
+.category-underline {
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #6B2F1A;
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+  transform-origin: left;
+}
+
+.mega-menu-item:hover .category-underline {
+  transform: scaleX(1);
+}
+
+/* Ensure subcategory text uses Poppins font */
+.subcategory-item {
+  font-family: var(--font-poppins);
+}
+
+/* Ensure category headings use Playfair Display font */
+.category-heading {
+  font-family: var(--font-playfair);
+}
+.category-heading2 {
+  font-family: var(--font-playfair);
+  font-weight: bolder;
+}
+
+/* ======= PLAYFAIR DISPLAY FONT VARIATIONS ======= */
+
+/* Normal styles for Playfair Display */
+.playfair {
+  font-family: var(--font-playfair);
+}
+
+.playfair-thin {
+  font-family: var(--font-playfair);
+  font-weight: 100;
+}
+
+.playfair-extralight {
+  font-family: var(--font-playfair);
+  font-weight: 200;
+}
+
+.playfair-light {
+  font-family: var(--font-playfair);
+  font-weight: 300;
+}
+
+.playfair-regular {
+  font-family: var(--font-playfair);
+  font-weight: 400;
+}
+
+.playfair-medium {
+  font-family: var(--font-playfair);
+  font-weight: 500;
+}
+
+.playfair-semibold {
+  font-family: var(--font-playfair);
+  font-weight: 600;
+}
+
+.playfair-bold {
+  font-family: var(--font-playfair);
+  font-weight: 700;
+}
+
+.playfair-extrabold {
+  font-family: var(--font-playfair);
+  font-weight: 800;
+}
+
+.playfair-black {
+  font-family: var(--font-playfair);
+  font-weight: 900;
+}
+
+/* Italic styles for Playfair Display */
+.playfair-italic {
+  font-family: var(--font-playfair);
+  font-style: italic;
+}
+
+.playfair-italic-thin {
+  font-family: var(--font-playfair);
+  font-style: italic;
+  font-weight: 100;
+}
+
+.playfair-italic-extralight {
+  font-family: var(--font-playfair);
+  font-style: italic;
+  font-weight: 200;
+}
+
+.playfair-italic-light {
+  font-family: var(--font-playfair);
+  font-style: italic;
+  font-weight: 300;
+}
+
+.playfair-italic-regular {
+  font-family: var(--font-playfair);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.playfair-italic-medium {
+  font-family: var(--font-playfair);
+  font-style: italic;
+  font-weight: 500;
+}
+
+.playfair-italic-semibold {
+  font-family: var(--font-playfair);
+  font-style: italic;
+  font-weight: 600;
+}
+
+.playfair-italic-bold {
+  font-family: var(--font-playfair);
+  font-style: italic;
+  font-weight: 700;
+}
+
+.playfair-italic-extrabold {
+  font-family: var(--font-playfair);
+  font-style: italic;
+  font-weight: 800;
+}
+
+.playfair-italic-black {
+  font-family: var(--font-playfair);
+  font-style: italic;
+  font-weight: 900;
+}
+
+/* ======= POPPINS FONT VARIATIONS ======= */
+
+/* Normal styles for Poppins */
+.poppins {
+  font-family: var(--font-poppins);
+}
+
+.poppins-thin {
+  font-family: var(--font-poppins);
+  font-weight: 100;
+}
+
+.poppins-extralight {
+  font-family: var(--font-poppins);
+  font-weight: 200;
+}
+
+.poppins-light {
+  font-family: var(--font-poppins);
+  font-weight: 300;
+}
+
+.poppins-regular {
+  font-family: var(--font-poppins);
+  font-weight: 400;
+}
+
+.poppins-medium {
+  font-family: var(--font-poppins);
+  font-weight: 500;
+}
+
+.poppins-semibold {
+  font-family: var(--font-poppins);
+  font-weight: 600;
+}
+
+.poppins-bold {
+  font-family: var(--font-poppins);
+  font-weight: 700;
+}
+
+.poppins-extrabold {
+  font-family: var(--font-poppins);
+  font-weight: 800;
+}
+
+.poppins-black {
+  font-family: var(--font-poppins);
+  font-weight: 900;
+}
+
+/* Italic styles for Poppins */
+.poppins-italic {
+  font-family: var(--font-poppins);
+  font-style: italic;
+}
+
+.poppins-italic-thin {
+  font-family: var(--font-poppins);
+  font-style: italic;
+  font-weight: 100;
+}
+
+.poppins-italic-extralight {
+  font-family: var(--font-poppins);
+  font-style: italic;
+  font-weight: 200;
+}
+
+.poppins-italic-light {
+  font-family: var(--font-poppins);
+  font-style: italic;
+  font-weight: 300;
+}
+
+.poppins-italic-regular {
+  font-family: var(--font-poppins);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.poppins-italic-medium {
+  font-family: var(--font-poppins);
+  font-style: italic;
+  font-weight: 500;
+}
+
+.poppins-italic-semibold {
+  font-family: var(--font-poppins);
+  font-style: italic;
+  font-weight: 600;
+}
+
+.poppins-italic-bold {
+  font-family: var(--font-poppins);
+  font-style: italic;
+  font-weight: 700;
+}
+
+.poppins-italic-extrabold {
+  font-family: var(--font-poppins);
+  font-style: italic;
+  font-weight: 800;
+}
+
+.poppins-italic-black {
+  font-family: var(--font-poppins);
+  font-style: italic;
+  font-weight: 900;
+}
+
+/* Mobile menu styling enhancements */
+.mobile-menu-category {
+  font-family: var(--font-playfair);
+  font-weight: 500;
+}
+
+.mobile-menu-subcategory {
+  font-family: var(--font-poppins);
+  font-weight: 400;
+}
