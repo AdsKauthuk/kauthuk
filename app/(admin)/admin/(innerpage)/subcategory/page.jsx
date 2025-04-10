@@ -284,7 +284,7 @@ const SubcategoryPage = () => {
       description: item.description || "",
       image: null,
     });
-    setEditImagePreview(item.image ? `/kauthuk_test/subcategories/${item.image}` : null);
+    setEditImagePreview(item.image ? `https://greenglow.in/kauthuk_test/${item.image}` : null);
     setShowEditModal(true);
   };
 
@@ -533,7 +533,7 @@ const SubcategoryPage = () => {
                           {item.image && (
                             <div className="h-10 w-10 mr-3 rounded-md overflow-hidden bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
                               <img 
-                                src={`/kauthuk_test/subcategories/${item.image}`} 
+                                src={`https://greenglow.in/kauthuk_test/${item.image}`} 
                                 alt={item.subcategory}
                                 className="h-full w-full object-cover"
                                 onError={(e) => {
@@ -624,7 +624,7 @@ const SubcategoryPage = () => {
                 <div className="h-36 overflow-hidden bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700">
                   {item.image ? (
                     <img 
-                      src={`/kauthuk_test/subcategories/${item.image}`} 
+                      src={`https://greenglow.in/kauthuk_test/${item.image}`} 
                       alt={item.subcategory}
                       className="h-full w-full object-cover"
                       onError={(e) => {

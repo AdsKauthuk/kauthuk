@@ -252,7 +252,7 @@ export async function updateSubcategory(data) {
 
       // Delete the old image from FTP if it exists
       if (existingSubcategory.image) {
-        const oldRemoteFilePath = `/kauthuk_test/subcategories/${existingSubcategory.image}`;
+        const oldRemoteFilePath = `https://greenglow.in/kauthuk_test/${existingSubcategory.image}`;
         try {
           await ftpClient.remove(oldRemoteFilePath);
           console.log("Old subcategory image removed from FTP server:", oldRemoteFilePath);
@@ -320,7 +320,7 @@ export async function deleteSubcategoryById(id) {
       console.log("Connected to FTP server");
 
       // Delete the image
-      const remoteFilePath = `/kauthuk_test/subcategories/${subcategory.image}`;
+      const remoteFilePath = `https://greenglow.in/kauthuk_test/${subcategory.image}`;
       try {
         await ftpClient.remove(remoteFilePath);
         console.log("Subcategory image deleted from FTP:", remoteFilePath);
