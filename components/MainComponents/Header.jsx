@@ -517,11 +517,11 @@ const Header = () => {
                       className="flex items-center py-2 border-b border-gray-100 text-gray-800"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      <span className="mr-2 relative w-5 h-5 flex items-center justify-center">
+                      <span className="mr-2 relative flex items-center justify-center">
                         <Image
                           src={category.icon}
-                          width={20}
-                          height={20}
+                          width={48}
+                          height={48}
                           alt={category.name}
                           className="object-contain"
                           onError={(e) => {

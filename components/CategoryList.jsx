@@ -92,11 +92,11 @@ const CategoryList = () => {
                 href={`/category/${category.id}`}
                 className="whitespace-nowrap py-2 text-lg font-bold uppercase text-[#fee3d8] transition-colors relative hover:text-[#8D4425] flex items-center poppins-black"
               >
-                <span className="mr-2 relative w-6 h-6 flex-shrink-0">
+                <span className="mr-2 relative  flex-shrink-0">
                   <Image
                     src={`https://greenglow.in/kauthuk_test/${category.image}`}
-                    width={24}
-                    height={24}
+                    width={48}
+                    height={48}
                     alt={category.catName}
                     className="object-contain"
                     onError={(e) => {
