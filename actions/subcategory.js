@@ -16,23 +16,29 @@ export async function createSubcategory(data) {
   try {
     console.log("Received data:", data);
 
-    if (!data.cat_id || !data.title) {
+    // When receiving FormData, we need to use get() to access values
+    const cat_id = data.get ? parseInt(data.get('cat_id')) : data.cat_id;
+    const title = data.get ? data.get('title') : data.title;
+    const description = data.get ? data.get('description') : data.description;
+
+    if (!cat_id || !title) {
       throw new Error("Category ID and title are required");
     }
 
     // Create the subcategory
     const subcategory = await db.subCategory.create({
       data: {
-        cat_id: data.cat_id,
-        subcategory: data.title,
-        description: data.description || null,
+        cat_id: cat_id,
+        subcategory: title.toString().trim(),
+        description: description || null,
       },
     });
 
     // Handle image upload if present
-    if (data.image && data.image.length > 0) {
-      const image = data.image[0];
-
+    // For FormData, we use the get method to retrieve the file
+    const image = data.get ? data.get('image') : (data.image && data.image.length > 0 ? data.image[0] : null);
+    
+    if (image && image instanceof File) {
       // Add current timestamp to the image filename
       const timestamp = Date.now();
       const newImageName = `subcat_${timestamp}_${image.name}`;
@@ -60,13 +66,13 @@ export async function createSubcategory(data) {
 
       // Create directory if it doesn't exist
       try {
-        await ftpClient.ensureDir("https://greenglow.in/kauthuk_test");
+        await ftpClient.ensureDir("/kauthuk_test");
       } catch (error) {
         console.warn("Directory may already exist:", error.message);
       }
 
       // Upload image to FTP server
-      const remoteFilePath = `https://greenglow.in/kauthuk_test/${newImageName}`;
+      const remoteFilePath = `/kauthuk_test/${newImageName}`;
       await ftpClient.uploadFrom(tempImagePath, remoteFilePath);
 
       console.log("Subcategory image uploaded successfully to:", remoteFilePath);
@@ -297,9 +303,14 @@ export async function deleteSubcategoryById(id) {
       throw new Error("Subcategory ID is required");
     }
 
+    const subcategoryId = parseInt(id);
+    if (isNaN(subcategoryId)) {
+      throw new Error("Invalid subcategory ID format");
+    }
+
     // Fetch the subcategory to check if it has an associated image
     const subcategory = await db.subCategory.findUnique({
-      where: { id },
+      where: { id: subcategoryId },
       select: { image: true },
     });
 
@@ -319,7 +330,7 @@ export async function deleteSubcategoryById(id) {
       console.log("Connected to FTP server");
 
       // Delete the image
-      const remoteFilePath = `https://greenglow.in/kauthuk_test/${subcategory.image}`;
+      const remoteFilePath = `/kauthuk_test/${subcategory.image}`;
       try {
         await ftpClient.remove(remoteFilePath);
         console.log("Subcategory image deleted from FTP:", remoteFilePath);
@@ -333,7 +344,7 @@ export async function deleteSubcategoryById(id) {
 
     // Delete the subcategory from the database
     const deletedSubcategory = await db.subCategory.delete({
-      where: { id },
+      where: { id: subcategoryId },
     });
 
     return {
