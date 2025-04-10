@@ -173,7 +173,7 @@ const FeaturedProductsSlider = ({
             <ChevronRight className="w-5 h-5" />
           </button>
 
-          <div className="pl-5">
+          <div>
             <Swiper
               modules={[Navigation, Autoplay, Pagination]}
               spaceBetween={20}

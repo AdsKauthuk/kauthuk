@@ -465,7 +465,7 @@ const ProductSlider = ({
             <ChevronRight className="w-5 h-5" />
           </button>
 
-          <div className="px-5 lg:px-6 md:px-4 mx-auto max-w-full">
+          <div className=" mx-auto max-w-full">
             <Swiper
               modules={[
                 Navigation,
