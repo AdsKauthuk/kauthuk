@@ -676,6 +676,7 @@ export async function getSubcategories(categoryId) {
       select: {
         id: true,
         subcategory: true,
+        image: true,
         _count: {
           select: {
             Product: true

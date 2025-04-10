@@ -306,7 +306,6 @@ const CategoryPage = () => {
                 <h2 className="playfair-italic text-2xl md:text-3xl font-bold text-[#6B2F1A] mb-2">
                   Featured {category?.catName || "Products"}
                 </h2>
-                <div className="w-24 h-1 bg-[#6B2F1A]/30"></div>
               </div>
               <Link 
                 href={`/products?category=${categoryId}&sort=popular`}
@@ -339,7 +338,6 @@ const CategoryPage = () => {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="playfair-italic text-2xl md:text-3xl font-bold text-[#6B2F1A] mb-2">Browse by Subcategory</h2>
-              <div className="w-24 h-1 bg-[#6B2F1A]/30"></div>
             </div>
           </div>
           
@@ -389,10 +387,11 @@ const CategoryPage = () => {
                       ? "bg-[#fee3d8] text-[#6B2F1A]" 
                       : "bg-gray-100 text-gray-600"
                   }`}>
+                    {/* {subcategory.image} */}
                     {subcategory.image ? (
                       <div className="relative w-6 h-6">
                         <Image 
-                          src={`/assets/images/categories/${subcategory.image}`}
+                          src={`https://greenglow.in/kauthuk_test/${subcategory.image}`}
                           alt={subcategory.subcategory}
                           fill
                           className="object-contain"
@@ -427,7 +426,6 @@ const CategoryPage = () => {
                   ? `All ${category?.catName || "Products"}` 
                   : subcategories.find(s => s.id === currentSubcategory)?.subcategory || "Products"}
               </h2>
-              <div className="w-24 h-1 bg-[#6B2F1A]/30 mb-2"></div>
               <p className="font-poppins text-gray-500 text-sm">
                 {products.length} products found
               </p>

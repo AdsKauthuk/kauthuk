@@ -262,7 +262,6 @@ const SubcategoryPage = () => {
                 <h2 className="playfair-italic text-2xl md:text-3xl font-bold text-[#6B2F1A] mb-2">
                   Featured {subcategory?.subcategory || "Products"}
                 </h2>
-                <div className="w-24 h-1 bg-[#6B2F1A]/30"></div>
               </div>
               <Link
                 href={`/products?subcategory=${subcategoryId}&sort=popular`}
@@ -298,7 +297,6 @@ const SubcategoryPage = () => {
                 <h2 className="playfair-italic text-2xl md:text-3xl font-bold text-[#6B2F1A] mb-2">
                   Related Subcategories
                 </h2>
-                <div className="w-24 h-1 bg-[#6B2F1A]/30"></div>
               </div>
             </div>
 
@@ -346,7 +344,6 @@ const SubcategoryPage = () => {
               <h2 className="playfair-italic text-2xl md:text-3xl font-bold text-[#6B2F1A] mb-2">
                 All {subcategory?.subcategory || "Products"}
               </h2>
-              <div className="w-24 h-1 bg-[#6B2F1A]/30 mb-2"></div>
               <p className="font-poppins text-gray-500 text-sm">
                 {products.length} products found
               </p>
