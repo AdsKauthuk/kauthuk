@@ -133,7 +133,7 @@ const ProductCard = ({
         setShowShareMenu(false);
       }}
     >
-      <div className="relative h-full flex flex-col overflow-hidden group bg-white shadow-sm hover:shadow-md transition-all duration-300 border-y-2 border-x-[0.1px] border-[#5A2814]">
+      <div className="relative h-full flex flex-col overflow-hidden group bg-white shadow-sm hover:shadow-md transition-all duration-300 border-y-2 border-x-[0.1px] border-[#5A2814]/20">
         {/* Product Tags */}
         <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
           {/* New Tag */}

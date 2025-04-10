@@ -148,7 +148,7 @@ const ProductCard = ({ id, title, price_rupees, images, index }) => {
         setShowShareMenu(false);
       }}
     >
-      <div className="relative h-full flex flex-col bg-white shadow-sm hover:shadow-md transition-all duration-300 border-y-2 border-x-[0.1px] border-[#5A2814]">
+      <div className="relative h-full flex flex-col bg-white shadow-sm hover:shadow-md transition-all duration-300 border-y-2 border-x-[0.1px] border-[#5A2814]/20">
         {/* Product Tag - New */}
         {index < 2 && (
           <div className="absolute top-3 left-3 z-10 bg-[#6B2F1A] text-white text-xs font-poppins px-2 py-1 rounded">

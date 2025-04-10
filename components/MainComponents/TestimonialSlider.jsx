@@ -20,7 +20,7 @@ const TestimonialCard = ({ name, location, description, rating = 5, role = "Cust
     <div className="testimonial-content flex-1 relative z-10">
       <Quote className="w-10 h-10 text-[#6B2F1A]/10 absolute -top-1 -left-1" />
       
-      <p className="font-poppins text-lg leading-relaxed text-gray-700 mb-6 mt-6 relative z-10">
+      <p className="font-poppins text-lg leading-relaxed text-gray-700 mb-6 mt-6 relative z-10 text-center">
         "{description}"
       </p>
       
@@ -35,11 +35,11 @@ const TestimonialCard = ({ name, location, description, rating = 5, role = "Cust
         </div>
         
         <div className="flex items-center">
-          <div className="flex-shrink-0 mr-3">
+          {/* <div className="flex-shrink-0 mr-3">
             <div className="w-10 h-10 rounded-full bg-[#F9F4F0] flex items-center justify-center">
               <span className="font-playfair text-[#6B2F1A] text-base font-semibold">{name.charAt(0)}</span>
             </div>
-          </div>
+          </div> */}
           
           <div>
             <h4 className="font-playfair text-base font-semibold text-[#6B2F1A]">
