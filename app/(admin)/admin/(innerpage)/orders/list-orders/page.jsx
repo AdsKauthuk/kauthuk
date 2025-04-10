@@ -320,7 +320,7 @@ const ListOrdersPage = () => {
     setUpdatingShipping(true);
     
     try {
-      const result = await updateShippingDetails(orderId, shippingForm);
+      // const result = await updateShippingDetails(orderId, shippingForm);
       
       if (result.success) {
         toast.success(result.message || "Shipping details updated successfully");
