@@ -6,6 +6,7 @@ const nextConfig = {
     }
     return config;
   },
+  basePath:"/alpha",
   images: {
     remotePatterns: [
       {
