@@ -193,7 +193,7 @@ const ProductCard = ({ id, title, price_rupees, images, index }) => {
             {" "}
             {/* Added fixed height of 3rem (48px) for 2 lines */}
             <Link href={`/product/${id}`}>
-              <h3 className="playfair-italic text-base font-medium text-[#6B2F1A] line-clamp-2 hover:text-[#6B2F1A] transition-colors">
+              <h3 className="playfair text-base font-medium text-[#6B2F1A] line-clamp-2 hover:text-[#6B2F1A] transition-colors">
                 {title || "Product"}
               </h3>
             </Link>

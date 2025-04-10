@@ -188,7 +188,7 @@ const ProductCard = ({
         <div className="p-4 flex flex-col flex-grow">
           <div className="mb-2">
             <Link href={`/product/${id}`}>
-              <h3 className="playfair-italic text-base font-medium text-[#6B2F1A] line-clamp-2 hover:text-[#6B2F1A] transition-colors">
+              <h3 className="playfair text-base font-medium text-[#6B2F1A] line-clamp-2 hover:text-[#6B2F1A] transition-colors">
                 {title || "Product"}
               </h3>
             </Link>
