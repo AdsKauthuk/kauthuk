@@ -168,7 +168,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
         setShowShareMenu(false);
       }}
     >
-      <div className="group h-full overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 flex flex-col border-y-2 border-x-[0.1px] border-[#5A2814]">
+      <div className="group h-full overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 flex flex-col border-y-2 border-x-[0.1px] border-[#5A2814]/20">
         {/* Product Image Container */}
         <div className="relative aspect-square overflow-hidden">
           <Link
@@ -226,7 +226,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
         <div className="p-4 flex flex-col flex-grow">
           <div className="mb-2">
             <Link href={`/product/${product?.id}`}>
-              <h3 className="playfair-italic text-base font-medium text-[#6B2F1A] line-clamp-2 hover:text-[#6B2F1A] transition-colors">
+              <h3 className="playfair text-base font-medium text-[#6B2F1A] line-clamp-2 hover:text-[#6B2F1A] transition-colors">
                 {product?.title || "Product Name"}
               </h3>
             </Link>

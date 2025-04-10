@@ -283,16 +283,7 @@ const CategoryPage = () => {
               
             </div>
             
-            <div className="flex flex-wrap gap-2">
-              <Button 
-                onClick={() => router.push(`/products?category=${categoryId}`)}
-                variant="outline" 
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20 font-poppins"
-              >
-                View All Products
-                <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
-            </div>
+            
           </div>
         </div>
       </div>

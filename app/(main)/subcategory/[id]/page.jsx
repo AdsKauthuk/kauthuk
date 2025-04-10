@@ -237,7 +237,7 @@ const SubcategoryPage = () => {
               </h1>
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            {/* <div className="flex flex-wrap gap-2">
               {parentCategory && (
                 <Button
                   onClick={() => router.push(`/category/${parentCategory.id}`)}
@@ -248,7 +248,7 @@ const SubcategoryPage = () => {
                   Back to {parentCategory.catName}
                 </Button>
               )}
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
