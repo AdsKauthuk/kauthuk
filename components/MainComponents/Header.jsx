@@ -225,7 +225,7 @@ const Header = () => {
 
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <div className="relative h-12 w-28 md:w-32">
+            <div className="relative h-12 w-28 md:w-32 mr-[10px]">
               <Image
                 src="/assets/images/logo.png"
                 fill
@@ -517,11 +517,11 @@ const Header = () => {
                       className="flex items-center py-2 border-b border-gray-100 text-gray-800"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      <span className="mr-2 relative flex items-center justify-center">
+                      <span className="mr-2 relative w-5 h-5 flex items-center justify-center">
                         <Image
                           src={category.icon}
-                          width={48}
-                          height={48}
+                          width={20}
+                          height={20}
                           alt={category.name}
                           className="object-contain"
                           onError={(e) => {

@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 const QuickContact = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -126,11 +127,27 @@ const QuickContact = () => {
       <div className="fixed right-0 top-1/2 transform -translate-y-1/2 z-40">
         <button
           onClick={() => setIsOpen(true)}
-          className="flex items-center gap-2 bg-[#6B2F1A] hover:bg-[#5A2814] text-white py-2 px-3 rounded-l-lg shadow-lg transition-all duration-300"
-          style={{ fontFamily: "Poppins, sans-serif" }}
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
+          className="flex items-center gap-2 bg-[#6B2F1A] hover:bg-[#5A2814] text-white py-2 rounded-l-lg shadow-lg transition-all duration-300"
+          style={{ 
+            fontFamily: "Poppins, sans-serif",
+            paddingLeft: isHovering ? '12px' : '8px',
+            paddingRight: isHovering ? '12px' : '8px',
+          }}
         >
           <MessageSquare size={20} />
-          <span className="text-sm font-medium">Quick Contact</span>
+          {isHovering && (
+            <motion.span 
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: 'auto' }}
+              exit={{ opacity: 0, width: 0 }}
+              className="text-sm font-medium overflow-hidden whitespace-nowrap"
+              style={{ display: 'block' }}
+            >
+              Quick Contact
+            </motion.span>
+          )}
         </button>
       </div>
 

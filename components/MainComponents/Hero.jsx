@@ -215,8 +215,6 @@ const Hero = () => {
                       {slide.title || sampleSlide.title}
                     </h1>
 
-                    <div className="h-1 w-16 bg-[#a99052]"></div>
-
                     {/* Description with more spacing */}
                     <p 
                       className="text-white/90 text-sm md:text-base leading-relaxed"
