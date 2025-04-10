@@ -149,6 +149,117 @@ async function sendOrderConfirmationEmail(order, user, items) {
 }
 
 /**
+ * Get detailed order information by ID
+ * @param {number} orderId - Order ID to retrieve
+ * @returns {Promise<Object>} Complete order information
+ */
+export async function getOrderById(orderId) {
+  try {
+    if (!orderId) {
+      return {
+        success: false,
+        error: "Order ID is required",
+      };
+    }
+
+    const order = await db.order.findUnique({
+      where: { id: parseInt(orderId) },
+      include: {
+        User: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            mobile: true,
+          },
+        },
+        OrderProducts: {
+          include: {
+            Product: {
+              select: {
+                id: true,
+                title: true,
+                description: true,
+                image: true,
+              },
+            },
+          },
+        },
+        ShippingDetail: true,
+      },
+    });
+
+    if (!order) {
+      return {
+        success: false,
+        error: "Order not found",
+      };
+    }
+
+    // Get the billing address for this user
+    const billingAddress = await db.billingAddress.findFirst({
+      where: { user_id: order.user_id },
+      orderBy: { id: 'desc' },
+      include: {
+        Country: true,
+        States: true,
+      },
+    });
+
+    // Get the delivery address for this user
+    const deliveryAddress = await db.deliveryAddress.findFirst({
+      where: { user_id: order.user_id },
+      orderBy: { id: 'desc' },
+      include: {
+        Country: true,
+        States: true,
+      },
+    });
+
+    // Format the response
+    const formattedOrder = {
+      id: order.id,
+      user_id: order.user_id,
+      total: Number(order.total),
+      order_status: order.order_status,
+      payment_status: order.payment_status,
+      payment_method: order.payment_method,
+      order_date: order.order_date,
+      currency: order.currency,
+      delivery_charge: Number(order.delivery_charge || 0),
+      tax_amount: Number(order.tax_amount || 0),
+      discount_amount: Number(order.discount_amount || 0),
+      coupon_code: order.coupon_code,
+      order_notes: order.order_notes,
+      User: order.User,
+      OrderProducts: order.OrderProducts.map(item => ({
+        id: item.id,
+        product_id: item.product_id,
+        order_id: item.order_id,
+        price: Number(item.price),
+        quantity: item.quantity,
+        Product: item.Product,
+        variation: item.variation ? JSON.parse(item.variation) : null,
+      })),
+      ShippingDetail: order.ShippingDetail,
+      BillingAddress: billingAddress,
+      DeliveryAddress: deliveryAddress,
+    };
+
+    return {
+      success: true,
+      order: formattedOrder,
+    };
+  } catch (error) {
+    console.error("Error fetching order by ID:", error);
+    return {
+      success: false,
+      error: "Failed to fetch order: " + error.message,
+    };
+  }
+}
+
+/**
  * Get orders with pagination, filtering and sorting
  */
 export async function getOrders({

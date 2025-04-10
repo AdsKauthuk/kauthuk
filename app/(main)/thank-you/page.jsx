@@ -1,22 +1,38 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Check, ShoppingBag, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
-import { useSearchParams } from "next/navigation";
+
+// Separate component to handle search params
+function OrderDetailsFromParams({ setOrderDetails }) {
+  const { useSearchParams } = require("next/navigation");
+  const searchParams = useSearchParams();
+  
+  useEffect(() => {
+    setOrderDetails({
+      id: searchParams.get('orderId') || `ORD-${Math.floor(Math.random() * 10000).toString().padStart(4, "0")}`,
+      date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+      total: searchParams.get('total') || "0.00",
+      currency: searchParams.get('currency') || "INR",
+      items: parseInt(searchParams.get('items') || "0")
+    });
+  }, [searchParams, setOrderDetails]);
+  
+  return null;
+}
 
 const ThankYouPage = () => {
-  const searchParams = useSearchParams();
   const [orderDetails, setOrderDetails] = useState({
-    id: searchParams.get('orderId') || `ORD-${Math.floor(Math.random() * 10000).toString().padStart(4, "0")}`,
+    id: `ORD-${Math.floor(Math.random() * 10000).toString().padStart(4, "0")}`,
     date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-    total: searchParams.get('total') || "0.00",
-    currency: searchParams.get('currency') || "INR",
-    items: parseInt(searchParams.get('items') || "0")
+    total: "0.00",
+    currency: "INR",
+    items: 0
   });
 
   useEffect(() => {
@@ -68,6 +84,11 @@ const ThankYouPage = () => {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center bg-[#F9F7F4]">
+      {/* Suspense boundary for the search params handling */}
+      <Suspense fallback={null}>
+        <OrderDetailsFromParams setOrderDetails={setOrderDetails} />
+      </Suspense>
+
       <div className="w-full max-w-3xl p-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
