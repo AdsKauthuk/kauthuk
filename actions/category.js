@@ -63,7 +63,7 @@ export async function createCategory(data) {
         console.warn("Directory may already exist:", error.message);
       }
 
-      const remoteFilePath = `https://greenglow.in/kauthuk_test/${newImageName}`;
+      const remoteFilePath = `/kauthuk_test/${newImageName}`;
       await ftpClient.uploadFrom(tempImagePath, remoteFilePath);
 
       console.log("Category image uploaded successfully to:", remoteFilePath);
@@ -226,7 +226,7 @@ export async function updateCategory(data) {
       }
 
       // Upload image to FTP server
-      const remoteFilePath = `https://greenglow.in/kauthuk_test/${newImageName}`;
+      const remoteFilePath = `/kauthuk_test/${newImageName}`;
       await ftpClient.uploadFrom(tempImagePath, remoteFilePath);
 
       console.log("Category image uploaded successfully to:", remoteFilePath);
@@ -239,7 +239,7 @@ export async function updateCategory(data) {
 
       // Delete the old image from FTP if it exists
       if (existingCategory.image) {
-        const oldRemoteFilePath = `https://greenglow.in/kauthuk_test/${existingCategory.image}`;
+        const oldRemoteFilePath = `/kauthuk_test/${existingCategory.image}`;
         try {
           await ftpClient.remove(oldRemoteFilePath);
           console.log("Old category image removed from FTP server:", oldRemoteFilePath);
@@ -364,7 +364,7 @@ export async function deleteCategoryById(id) {
       console.log("Connected to FTP server");
 
       // Delete the image
-      const remoteFilePath = `https://greenglow.in/kauthuk_test/${category.image}`;
+      const remoteFilePath = `/kauthuk_test/${category.image}`;
       try {
         await ftpClient.remove(remoteFilePath);
         console.log("Category image deleted from FTP:", remoteFilePath);

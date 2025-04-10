@@ -60,13 +60,13 @@ export async function createSubcategory(data) {
 
       // Create directory if it doesn't exist
       try {
-        await ftpClient.ensureDir("/kauthuk_test/subcategories");
+        await ftpClient.ensureDir("https://greenglow.in/kauthuk_test");
       } catch (error) {
         console.warn("Directory may already exist:", error.message);
       }
 
       // Upload image to FTP server
-      const remoteFilePath = `/kauthuk_test/subcategories/${newImageName}`;
+      const remoteFilePath = `https://greenglow.in/kauthuk_test/${newImageName}`;
       await ftpClient.uploadFrom(tempImagePath, remoteFilePath);
 
       console.log("Subcategory image uploaded successfully to:", remoteFilePath);
@@ -233,13 +233,13 @@ export async function updateSubcategory(data) {
 
       // Ensure directory exists
       try {
-        await ftpClient.ensureDir("/kauthuk_test/subcategories");
+        await ftpClient.ensureDir("/kauthuk_test");
       } catch (error) {
         console.warn("Directory may already exist:", error.message);
       }
 
       // Upload image to FTP server
-      const remoteFilePath = `/kauthuk_test/subcategories/${newImageName}`;
+      const remoteFilePath = `/kauthuk_test/${newImageName}`;
       await ftpClient.uploadFrom(tempImagePath, remoteFilePath);
 
       console.log("Subcategory image uploaded successfully to:", remoteFilePath);
@@ -252,7 +252,7 @@ export async function updateSubcategory(data) {
 
       // Delete the old image from FTP if it exists
       if (existingSubcategory.image) {
-        const oldRemoteFilePath = `https://greenglow.in/kauthuk_test/${existingSubcategory.image}`;
+        const oldRemoteFilePath = `/kauthuk_test/${existingSubcategory.image}`;
         try {
           await ftpClient.remove(oldRemoteFilePath);
           console.log("Old subcategory image removed from FTP server:", oldRemoteFilePath);
@@ -286,7 +286,6 @@ export async function updateSubcategory(data) {
     ftpClient.close();
   }
 }
-
 
 export async function deleteSubcategoryById(id) {
   const ftpClient = new ftp.Client();
