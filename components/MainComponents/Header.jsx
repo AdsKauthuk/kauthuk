@@ -206,9 +206,7 @@ const Header = () => {
       {/* Main Header Section */}
       <div
         className={cn(
-          "w-full bg-[#6B2F1A] transition-all duration-300",
-          isScrolled ? "py-2" : "py-3"
-        )}
+          "w-full bg-[#6B2F1A] transition-all duration-300"        )}
       >
         <div className="mx-auto px-4 flex items-center justify-between">
           {/* Mobile Menu Trigger */}

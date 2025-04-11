@@ -75,7 +75,7 @@ const CategoryList = () => {
   return (
     <nav className="">
       {/* Main Categories */}
-      <div className="flex items-center gap-10 py-4 px-4 max-w-7xl">
+      <div className="flex items-center gap-10 py-[0.6rem] px-4 max-w-7xl">
         {categories
           .filter((category) => category.showHome === "active")
           .map((category, index) => (
@@ -92,17 +92,18 @@ const CategoryList = () => {
                 href={`/category/${category.id}`}
                 className="whitespace-nowrap py-2 text-lg font-bold uppercase text-[#fee3d8] transition-colors relative hover:text-[#8D4425] flex items-center poppins-black"
               >
-                <span className="mr-2 relative  flex-shrink-0">
-                  <Image
-                    src={`https://greenglow.in/kauthuk_test/${category.image}`}
-                    width={48}
-                    height={48}
-                    alt={category.catName}
-                    className="object-contain"
-                    onError={(e) => {
-                      e.target.src = "/assets/images/decor.png"; // Fallback image
-                    }}
-                  />
+                <span className="relative  flex-shrink-0">
+                  <div className="relative w-[35px] h-[35px] ">
+                    <Image
+                      src={`https://greenglow.in/kauthuk_test/${category.image}`}
+                      fill
+                      alt={category.catName}
+                      className="object-contain"
+                      onError={(e) => {
+                        e.target.src = "/assets/images/decor.png"; // Fallback image
+                      }}
+                    />
+                  </div>
                 </span>
                 {category.catName}
                 <span className="category-underline"></span>
@@ -118,16 +119,12 @@ const CategoryList = () => {
                   }}
                 >
                   <div className="px-2">
-                    <h3 className="font-medium mb-2 px-4 uppercase text-xs tracking-wide text-[#6B2F1A] category-heading">
-                      Browse {category.catName}
-                    </h3>
-
                     <div className="grid grid-cols-1 gap-1">
                       {category.SubCategory.map((subcat) => (
                         <Link
                           key={subcat.id}
                           href={`/subcategory/${subcat.id}`}
-                          className="flex items-center justify-between px-4 py-2 text-sm text-black hover:bg-[#F9F4F0] hover:text-[#6B2F1A] rounded-md transition-colors playfair-italic"
+                          className="flex items-center justify-between px-4 py-2 text-sm text-black hover:bg-[#F9F4F0] hover:text-[#6B2F1A] rounded-md transition-colors category-heading"
                         >
                           <span>{subcat.subcategory}</span>
                           <ChevronRight className="h-4 w-4 opacity-70" />
@@ -138,7 +135,7 @@ const CategoryList = () => {
                     <div className="pt-3 mt-3 border-t border-gray-100 px-4">
                       <Link
                         href={`/category/${category.id}`}
-                        className="flex items-center justify-center w-full text-sm font-medium text-black hover:text-[#5A2814] rounded-md transition-colors category-heading"
+                        className="flex items-center text-left w-full text-sm font-medium text-black hover:text-[#5A2814] rounded-md transition-colors playfair-italic"
                       >
                         View All
                       </Link>

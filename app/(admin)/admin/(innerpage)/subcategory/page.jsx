@@ -71,6 +71,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Icons
 import {
@@ -88,6 +89,7 @@ import {
   Upload,
   FileImage,
   Image,
+  ImageIcon,
 } from "lucide-react";
 
 // Hooks and Utilities
@@ -123,11 +125,14 @@ const SubcategoryPage = () => {
     cat_id: "",
     description: "",
     image: null,
+    banner: null, // Added banner field
   });
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [bannerPreview, setBannerPreview] = useState(null); // Added banner preview
   const [editImagePreview, setEditImagePreview] = useState(null);
+  const [editBannerPreview, setEditBannerPreview] = useState(null); // Added edit banner preview
 
   const itemsPerPage = 15;
   const router = useRouter();
@@ -201,6 +206,7 @@ const SubcategoryPage = () => {
       setShowCreateModal(false);
       reset();
       setImagePreview(null);
+      setBannerPreview(null); // Reset banner preview
       fetchSubcategories();
     }
   }, [subcategory]);
@@ -210,6 +216,7 @@ const SubcategoryPage = () => {
       toast.success("Subcategory updated successfully");
       setShowEditModal(false);
       setEditImagePreview(null);
+      setEditBannerPreview(null); // Reset edit banner preview
       fetchSubcategories();
     }
   }, [updatedSubcategory]);
@@ -227,6 +234,19 @@ const SubcategoryPage = () => {
     }
   }, [watchImage]);
 
+  // Watch for banner changes in create form
+  const watchBanner = watch("banner");
+  useEffect(() => {
+    if (watchBanner && watchBanner[0]) {
+      const file = watchBanner[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setBannerPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  }, [watchBanner]);
+
   const onSubmitCreate = async (data) => {
     await createSubcategoryFN(data);
   };
@@ -242,6 +262,10 @@ const SubcategoryPage = () => {
     
     if (formData.image && formData.image[0]) {
       formDataObj.append("image", formData.image[0]);
+    }
+    
+    if (formData.banner && formData.banner[0]) {
+      formDataObj.append("banner", formData.banner[0]);
     }
     
     await updateSubcategoryFN(formDataObj);
@@ -283,8 +307,10 @@ const SubcategoryPage = () => {
       cat_id: item.cat_id,
       description: item.description || "",
       image: null,
+      banner: null, // Initialize banner as null
     });
     setEditImagePreview(item.image ? `https://greenglow.in/kauthuk_test/${item.image}` : null);
+    setEditBannerPreview(item.banner ? `https://greenglow.in/kauthuk_test/${item.banner}` : null);
     setShowEditModal(true);
   };
 
@@ -299,7 +325,20 @@ const SubcategoryPage = () => {
       setFormData({ ...formData, image: e.target.files });
     }
   };
+  
+  const handleEditBannerChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditBannerPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+      setFormData({ ...formData, banner: e.target.files });
+    }
+  };
 
+  // Fixed skeleton renderers
   const renderSkeletons = () => {
     return Array(3).fill(0).map((_, index) => (
       <tr key={`skeleton-${index}`} className="animate-pulse">
@@ -550,6 +589,13 @@ const SubcategoryPage = () => {
                                 {item.description}
                               </div>
                             )}
+                            {item.banner && (
+                              <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/40">
+                                  Has Banner
+                                </Badge>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -656,9 +702,17 @@ const SubcategoryPage = () => {
                       {item.description}
                     </p>
                   )}
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                    Created {new Date(item.createdAt).toLocaleDateString()}
-                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {item.banner && (
+                      <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/40">
+                        <ImageIcon size={12} className="mr-1" />
+                        Has Banner
+                      </Badge>
+                    )}
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Created {new Date(item.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
                 </CardContent>
                 
                 <Separator className="bg-blue-100 dark:bg-blue-900/30" />
@@ -822,46 +876,100 @@ const SubcategoryPage = () => {
               />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="image" className="text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                <Upload size={14} />
-                Subcategory Image (Optional)
-              </Label>
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="border-2 border-dashed border-blue-200 dark:border-blue-900/50 rounded-lg p-4 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors">
-                    <Input
-                      id="image"
-                      type="file"
-                      accept="image/png, image/jpeg"
-                      {...register("image")}
-                      className="border-0 p-0"
-                    />
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                      Supported formats: JPG, PNG. Maximum size: 2MB.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Image preview */}
-                <div className="w-full md:w-1/3">
-                  <div className="border border-blue-200 dark:border-blue-900/50 rounded-lg aspect-video overflow-hidden flex items-center justify-center bg-slate-100 dark:bg-slate-800">
-                    {imagePreview ? (
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
+            <Tabs defaultValue="thumbnail" className="w-full">
+              <TabsList className="grid grid-cols-2 mb-2">
+                <TabsTrigger value="thumbnail" className="flex items-center gap-1">
+                  <FileImage size={14} />
+                  Thumbnail Image
+                </TabsTrigger>
+                <TabsTrigger value="banner" className="flex items-center gap-1">
+                  <ImageIcon size={14} />
+                  Banner Image
+                </TabsTrigger>
+              </TabsList>
+            
+              <TabsContent value="thumbnail" className="space-y-2">
+                <Label htmlFor="image" className="text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                  <Upload size={14} />
+                  Subcategory Thumbnail (Optional)
+                </Label>
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-1">
+                    <div className="border-2 border-dashed border-blue-200 dark:border-blue-900/50 rounded-lg p-4 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors">
+                      <Input
+                        id="image"
+                        type="file"
+                        accept="image/png, image/jpeg"
+                        {...register("image")}
+                        className="border-0 p-0"
                       />
-                    ) : (
-                      <div className="flex flex-col items-center text-slate-400 dark:text-slate-600">
-                        <FileImage size={40} className="mb-2" />
-                        <span className="text-xs">Image preview</span>
-                      </div>
-                    )}
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                        Supported formats: JPG, PNG. Maximum size: 2MB.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Image preview */}
+                  <div className="w-full md:w-1/3">
+                    <div className="border border-blue-200 dark:border-blue-900/50 rounded-lg aspect-video overflow-hidden flex items-center justify-center bg-slate-100 dark:bg-slate-800">
+                      {imagePreview ? (
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center text-slate-400 dark:text-slate-600">
+                          <FileImage size={40} className="mb-2" />
+                          <span className="text-xs">Thumbnail preview</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </TabsContent>
+              
+              <TabsContent value="banner" className="space-y-2">
+                <Label htmlFor="banner" className="text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                  <Upload size={14} />
+                  Subcategory Banner (Optional)
+                </Label>
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-1">
+                    <div className="border-2 border-dashed border-blue-200 dark:border-blue-900/50 rounded-lg p-4 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors">
+                      <Input
+                        id="banner"
+                        type="file"
+                        accept="image/png, image/jpeg"
+                        {...register("banner")}
+                        className="border-0 p-0"
+                      />
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                        Banner image for subcategory page (1200×300px recommended). Supported formats: JPG, PNG.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Banner preview */}
+                  <div className="w-full md:w-1/3">
+                    <div className="border border-blue-200 dark:border-blue-900/50 rounded-lg aspect-video overflow-hidden flex items-center justify-center bg-slate-100 dark:bg-slate-800">
+                      {bannerPreview ? (
+                        <img
+                          src={bannerPreview}
+                          alt="Banner Preview"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center text-slate-400 dark:text-slate-600">
+                          <ImageIcon size={40} className="mb-2" />
+                          <span className="text-xs">Banner preview</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
             
             <DialogFooter className="mt-4">
               <DialogClose asChild>
@@ -971,50 +1079,114 @@ const SubcategoryPage = () => {
               />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="edit-image" className="text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                <Upload size={14} />
-                Subcategory Image
-              </Label>
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="border-2 border-dashed border-blue-200 dark:border-blue-900/50 rounded-lg p-4 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors">
-                    <Input
-                      id="edit-image"
-                      type="file"
-                      accept="image/png, image/jpeg"
-                      onChange={handleEditImageChange}
-                      className="border-0 p-0"
-                    />
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                      Leave empty to keep current image. Supported formats: JPG, PNG.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Image preview */}
-                <div className="w-full md:w-1/3">
-                  <div className="border border-blue-200 dark:border-blue-900/50 rounded-lg aspect-video overflow-hidden flex items-center justify-center bg-slate-100 dark:bg-slate-800">
-                    {editImagePreview ? (
-                      <img
-                        src={editImagePreview}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = "/placeholder-image.jpg";
-                        }}
+            <Tabs defaultValue="thumbnail" className="w-full">
+              <TabsList className="grid grid-cols-2 mb-2">
+                <TabsTrigger value="thumbnail" className="flex items-center gap-1">
+                  <FileImage size={14} />
+                  Thumbnail Image
+                </TabsTrigger>
+                <TabsTrigger value="banner" className="flex items-center gap-1">
+                  <ImageIcon size={14} />
+                  Banner Image
+                </TabsTrigger>
+              </TabsList>
+            
+              <TabsContent value="thumbnail" className="space-y-2">
+                <Label
+                  htmlFor="edit-image"
+                  className="text-slate-700 dark:text-slate-300 flex items-center gap-1"
+                >
+                  <Upload size={14} />
+                  Subcategory Thumbnail
+                </Label>
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-1">
+                    <div className="border-2 border-dashed border-blue-200 dark:border-blue-900/50 rounded-lg p-4 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors">
+                      <Input
+                        id="edit-image"
+                        type="file"
+                        accept="image/png, image/jpeg"
+                        onChange={handleEditImageChange}
+                        className="border-0 p-0"
                       />
-                    ) : (
-                      <div className="flex flex-col items-center text-slate-400 dark:text-slate-600">
-                        <FileImage size={40} className="mb-2" />
-                        <span className="text-xs">No image</span>
-                      </div>
-                    )}
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                        Leave empty to keep current image. Supported formats: JPG, PNG.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Image preview */}
+                  <div className="w-full md:w-1/3">
+                    <div className="border border-blue-200 dark:border-blue-900/50 rounded-lg aspect-video overflow-hidden flex items-center justify-center bg-slate-100 dark:bg-slate-800">
+                      {editImagePreview ? (
+                        <img
+                          src={editImagePreview}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "/placeholder-image.jpg";
+                          }}
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center text-slate-400 dark:text-slate-600">
+                          <FileImage size={40} className="mb-2" />
+                          <span className="text-xs">No thumbnail</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </TabsContent>
+              
+              <TabsContent value="banner" className="space-y-2">
+                <Label
+                  htmlFor="edit-banner"
+                  className="text-slate-700 dark:text-slate-300 flex items-center gap-1"
+                >
+                  <Upload size={14} />
+                  Subcategory Banner
+                </Label>
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-1">
+                    <div className="border-2 border-dashed border-blue-200 dark:border-blue-900/50 rounded-lg p-4 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors">
+                      <Input
+                        id="edit-banner"
+                        type="file"
+                        accept="image/png, image/jpeg"
+                        onChange={handleEditBannerChange}
+                        className="border-0 p-0"
+                      />
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                        Leave empty to keep current banner. Banner image for subcategory page (1200×300px recommended).
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Banner preview */}
+                  <div className="w-full md:w-1/3">
+                    <div className="border border-blue-200 dark:border-blue-900/50 rounded-lg aspect-video overflow-hidden flex items-center justify-center bg-slate-100 dark:bg-slate-800">
+                      {editBannerPreview ? (
+                        <img
+                          src={editBannerPreview}
+                          alt="Banner Preview"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "/placeholder-image.jpg";
+                          }}
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center text-slate-400 dark:text-slate-600">
+                          <ImageIcon size={40} className="mb-2" />
+                          <span className="text-xs">No banner</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
             
             <DialogFooter className="mt-4">
               <DialogClose asChild>

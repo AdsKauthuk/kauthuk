@@ -150,6 +150,7 @@ body {
 :root {
   --font-playfair: 'Playfair Display', serif;
   --font-poppins: 'Poppins', sans-serif;
+  --font-poppins-black: 'Poppins Black', sans-serif;
 }
 
 /* Mega menu dropdown hover effects */
@@ -364,7 +365,7 @@ body {
 }
 
 .poppins-black {
-  font-family: var(--font-poppins);
+  font-family: var(--font-poppins-black);
   font-weight: 900;
 }
 
