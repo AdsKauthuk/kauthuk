@@ -307,11 +307,7 @@ const SubcategoryPage = () => {
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="playfair-italic text-2xl md:text-3xl font-bold text-[#6B2F1A] mb-2">
-                  Featured {subcategory?.subcategory || "Products"}
-                </h2>
-              </div>
+           
               <Link
                 href={`/products?subcategory=${subcategoryId}&sort=popular`}
                 className="group font-poppins text-[#6B2F1A] hover:text-[#5A2814] flex items-center text-sm"

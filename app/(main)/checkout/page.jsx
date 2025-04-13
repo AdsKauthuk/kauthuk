@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
@@ -35,7 +36,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Form handling
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
@@ -63,10 +64,10 @@ import {
 } from "lucide-react";
 
 // API functions
-import { 
-  createGuestOrder, 
-  createRazorpayOrder, 
-  verifyPayment 
+import {
+  createGuestOrder,
+  createRazorpayOrder,
+  verifyPayment,
 } from "@/actions/order";
 
 // Order Schema (with guest checkout support)
@@ -76,15 +77,20 @@ const OrderSchema = z.object({
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
-  
+
   // Account creation option (for guest checkout)
   createAccount: z.boolean().default(false),
-  password: z.string().optional()
-    .refine(val => {
-      // Only validate password if createAccount is true
-      if (val === undefined) return true;
-      return val.length >= 6 || !val;
-    }, { message: "Password must be at least 6 characters" }),
+  password: z
+    .string()
+    .optional()
+    .refine(
+      (val) => {
+        // Only validate password if createAccount is true
+        if (val === undefined) return true;
+        return val.length >= 6 || !val;
+      },
+      { message: "Password must be at least 6 characters" }
+    ),
 
   // Billing information
   billingAddress1: z.string().min(5, "Address must be at least 5 characters"),
@@ -235,20 +241,28 @@ const CheckoutPage = () => {
   const router = useRouter();
   const { cart, totals, currency, formatPrice, itemCount, clearCart } =
     useCart();
-  const { user, isAuthenticated, login, register: registerUser } = useUserAuth();
+  const {
+    user,
+    isAuthenticated,
+    login,
+    register: registerUser,
+  } = useUserAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderCreated, setOrderCreated] = useState(false);
   const [order, setOrder] = useState(null);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
   const [currentStep, setCurrentStep] = useState("contact");
   const [paymentSuccess, setPaymentSuccess] = useState(false);
-  const [checkoutMode, setCheckoutMode] = useState(isAuthenticated ? "loggedIn" : "guest");
+  const [checkoutMode, setCheckoutMode] = useState(
+    isAuthenticated ? "loggedIn" : "guest"
+  );
 
   // Form with validation
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    control,
+    formState: { errors, isValid },
     watch,
     setValue,
     getValues,
@@ -315,80 +329,12 @@ const CheckoutPage = () => {
           );
         }
       }
-      
+
       // Switch to logged-in mode
       setCheckoutMode("loggedIn");
     }
   }, [user, setValue]);
 
-  // Add this useEffect to make the Continue button work
-useEffect(() => {
-  // Add event listener directly to the Continue button
-  const addButtonHandler = () => {
-    const continueButton = document.querySelector('button[type="submit"]');
-    if (continueButton) {
-      continueButton.addEventListener('click', (e) => {
-        // Check which step we're on
-        if (currentStep === "contact") {
-          // Manually trigger step change
-          const isValid = validateContactInfo();
-          if (isValid) {
-            e.preventDefault();
-            setCurrentStep("shipping");
-            window.scrollTo(0, 0);
-          }
-        } else if (currentStep === "shipping") {
-          // Manually trigger step change
-          const isValid = validateShippingInfo();
-          if (isValid) {
-            e.preventDefault();
-            setCurrentStep("payment");
-            window.scrollTo(0, 0);
-          }
-        }
-        // Let the normal form submission happen for the payment step
-      });
-    }
-  };
-  
-  // Simple validation functions
-  const validateContactInfo = () => {
-    const firstName = document.getElementById('firstName')?.value;
-    const lastName = document.getElementById('lastName')?.value;
-    const email = document.getElementById('email')?.value;
-    const phone = document.getElementById('phone')?.value;
-    
-    if (!firstName || !lastName || !email || !phone) {
-      toast.error("Please fill in all required fields");
-      return false;
-    }
-    return true;
-  };
-  
-  const validateShippingInfo = () => {
-    const billingAddress1 = document.getElementById('billingAddress1')?.value;
-    const billingCity = document.getElementById('billingCity')?.value;
-    const billingState = document.getElementById('billingState')?.value;
-    const billingPostalCode = document.getElementById('billingPostalCode')?.value;
-    
-    if (!billingAddress1 || !billingCity || !billingState || !billingPostalCode) {
-      toast.error("Please fill in all required billing fields");
-      return false;
-    }
-    return true;
-  };
-  
-  // Add the handler after a short delay to ensure the DOM is ready
-  setTimeout(addButtonHandler, 500);
-  
-  // Cleanup
-  return () => {
-    const continueButton = document.querySelector('button[type="submit"]');
-    if (continueButton) {
-      continueButton.replaceWith(continueButton.cloneNode(true)); // Remove event listeners
-    }
-  };
-}, [currentStep]); // Re-run when step changes
   // Check if cart is empty and redirect if needed
   useEffect(() => {
     if (cart.length === 0 && !orderCreated && typeof window !== "undefined") {
@@ -408,8 +354,9 @@ useEffect(() => {
   const taxRate = 0.1;
   const tax = subtotal * taxRate;
 
-  // Calculate total
-  const total = subtotal + tax + shippingCost;
+  // Calculate total (with tax)
+  const subtotalWithTax = subtotal * (1 + taxRate);
+  const total = subtotalWithTax + shippingCost;
 
   // Calculate total weight for display
   const totalWeight = useMemo(() => {
@@ -440,31 +387,38 @@ useEffect(() => {
   
       // First, ensure Razorpay script is loaded
       if (!window.Razorpay) {
-        // You can provide more user-friendly handling here
-        toast.error("Payment service is not available. Please try again later.");
+        toast.error(
+          "Payment service is not available. Please try again later."
+        );
         setIsProcessing(false);
         return;
       }
   
-      // Create a Razorpay order first
-      const razorpayOrder = await createRazorpayOrder({
+      console.log("Creating Razorpay order for:", orderData);
+  
+      // Create a Razorpay order on your server
+      const razorpayOrderResponse = await createRazorpayOrder({
         amount: total,
         currency: currency,
-        orderId: orderData.id
+        orderId: orderData.id,
       });
   
-      if (!razorpayOrder.success || !razorpayOrder.orderId) {
-        throw new Error(razorpayOrder.error || "Failed to create payment order");
+      console.log("Razorpay order creation response:", razorpayOrderResponse);
+  
+      if (!razorpayOrderResponse.success || !razorpayOrderResponse.orderId) {
+        throw new Error(
+          razorpayOrderResponse.error || "Failed to create payment order"
+        );
       }
   
       // Set up Razorpay options
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_jG2ZIwR6d1w09S", // Replace with your actual test key
-        amount: Math.round(total * 100), // Convert to smallest currency unit (paise)
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_jG2ZIwR6d1w09S",
+        amount: Math.round(total * 100), // Convert to smallest currency unit
         currency: currency,
         name: "Kauthuk",
         description: `Order #${orderData.id}`,
-        order_id: razorpayOrder.orderId,
+        order_id: razorpayOrderResponse.orderId,
         handler: function (response) {
           // This function runs after successful payment
           handlePaymentSuccess(response, orderData.id);
@@ -472,7 +426,7 @@ useEffect(() => {
         prefill: {
           name: `${getValues("firstName")} ${getValues("lastName")}`,
           email: getValues("email"),
-          contact: getValues("phone"), // Make sure this includes country code
+          contact: getValues("phone"),
         },
         notes: {
           address: getValues("billingAddress1"),
@@ -489,29 +443,49 @@ useEffect(() => {
         },
       };
   
+      console.log("Initializing Razorpay with options:", {
+        key: options.key,
+        amount: options.amount,
+        currency: options.currency,
+        order_id: options.order_id
+      });
+  
       // Create and open Razorpay payment form
       const paymentObject = new window.Razorpay(options);
-      
+  
       // Add event listeners for different payment scenarios
       paymentObject.on("payment.failed", function (response) {
         const error = response.error || {};
-        toast.error(`Payment failed: ${error.description || "Unknown error"}`);
         console.error("Payment failed:", response);
+        toast.error(`Payment failed: ${error.description || "Unknown error"}`);
         setIsProcessing(false);
       });
   
+      console.log("Opening Razorpay payment form");
       paymentObject.open();
     } catch (error) {
       console.error("Razorpay initialization error:", error);
-      toast.error("Failed to initialize payment: " + (error.message || "Please try again"));
+      toast.error(
+        "Failed to initialize payment: " + (error.message || "Please try again")
+      );
       setIsProcessing(false);
     }
   };
+  
 
   const handlePaymentSuccess = async (response, orderId) => {
     try {
       setIsProcessing(true);
-
+      console.log("Payment success response:", response);
+      
+      // Make sure we have all required fields from Razorpay
+      if (!response.razorpay_payment_id || !response.razorpay_order_id || !response.razorpay_signature) {
+        console.error("Missing required payment verification fields", response);
+        toast.error("Payment verification failed - missing required data");
+        setIsProcessing(false);
+        return;
+      }
+  
       // Verify the payment
       const verificationResult = await verifyPayment({
         paymentData: {
@@ -519,20 +493,19 @@ useEffect(() => {
           razorpay_order_id: response.razorpay_order_id,
           razorpay_signature: response.razorpay_signature,
         },
-        orderId: orderId
+        orderId: orderId,
       });
-
+  
       if (verificationResult.success) {
         setPaymentSuccess(true);
         clearCart();
         toast.success("Payment successful!");
       } else {
-        throw new Error("Payment verification failed");
+        throw new Error(verificationResult.error || "Payment verification failed");
       }
     } catch (error) {
-      toast.error("Payment verification failed. Please contact support.");
       console.error("Payment verification error:", error);
-    } finally {
+      toast.error("Payment verification failed. Please contact support.");
       setIsProcessing(false);
     }
   };
@@ -540,7 +513,7 @@ useEffect(() => {
   const processOrder = async (data) => {
     try {
       setIsProcessing(true);
-
+  
       // Combine shipping and billing if sameAsBilling is true
       if (data.sameAsBilling) {
         data.shippingAddress1 = data.billingAddress1;
@@ -550,33 +523,33 @@ useEffect(() => {
         data.shippingPostalCode = data.billingPostalCode;
         data.shippingCountry = data.billingCountry;
       }
-
+  
       // Prepare the order data
       const orderData = {
         ...data,
         items: cart,
         currency,
-        subtotal,
+        subtotal: subtotalWithTax, // Already includes tax
         shipping: shippingCost,
-        tax,
-        total,
+        tax: tax, // Store tax separately even if included in subtotal
+        total: total,
         totalWeight,
         isGuest: !isAuthenticated,
         userId: user?.id,
         paymentStatus: data.paymentMethod === "cod" ? "pending" : "pending",
         orderStatus: "placed",
       };
-
+  
       // Create the order in the database
       const result = await createGuestOrder(orderData);
-
+  
       if (!result.success) {
         throw new Error(result.error || "Failed to create order");
       }
-
+  
       setOrder(result.order);
       setOrderCreated(true);
-
+  
       // Handle different payment methods
       if (data.paymentMethod === "cod") {
         // For COD, mark as success immediately
@@ -585,9 +558,26 @@ useEffect(() => {
           clearCart();
           setIsProcessing(false);
         }, 1500);
-      } else {
-        // For online payments, initialize Razorpay
-        await initializeRazorpay(result.order);
+      } else if (data.paymentMethod === "card" || data.paymentMethod === "upi") {
+        // For online payments, check if Razorpay is available
+        if (!razorpayLoaded) {
+          toast.error("Payment service is not available. Please try again later or choose Cash on Delivery.");
+          setIsProcessing(false);
+          return;
+        }
+        
+        try {
+          // Initialize Razorpay with a proper order object format
+          await initializeRazorpay({
+            id: result.order.id,
+            total: total,
+            currency: currency
+          });
+        } catch (paymentError) {
+          console.error("Payment initialization error:", paymentError);
+          toast.error("There was an issue with the payment service. Please try again or choose Cash on Delivery.");
+          setIsProcessing(false);
+        }
       }
     } catch (error) {
       console.error("Order processing error:", error);
@@ -597,59 +587,29 @@ useEffect(() => {
       setIsProcessing(false);
     }
   };
+  
 
   const onSubmit = async (data) => {
-    // Different behavior based on current step
-    if (currentStep === "contact") {
-      // Validate contact information
-      const isContactValid = await trigger([
-        "firstName",
-        "lastName",
-        "email",
-        "phone",
-      ]);
-      
-      // Also validate password if creating account
-      if (data.createAccount) {
-        await trigger(["password"]);
-      }
-      
-      if (isContactValid) {
+    try {
+      // Different behavior based on current step
+      if (currentStep === "contact") {
+        // Just move to the next step without validation here
+        // (validation will happen automatically via the handleSubmit function)
         setCurrentStep("shipping");
         window.scrollTo(0, 0);
-      }
-    } else if (currentStep === "shipping") {
-      // Validate shipping & billing information
-      const fieldsToValidate = [
-        "billingAddress1",
-        "billingCity",
-        "billingState",
-        "billingPostalCode",
-        "billingCountry",
-        "shippingMethod",
-      ];
-
-      if (!watchSameAsBilling) {
-        fieldsToValidate.push(
-          "shippingAddress1",
-          "shippingCity",
-          "shippingState",
-          "shippingPostalCode",
-          "shippingCountry"
-        );
-      }
-
-      const isShippingValid = await trigger(fieldsToValidate);
-      if (isShippingValid) {
+        return;
+      } else if (currentStep === "shipping") {
+        // Just move to the next step
         setCurrentStep("payment");
         window.scrollTo(0, 0);
+        return;
+      } else if (currentStep === "payment") {
+        // For the final step, process the order
+        await processOrder(data);
       }
-    } else if (currentStep === "payment") {
-      // Validate payment information and complete the order
-      const isPaymentValid = await trigger(["paymentMethod", "termsAccepted"]);
-      if (isPaymentValid) {
-        processOrder(data);
-      }
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast.error("There was an error processing your request");
     }
   };
 
@@ -671,22 +631,20 @@ useEffect(() => {
   // If cart is empty, redirect to cart page
   if (cart.length === 0 && !orderCreated) {
     return (
-      <div className="min-h-screen bg-[#FFFBF9] py-16">
+      <div className="min-h-screen bg-[#FAFAFA] py-16">
         <div className="container mx-auto px-4 text-center">
-          <div className="max-w-md mx-auto">
+          <div className="max-w-md mx-auto bg-white p-8 rounded-xl shadow-sm">
             <div className="flex justify-center mb-6">
-              <div className="p-6 bg-white rounded-full shadow-sm">
+              <div className="p-6 bg-[#F8F8F8] rounded-full">
                 <ShoppingBag className="h-12 w-12 text-gray-400" />
               </div>
             </div>
-            <h1 className="text-3xl font-bold mb-4">
-              Your cart is empty
-            </h1>
+            <h1 className="text-3xl font-bold mb-4">Your cart is empty</h1>
             <p className="text-gray-600 mb-8">
               Please add some products to your cart before checking out.
             </p>
             <Link href="/products">
-              <Button className="px-8 py-6 text-lg bg-[#6B2F1A] hover:bg-[#5A2814]">
+              <Button className="px-8 py-6 text-lg bg-[#6B2F1A] hover:bg-[#5A2814] transition-all duration-300">
                 <ChevronLeft className="h-5 w-5 mr-2" />
                 Browse Products
               </Button>
@@ -700,31 +658,43 @@ useEffect(() => {
   // Show payment success page
   if (paymentSuccess) {
     return (
-      <div className="min-h-screen bg-[#FFFBF9] py-16">
+      <div className="min-h-screen bg-[#FAFAFA] py-16">
         <div className="container mx-auto px-4">
-          <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-sm p-8">
+          <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-sm p-10">
             <div className="flex flex-col items-center justify-center text-center">
-              <div className="w-20 h-20 bg-[#fee3d8] rounded-full flex items-center justify-center mb-6">
-                <CheckCircle2 className="h-10 w-10 text-[#6B2F1A]" />
+              <div className="w-20 h-20 bg-[#F1F9EC] rounded-full flex items-center justify-center mb-8">
+                <CheckCircle2 className="h-10 w-10 text-green-600" />
               </div>
-              <h1 className="text-3xl font-bold text-[#6B2F1A] mb-4">
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">
                 Order Confirmed!
               </h1>
-              <p className="text-lg text-gray-600 mb-6">
+              <p className="text-lg text-gray-600 mb-8">
                 Thank you for your purchase. Your order has been placed
                 successfully.
               </p>
-              <div className="w-full bg-[#FFF5F1] rounded-lg p-6 mb-6">
-                <div className="flex justify-between mb-2">
-                  <span className="font-medium">Order Number:</span>
-                  <span>{order?.id || "ORD123456"}</span>
+              <div className="w-full bg-[#F9F9F9] rounded-xl p-6 mb-8">
+                <div className="flex justify-between mb-3">
+                  <span className="font-medium text-gray-600">
+                    Order Number:
+                  </span>
+                  <span className="font-semibold">
+                    {order?.id || "ORD123456"}
+                  </span>
                 </div>
-                <div className="flex justify-between mb-2">
-                  <span className="font-medium">Order Date:</span>
+                <div className="flex justify-between mb-3">
+                  <span className="font-medium text-gray-600">Order Date:</span>
                   <span>{new Date().toLocaleDateString()}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="font-medium">Order Total:</span>
+                <div className="flex justify-between mb-3">
+                  <span className="font-medium text-gray-600">
+                    Payment Method:
+                  </span>
+                  <span className="capitalize">{watchPaymentMethod}</span>
+                </div>
+                <div className="flex justify-between pt-3 border-t border-gray-200">
+                  <span className="font-medium text-gray-600">
+                    Order Total:
+                  </span>
                   <span className="font-semibold text-[#6B2F1A]">
                     {formatPrice(total)}
                   </span>
@@ -736,15 +706,16 @@ useEffect(() => {
                 your order.
               </p>
               {watchCreateAccount && !isAuthenticated && (
-                <Alert className="mb-8 bg-[#FFF5F1] border-[#fee3d8]">
+                <Alert className="mb-8 bg-[#F1F9EC] border-green-200">
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-[#6B2F1A]" />
-                    <AlertTitle className="text-[#6B2F1A]">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <AlertTitle className="text-green-700">
                       Account Created
                     </AlertTitle>
                   </div>
-                  <AlertDescription className="text-[#6B2F1A]/80 mt-1">
-                    Your account has been created successfully. You can now log in with your email and password.
+                  <AlertDescription className="text-green-600/80 mt-1">
+                    Your account has been created successfully. You can now log
+                    in with your email and password.
                   </AlertDescription>
                 </Alert>
               )}
@@ -752,13 +723,13 @@ useEffect(() => {
                 <Link href="/my-account" className="flex-1">
                   <Button
                     variant="outline"
-                    className="w-full border-[#6B2F1A]/20 text-[#6B2F1A] hover:bg-[#fee3d8] hover:text-[#6B2F1A]"
+                    className="w-full border-[#6B2F1A]/20 text-[#6B2F1A] hover:bg-[#FFF5F1] hover:text-[#6B2F1A] transition-all duration-300"
                   >
-                    View My Orders
+                    Track My Order
                   </Button>
                 </Link>
                 <Link href="/products" className="flex-1">
-                  <Button className="w-full bg-[#6B2F1A] hover:bg-[#5A2814]">
+                  <Button className="w-full bg-[#6B2F1A] hover:bg-[#5A2814] transition-all duration-300">
                     Continue Shopping
                   </Button>
                 </Link>
@@ -778,32 +749,49 @@ useEffect(() => {
         onLoad={() => setRazorpayLoaded(true)}
       />
 
-      <div className="min-h-screen bg-[#FFFBF9] py-8">
+      <div className="min-h-screen bg-[#FAFAFA] py-8">
         <div className="container mx-auto px-4">
           <div className="mb-8">
             <Link
               href="/cart"
-              className="inline-flex items-center text-sm text-[#6B2F1A] hover:text-[#5A2814]"
+              className="inline-flex items-center text-sm text-[#6B2F1A] hover:text-[#5A2814] transition-all duration-300"
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
               Back to Cart
             </Link>
           </div>
 
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-[#6B2F1A]">
-              Checkout
-            </h1>
-            <div className="hidden sm:flex items-center space-x-4">
+          <div className="flex flex-col mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">Checkout</h1>
+
+            {/* Progress bar */}
+            <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden mb-6">
               <div
-                className={`flex items-center ${
+                className="h-full bg-[#6B2F1A] transition-all duration-300"
+                style={{
+                  width:
+                    currentStep === "contact"
+                      ? "33.33%"
+                      : currentStep === "shipping"
+                      ? "66.66%"
+                      : "100%",
+                }}
+              ></div>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <div
+                className={`flex flex-col items-center ${
                   currentStep === "contact"
                     ? "text-[#6B2F1A] font-medium"
-                    : "text-gray-500"
+                    : currentStep === "shipping" || currentStep === "payment"
+                    ? "text-gray-400"
+                    : ""
                 }`}
               >
                 <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${
+                  className={`w-8 h-8 rounded-full flex items-center justify-center mb-1 
+                  ${
                     currentStep === "contact"
                       ? "bg-[#6B2F1A] text-white"
                       : "bg-gray-200 text-gray-600"
@@ -811,37 +799,43 @@ useEffect(() => {
                 >
                   1
                 </div>
-                <span>Contact</span>
+                <span className="text-sm">Contact</span>
               </div>
-              <div className="w-8 h-0.5 bg-gray-200"></div>
+
               <div
-                className={`flex items-center ${
+                className={`flex flex-col items-center ${
                   currentStep === "shipping"
                     ? "text-[#6B2F1A] font-medium"
-                    : "text-gray-500"
+                    : currentStep === "payment"
+                    ? "text-gray-400"
+                    : "text-gray-400"
                 }`}
               >
                 <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${
+                  className={`w-8 h-8 rounded-full flex items-center justify-center mb-1
+                  ${
                     currentStep === "shipping"
                       ? "bg-[#6B2F1A] text-white"
+                      : currentStep === "payment"
+                      ? "bg-gray-200 text-gray-600"
                       : "bg-gray-200 text-gray-600"
                   }`}
                 >
                   2
                 </div>
-                <span>Shipping</span>
+                <span className="text-sm">Shipping</span>
               </div>
-              <div className="w-8 h-0.5 bg-gray-200"></div>
+
               <div
-                className={`flex items-center ${
+                className={`flex flex-col items-center ${
                   currentStep === "payment"
                     ? "text-[#6B2F1A] font-medium"
-                    : "text-gray-500"
+                    : "text-gray-400"
                 }`}
               >
                 <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${
+                  className={`w-8 h-8 rounded-full flex items-center justify-center mb-1
+                  ${
                     currentStep === "payment"
                       ? "bg-[#6B2F1A] text-white"
                       : "bg-gray-200 text-gray-600"
@@ -849,7 +843,7 @@ useEffect(() => {
                 >
                   3
                 </div>
-                <span>Payment</span>
+                <span className="text-sm">Payment</span>
               </div>
             </div>
           </div>
@@ -860,70 +854,95 @@ useEffect(() => {
               <form onSubmit={handleSubmit(onSubmit)}>
                 {/* Contact Information */}
                 {currentStep === "contact" && (
-                  <Card className="mb-8 border-gray-200 shadow-sm">
-                    <CardContent className="p-6">
+                  <Card className="mb-8 border-0 rounded-xl overflow-hidden shadow-sm">
+                    <CardContent className="p-8">
                       {/* Guest Checkout / Login Options (only show if not logged in) */}
                       {!isAuthenticated && (
-                        <div className="mb-6">
-                          <Tabs defaultValue="guest" onValueChange={handleModeSwitch} value={checkoutMode}>
-                            <TabsList className="grid w-full grid-cols-2 mb-4">
-                              <TabsTrigger value="guest">
+                        <div className="mb-8">
+                          <Tabs
+                            defaultValue="guest"
+                            onValueChange={handleModeSwitch}
+                            value={checkoutMode}
+                            className="w-full"
+                          >
+                            <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-100 p-1 rounded-lg">
+                              <TabsTrigger
+                                value="guest"
+                                className="rounded-md py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                              >
                                 <UserPlus className="h-4 w-4 mr-2" />
                                 Guest Checkout
                               </TabsTrigger>
-                              <TabsTrigger value="login">
+                              <TabsTrigger
+                                value="login"
+                                className="rounded-md py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                              >
                                 <LogIn className="h-4 w-4 mr-2" />
                                 Login
                               </TabsTrigger>
                             </TabsList>
-                            
+
                             <TabsContent value="guest">
-                              <div className="bg-[#FFF5F1] p-4 rounded-md mb-6">
-                                <p className="text-sm text-[#6B2F1A]">
-                                  Continue as a guest. You can create an account during checkout if you wish.
+                              <div className="bg-blue-50 p-4 rounded-lg mb-6 border border-blue-100">
+                                <p className="text-sm text-blue-700 flex items-center">
+                                  <Info className="h-4 w-4 mr-2 text-blue-500" />
+                                  Continue as a guest. You can create an account
+                                  during checkout if you wish.
                                 </p>
                               </div>
                             </TabsContent>
-                            
+
                             <TabsContent value="login">
                               <div className="space-y-4 mb-4">
                                 <div>
-                                  <label
+                                  <Label
                                     htmlFor="login-email"
-                                    className="block text-sm font-medium text-gray-700 mb-1"
+                                    className="text-sm font-medium text-gray-700 mb-1.5 block"
                                   >
                                     Email
-                                  </label>
+                                  </Label>
                                   <Input
                                     id="login-email"
-                                    placeholder="Email address"
-                                    onChange={(e) => setValue("email", e.target.value)}
+                                    placeholder="Enter your email address"
+                                    className="w-full rounded-lg"
+                                    onChange={(e) =>
+                                      setValue("email", e.target.value)
+                                    }
                                   />
                                 </div>
                                 <div>
-                                  <label
+                                  <Label
                                     htmlFor="login-password"
-                                    className="block text-sm font-medium text-gray-700 mb-1"
+                                    className="text-sm font-medium text-gray-700 mb-1.5 block"
                                   >
                                     Password
-                                  </label>
+                                  </Label>
                                   <Input
                                     id="login-password"
                                     type="password"
-                                    placeholder="Password"
+                                    placeholder="Enter your password"
+                                    className="w-full rounded-lg"
                                   />
                                 </div>
-                                <Button 
+                                <Button
                                   type="button"
-                                  className="w-full bg-[#6B2F1A] hover:bg-[#5A2814]"
+                                  className="w-full bg-[#6B2F1A] hover:bg-[#5A2814] transition-all duration-300 py-2.5 mt-2"
                                   onClick={async () => {
                                     try {
                                       setIsProcessing(true);
-                                      const email = document.getElementById('login-email').value;
-                                      const password = document.getElementById('login-password').value;
-                                      
+                                      const email =
+                                        document.getElementById(
+                                          "login-email"
+                                        ).value;
+                                      const password =
+                                        document.getElementById(
+                                          "login-password"
+                                        ).value;
+
                                       if (!email || !password) {
-                                        toast.error("Please enter both email and password");
+                                        toast.error(
+                                          "Please enter both email and password"
+                                        );
                                         setIsProcessing(false);
                                         return;
                                       }
@@ -939,10 +958,16 @@ useEffect(() => {
                                         toast.success("Logged in successfully");
                                         setCheckoutMode("loggedIn");
                                       } else {
-                                        toast.error(result?.error || "Login failed. Please check your credentials.");
+                                        toast.error(
+                                          result?.error ||
+                                            "Login failed. Please check your credentials."
+                                        );
                                       }
                                     } catch (error) {
-                                      toast.error("Login failed: " + (error.message || "Unknown error"));
+                                      toast.error(
+                                        "Login failed: " +
+                                          (error.message || "Unknown error")
+                                      );
                                     } finally {
                                       setIsProcessing(false);
                                     }
@@ -956,117 +981,117 @@ useEffect(() => {
                                   Log In
                                 </Button>
                               </div>
-                              
-                              <div className="text-center">
+
+                              <div className="text-center mt-4">
                                 <Button
                                   type="button"
                                   variant="link"
-                                  className="text-[#6B2F1A] hover:text-[#5A2814]"
+                                  className="text-[#6B2F1A] hover:text-[#5A2814] transition-all duration-300"
                                   onClick={() => handleModeSwitch("guest")}
                                 >
                                   Continue as guest instead
                                 </Button>
                               </div>
-                              </TabsContent>
+                            </TabsContent>
                           </Tabs>
                         </div>
                       )}
 
-                      <h2 className="text-xl font-semibold mb-6 flex items-center text-[#6B2F1A]">
-                        <User className="h-5 w-5 mr-2" />
+                      <h2 className="text-xl font-semibold mb-6 flex items-center text-gray-800">
+                        <User className="h-5 w-5 mr-2 text-[#6B2F1A]" />
                         Contact Information
                       </h2>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
-                          <label
+                          <Label
                             htmlFor="firstName"
-                            className="block text-sm font-medium text-gray-700 mb-1"
+                            className="text-sm font-medium text-gray-700 mb-1.5 block"
                           >
                             First Name*
-                          </label>
+                          </Label>
                           <Input
                             id="firstName"
                             {...register("firstName")}
                             placeholder="John"
-                            className={`${
+                            className={`w-full rounded-lg ${
                               errors.firstName
-                                ? "border-red-300"
-                                : "border-gray-300 focus:border-[#6B2F1A]"
+                                ? "border-red-300 focus:ring-red-500"
+                                : "border-gray-300 focus:ring-[#6B2F1A]"
                             }`}
                           />
                           {errors.firstName && (
-                            <p className="text-red-500 text-sm mt-1">
+                            <p className="text-red-500 text-sm mt-1.5">
                               {errors.firstName.message}
                             </p>
                           )}
                         </div>
                         <div>
-                          <label
+                          <Label
                             htmlFor="lastName"
-                            className="block text-sm font-medium text-gray-700 mb-1"
+                            className="text-sm font-medium text-gray-700 mb-1.5 block"
                           >
                             Last Name*
-                          </label>
+                          </Label>
                           <Input
                             id="lastName"
                             {...register("lastName")}
                             placeholder="Doe"
-                            className={`${
+                            className={`w-full rounded-lg ${
                               errors.lastName
-                                ? "border-red-300"
-                                : "border-gray-300 focus:border-[#6B2F1A]"
+                                ? "border-red-300 focus:ring-red-500"
+                                : "border-gray-300 focus:ring-[#6B2F1A]"
                             }`}
                           />
                           {errors.lastName && (
-                            <p className="text-red-500 text-sm mt-1">
+                            <p className="text-red-500 text-sm mt-1.5">
                               {errors.lastName.message}
                             </p>
                           )}
                         </div>
                         <div>
-                          <label
+                          <Label
                             htmlFor="email"
-                            className="block text-sm font-medium text-gray-700 mb-1"
+                            className="text-sm font-medium text-gray-700 mb-1.5 block"
                           >
                             Email Address*
-                          </label>
+                          </Label>
                           <Input
                             id="email"
                             type="email"
                             {...register("email")}
                             placeholder="john.doe@example.com"
-                            className={`${
+                            className={`w-full rounded-lg ${
                               errors.email
-                                ? "border-red-300"
-                                : "border-gray-300 focus:border-[#6B2F1A]"
+                                ? "border-red-300 focus:ring-red-500"
+                                : "border-gray-300 focus:ring-[#6B2F1A]"
                             }`}
                           />
                           {errors.email && (
-                            <p className="text-red-500 text-sm mt-1">
+                            <p className="text-red-500 text-sm mt-1.5">
                               {errors.email.message}
                             </p>
                           )}
                         </div>
                         <div>
-                          <label
+                          <Label
                             htmlFor="phone"
-                            className="block text-sm font-medium text-gray-700 mb-1"
+                            className="text-sm font-medium text-gray-700 mb-1.5 block"
                           >
                             Phone Number*
-                          </label>
+                          </Label>
                           <Input
                             id="phone"
                             {...register("phone")}
                             placeholder="Your phone number"
-                            className={`${
+                            className={`w-full rounded-lg ${
                               errors.phone
-                                ? "border-red-300"
-                                : "border-gray-300 focus:border-[#6B2F1A]"
+                                ? "border-red-300 focus:ring-red-500"
+                                : "border-gray-300 focus:ring-[#6B2F1A]"
                             }`}
                           />
                           {errors.phone && (
-                            <p className="text-red-500 text-sm mt-1">
+                            <p className="text-red-500 text-sm mt-1.5">
                               {errors.phone.message}
                             </p>
                           )}
@@ -1075,15 +1100,19 @@ useEffect(() => {
 
                       {/* Account Creation Option for Guest Users */}
                       {!isAuthenticated && checkoutMode === "guest" && (
-                        <div className="mt-6 pt-6 border-t border-gray-200">
-                          <div className="flex items-center space-x-3 mb-4">
-                            <Checkbox
-                              id="createAccount"
-                              checked={watchCreateAccount}
-                              onCheckedChange={(checked) => {
-                                setValue("createAccount", checked === true);
-                              }}
-                              className="text-[#6B2F1A] border-gray-300 focus:ring-[#6B2F1A]"
+                        <div className="mt-8 pt-6 border-t border-gray-200">
+                          <div className="flex items-start space-x-3 mb-4">
+                            <Controller
+                              name="createAccount"
+                              control={control}
+                              render={({ field }) => (
+                                <Checkbox
+                                  id="createAccount"
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                  className="mt-1 text-[#6B2F1A] border-gray-300 rounded focus:ring-[#6B2F1A]"
+                                />
+                              )}
                             />
                             <div>
                               <label
@@ -1092,33 +1121,34 @@ useEffect(() => {
                               >
                                 Create an account for faster checkout next time
                               </label>
-                              <p className="text-xs text-gray-500">
-                                Save your details for future purchases
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                Save your details for future purchases and order
+                                tracking
                               </p>
                             </div>
                           </div>
 
                           {watchCreateAccount && (
-                            <div className="mb-2">
-                              <label
+                            <div className="ml-7 mt-4">
+                              <Label
                                 htmlFor="password"
-                                className="block text-sm font-medium text-gray-700 mb-1"
+                                className="text-sm font-medium text-gray-700 mb-1.5 block"
                               >
                                 Password*
-                              </label>
+                              </Label>
                               <Input
                                 id="password"
                                 type="password"
                                 {...register("password")}
                                 placeholder="Create a password (min. 6 characters)"
-                                className={`${
+                                className={`w-full rounded-lg ${
                                   errors.password
-                                    ? "border-red-300"
-                                    : "border-gray-300 focus:border-[#6B2F1A]"
+                                    ? "border-red-300 focus:ring-red-500"
+                                    : "border-gray-300 focus:ring-[#6B2F1A]"
                                 }`}
                               />
                               {errors.password && (
-                                <p className="text-red-500 text-sm mt-1">
+                                <p className="text-red-500 text-sm mt-1.5">
                                   {errors.password.message}
                                 </p>
                               )}
@@ -1133,158 +1163,164 @@ useEffect(() => {
                 {/* Shipping & Billing */}
                 {currentStep === "shipping" && (
                   <>
-                    <Card className="mb-6 border-gray-200 shadow-sm">
-                      <CardContent className="p-6">
-                        <h2 className="text-xl font-semibold mb-6 flex items-center text-[#6B2F1A]">
-                          <Building className="h-5 w-5 mr-2" />
+                    <Card className="mb-6 border-0 rounded-xl overflow-hidden shadow-sm">
+                      <CardContent className="p-8">
+                        <h2 className="text-xl font-semibold mb-6 flex items-center text-gray-800">
+                          <Building className="h-5 w-5 mr-2 text-[#6B2F1A]" />
                           Billing Information
                         </h2>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                           <div className="sm:col-span-2">
-                            <label
+                            <Label
                               htmlFor="billingAddress1"
-                              className="block text-sm font-medium text-gray-700 mb-1"
+                              className="text-sm font-medium text-gray-700 mb-1.5 block"
                             >
                               Address Line 1*
-                            </label>
+                            </Label>
                             <Input
                               id="billingAddress1"
                               {...register("billingAddress1")}
                               placeholder="Street address"
-                              className={`${
+                              className={`w-full rounded-lg ${
                                 errors.billingAddress1
-                                  ? "border-red-300"
-                                  : "border-gray-300 focus:border-[#6B2F1A]"
+                                  ? "border-red-300 focus:ring-red-500"
+                                  : "border-gray-300 focus:ring-[#6B2F1A]"
                               }`}
                             />
                             {errors.billingAddress1 && (
-                              <p className="text-red-500 text-sm mt-1">
+                              <p className="text-red-500 text-sm mt-1.5">
                                 {errors.billingAddress1.message}
                               </p>
                             )}
                           </div>
                           <div className="sm:col-span-2">
-                            <label
+                            <Label
                               htmlFor="billingAddress2"
-                              className="block text-sm font-medium text-gray-700 mb-1"
+                              className="text-sm font-medium text-gray-700 mb-1.5 block"
                             >
                               Address Line 2
-                            </label>
+                            </Label>
                             <Input
                               id="billingAddress2"
                               {...register("billingAddress2")}
                               placeholder="Apartment, suite, unit, etc. (optional)"
-                              className="border-gray-300 focus:border-[#6B2F1A]"
+                              className="w-full rounded-lg border-gray-300 focus:ring-[#6B2F1A]"
                             />
                           </div>
                           <div>
-                            <label
+                            <Label
                               htmlFor="billingCity"
-                              className="block text-sm font-medium text-gray-700 mb-1"
+                              className="text-sm font-medium text-gray-700 mb-1.5 block"
                             >
                               City*
-                            </label>
+                            </Label>
                             <Input
                               id="billingCity"
                               {...register("billingCity")}
                               placeholder="City"
-                              className={`${
+                              className={`w-full rounded-lg ${
                                 errors.billingCity
-                                  ? "border-red-300"
-                                  : "border-gray-300 focus:border-[#6B2F1A]"
+                                  ? "border-red-300 focus:ring-red-500"
+                                  : "border-gray-300 focus:ring-[#6B2F1A]"
                               }`}
                             />
                             {errors.billingCity && (
-                              <p className="text-red-500 text-sm mt-1">
+                              <p className="text-red-500 text-sm mt-1.5">
                                 {errors.billingCity.message}
                               </p>
                             )}
                           </div>
                           <div>
-                            <label
+                            <Label
                               htmlFor="billingState"
-                              className="block text-sm font-medium text-gray-700 mb-1"
+                              className="text-sm font-medium text-gray-700 mb-1.5 block"
                             >
                               State/Province*
-                            </label>
+                            </Label>
                             <Input
                               id="billingState"
                               {...register("billingState")}
                               placeholder="State"
-                              className={`${
+                              className={`w-full rounded-lg ${
                                 errors.billingState
-                                  ? "border-red-300"
-                                  : "border-gray-300 focus:border-[#6B2F1A]"
+                                  ? "border-red-300 focus:ring-red-500"
+                                  : "border-gray-300 focus:ring-[#6B2F1A]"
                               }`}
                             />
                             {errors.billingState && (
-                              <p className="text-red-500 text-sm mt-1">
+                              <p className="text-red-500 text-sm mt-1.5">
                                 {errors.billingState.message}
                               </p>
                             )}
                           </div>
                           <div>
-                            <label
+                            <Label
                               htmlFor="billingPostalCode"
-                              className="block text-sm font-medium text-gray-700 mb-1"
+                              className="text-sm font-medium text-gray-700 mb-1.5 block"
                             >
                               Postal Code*
-                            </label>
+                            </Label>
                             <Input
                               id="billingPostalCode"
                               {...register("billingPostalCode")}
                               placeholder="Postal code"
-                              className={`${
+                              className={`w-full rounded-lg ${
                                 errors.billingPostalCode
-                                  ? "border-red-300"
-                                  : "border-gray-300 focus:border-[#6B2F1A]"
+                                  ? "border-red-300 focus:ring-red-500"
+                                  : "border-gray-300 focus:ring-[#6B2F1A]"
                               }`}
                             />
                             {errors.billingPostalCode && (
-                              <p className="text-red-500 text-sm mt-1">
+                              <p className="text-red-500 text-sm mt-1.5">
                                 {errors.billingPostalCode.message}
                               </p>
                             )}
                           </div>
                           <div>
-                            <label
+                            <Label
                               htmlFor="billingCountry"
-                              className="block text-sm font-medium text-gray-700 mb-1"
+                              className="text-sm font-medium text-gray-700 mb-1.5 block"
                             >
                               Country*
-                            </label>
-                            <Select
-                              defaultValue="India"
-                              onValueChange={(value) =>
-                                setValue("billingCountry", value)
-                              }
-                            >
-                              <SelectTrigger
-                                className={`${
-                                  errors.billingCountry
-                                    ? "border-red-300"
-                                    : "border-gray-300 focus:border-[#6B2F1A]"
-                                }`}
-                              >
-                                <SelectValue placeholder="Select a country" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="India">India</SelectItem>
-                                <SelectItem value="United States">
-                                  United States
-                                </SelectItem>
-                                <SelectItem value="United Kingdom">
-                                  United Kingdom
-                                </SelectItem>
-                                <SelectItem value="Canada">Canada</SelectItem>
-                                <SelectItem value="Australia">
-                                  Australia
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
+                            </Label>
+                            <Controller
+                              name="billingCountry"
+                              control={control}
+                              render={({ field }) => (
+                                <Select
+                                  value={field.value}
+                                  onValueChange={field.onChange}
+                                >
+                                  <SelectTrigger
+                                    className={`w-full rounded-lg ${
+                                      errors.billingCountry
+                                        ? "border-red-300 focus:ring-red-500"
+                                        : "border-gray-300 focus:ring-[#6B2F1A]"
+                                    }`}
+                                  >
+                                    <SelectValue placeholder="Select a country" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="India">India</SelectItem>
+                                    <SelectItem value="United States">
+                                      United States
+                                    </SelectItem>
+                                    <SelectItem value="United Kingdom">
+                                      United Kingdom
+                                    </SelectItem>
+                                    <SelectItem value="Canada">
+                                      Canada
+                                    </SelectItem>
+                                    <SelectItem value="Australia">
+                                      Australia
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              )}
+                            />
                             {errors.billingCountry && (
-                              <p className="text-red-500 text-sm mt-1">
+                              <p className="text-red-500 text-sm mt-1.5">
                                 {errors.billingCountry.message}
                               </p>
                             )}
@@ -1292,13 +1328,17 @@ useEffect(() => {
                         </div>
 
                         <div className="flex items-center mt-6">
-                          <Checkbox
-                            id="sameAsBilling"
-                            checked={watchSameAsBilling}
-                            onCheckedChange={(checked) => {
-                              setValue("sameAsBilling", checked === true);
-                            }}
-                            className="text-[#6B2F1A] border-gray-300 focus:ring-[#6B2F1A]"
+                          <Controller
+                            name="sameAsBilling"
+                            control={control}
+                            render={({ field }) => (
+                              <Checkbox
+                                id="sameAsBilling"
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                className="text-[#6B2F1A] border-gray-300 rounded focus:ring-[#6B2F1A]"
+                              />
+                            )}
                           />
                           <label
                             htmlFor="sameAsBilling"
@@ -1311,34 +1351,32 @@ useEffect(() => {
                     </Card>
 
                     {/* Order Notes */}
-                    <Card className="mb-6 border-gray-200 shadow-sm">
-                      <CardContent className="p-6">
+                    <Card className="mb-6 border-0 rounded-xl overflow-hidden shadow-sm">
+                      <CardContent className="p-8">
                         <Accordion type="single" collapsible>
                           <AccordionItem
                             value="order-notes"
                             className="border-b-0"
                           >
-                            <AccordionTrigger className="text-base font-medium text-[#6B2F1A]">
+                            <AccordionTrigger className="text-base font-medium text-gray-800 py-2">
                               <div className="flex items-center">
-                                <Info className="h-4 w-4 mr-2" />
-                                <span>
-                                  Add Order Notes
-                                </span>
+                                <Info className="h-4 w-4 mr-2 text-[#6B2F1A]" />
+                                <span>Add Order Notes</span>
                               </div>
                             </AccordionTrigger>
                             <AccordionContent>
-                              <div className="mt-2">
-                                <label
+                              <div className="mt-4">
+                                <Label
                                   htmlFor="notes"
-                                  className="block text-sm font-medium text-gray-700 mb-1"
+                                  className="text-sm font-medium text-gray-700 mb-1.5 block"
                                 >
                                   Order Notes
-                                </label>
+                                </Label>
                                 <Textarea
                                   id="notes"
                                   {...register("notes")}
                                   placeholder="Any special instructions for delivery"
-                                  className="h-24 border-gray-300 focus:border-[#6B2F1A]"
+                                  className="h-24 w-full rounded-lg border-gray-300 focus:ring-[#6B2F1A]"
                                 />
                               </div>
                             </AccordionContent>
@@ -1348,157 +1386,165 @@ useEffect(() => {
                     </Card>
 
                     {!watchSameAsBilling && (
-                      <Card className="mt-6 border-gray-200 shadow-sm">
-                        <CardContent className="p-6">
-                          <h2 className="text-xl font-semibold mb-6 flex items-center text-[#6B2F1A]">
-                            <MapPin className="h-5 w-5 mr-2" />
+                      <Card className="mt-6 border-0 rounded-xl overflow-hidden shadow-sm">
+                        <CardContent className="p-8">
+                          <h2 className="text-xl font-semibold mb-6 flex items-center text-gray-800">
+                            <MapPin className="h-5 w-5 mr-2 text-[#6B2F1A]" />
                             Shipping Information
                           </h2>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div className="sm:col-span-2">
-                              <label
+                              <Label
                                 htmlFor="shippingAddress1"
-                                className="block text-sm font-medium text-gray-700 mb-1"
+                                className="text-sm font-medium text-gray-700 mb-1.5 block"
                               >
                                 Address Line 1*
-                              </label>
+                              </Label>
                               <Input
                                 id="shippingAddress1"
                                 {...register("shippingAddress1")}
                                 placeholder="Street address"
-                                className={`${
+                                className={`w-full rounded-lg ${
                                   errors.shippingAddress1
-                                    ? "border-red-300"
-                                    : "border-gray-300 focus:border-[#6B2F1A]"
+                                    ? "border-red-300 focus:ring-red-500"
+                                    : "border-gray-300 focus:ring-[#6B2F1A]"
                                 }`}
                               />
                               {errors.shippingAddress1 && (
-                                <p className="text-red-500 text-sm mt-1">
+                                <p className="text-red-500 text-sm mt-1.5">
                                   {errors.shippingAddress1.message}
                                 </p>
                               )}
                             </div>
                             <div className="sm:col-span-2">
-                              <label
+                              <Label
                                 htmlFor="shippingAddress2"
-                                className="block text-sm font-medium text-gray-700 mb-1"
+                                className="text-sm font-medium text-gray-700 mb-1.5 block"
                               >
                                 Address Line 2
-                              </label>
+                              </Label>
                               <Input
                                 id="shippingAddress2"
                                 {...register("shippingAddress2")}
                                 placeholder="Apartment, suite, unit, etc. (optional)"
-                                className="border-gray-300 focus:border-[#6B2F1A]"
+                                className="w-full rounded-lg border-gray-300 focus:ring-[#6B2F1A]"
                               />
                             </div>
                             <div>
-                              <label
+                              <Label
                                 htmlFor="shippingCity"
-                                className="block text-sm font-medium text-gray-700 mb-1"
+                                className="text-sm font-medium text-gray-700 mb-1.5 block"
                               >
                                 City*
-                              </label>
+                              </Label>
                               <Input
                                 id="shippingCity"
                                 {...register("shippingCity")}
                                 placeholder="City"
-                                className={`${
+                                className={`w-full rounded-lg ${
                                   errors.shippingCity
-                                    ? "border-red-300"
-                                    : "border-gray-300 focus:border-[#6B2F1A]"
+                                    ? "border-red-300 focus:ring-red-500"
+                                    : "border-gray-300 focus:ring-[#6B2F1A]"
                                 }`}
                               />
                               {errors.shippingCity && (
-                                <p className="text-red-500 text-sm mt-1">
+                                <p className="text-red-500 text-sm mt-1.5">
                                   {errors.shippingCity.message}
                                 </p>
                               )}
                             </div>
                             <div>
-                              <label
+                              <Label
                                 htmlFor="shippingState"
-                                className="block text-sm font-medium text-gray-700 mb-1"
+                                className="text-sm font-medium text-gray-700 mb-1.5 block"
                               >
                                 State/Province*
-                              </label>
+                              </Label>
                               <Input
                                 id="shippingState"
                                 {...register("shippingState")}
                                 placeholder="State"
-                                className={`${
+                                className={`w-full rounded-lg ${
                                   errors.shippingState
-                                    ? "border-red-300"
-                                    : "border-gray-300 focus:border-[#6B2F1A]"
+                                    ? "border-red-300 focus:ring-red-500"
+                                    : "border-gray-300 focus:ring-[#6B2F1A]"
                                 }`}
                               />
                               {errors.shippingState && (
-                                <p className="text-red-500 text-sm mt-1">
+                                <p className="text-red-500 text-sm mt-1.5">
                                   {errors.shippingState.message}
                                 </p>
                               )}
                             </div>
                             <div>
-                              <label
+                              <Label
                                 htmlFor="shippingPostalCode"
-                                className="block text-sm font-medium text-gray-700 mb-1"
+                                className="text-sm font-medium text-gray-700 mb-1.5 block"
                               >
                                 Postal Code*
-                              </label>
+                              </Label>
                               <Input
                                 id="shippingPostalCode"
                                 {...register("shippingPostalCode")}
                                 placeholder="Postal code"
-                                className={`${
+                                className={`w-full rounded-lg ${
                                   errors.shippingPostalCode
-                                    ? "border-red-300"
-                                    : "border-gray-300 focus:border-[#6B2F1A]"
+                                    ? "border-red-300 focus:ring-red-500"
+                                    : "border-gray-300 focus:ring-[#6B2F1A]"
                                 }`}
                               />
                               {errors.shippingPostalCode && (
-                                <p className="text-red-500 text-sm mt-1">
+                                <p className="text-red-500 text-sm mt-1.5">
                                   {errors.shippingPostalCode.message}
                                 </p>
                               )}
                             </div>
                             <div>
-                              <label
+                              <Label
                                 htmlFor="shippingCountry"
-                                className="block text-sm font-medium text-gray-700 mb-1"
+                                className="text-sm font-medium text-gray-700 mb-1.5 block"
                               >
                                 Country*
-                              </label>
-                              <Select
-                                defaultValue="India"
-                                onValueChange={(value) =>
-                                  setValue("shippingCountry", value)
-                                }
-                              >
-                                <SelectTrigger
-                                  className={`${
-                                    errors.shippingCountry
-                                      ? "border-red-300"
-                                      : "border-gray-300 focus:border-[#6B2F1A]"
-                                  }`}
-                                >
-                                  <SelectValue placeholder="Select a country" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="India">India</SelectItem>
-                                  <SelectItem value="United States">
-                                    United States
-                                  </SelectItem>
-                                  <SelectItem value="United Kingdom">
-                                    United Kingdom
-                                  </SelectItem>
-                                  <SelectItem value="Canada">Canada</SelectItem>
-                                  <SelectItem value="Australia">
-                                    Australia
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
+                              </Label>
+                              <Controller
+                                name="shippingCountry"
+                                control={control}
+                                render={({ field }) => (
+                                  <Select
+                                    value={field.value}
+                                    onValueChange={field.onChange}
+                                  >
+                                    <SelectTrigger
+                                      className={`w-full rounded-lg ${
+                                        errors.shippingCountry
+                                          ? "border-red-300 focus:ring-red-500"
+                                          : "border-gray-300 focus:ring-[#6B2F1A]"
+                                      }`}
+                                    >
+                                      <SelectValue placeholder="Select a country" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="India">
+                                        India
+                                      </SelectItem>
+                                      <SelectItem value="United States">
+                                        United States
+                                      </SelectItem>
+                                      <SelectItem value="United Kingdom">
+                                        United Kingdom
+                                      </SelectItem>
+                                      <SelectItem value="Canada">
+                                        Canada
+                                      </SelectItem>
+                                      <SelectItem value="Australia">
+                                        Australia
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                )}
+                              />
                               {errors.shippingCountry && (
-                                <p className="text-red-500 text-sm mt-1">
+                                <p className="text-red-500 text-sm mt-1.5">
                                   {errors.shippingCountry.message}
                                 </p>
                               )}
@@ -1508,98 +1554,88 @@ useEffect(() => {
                       </Card>
                     )}
 
-                    <Card className="mt-6 border-gray-200 shadow-sm">
-                      <CardContent className="p-6">
-                        <h2 className="text-xl font-semibold mb-6 flex items-center text-[#6B2F1A]">
-                          <Truck className="h-5 w-5 mr-2" />
+                    <Card className="mt-6 border-0 rounded-xl overflow-hidden shadow-sm">
+                      <CardContent className="p-8">
+                        <h2 className="text-xl font-semibold mb-6 flex items-center text-gray-800">
+                          <Truck className="h-5 w-5 mr-2 text-[#6B2F1A]" />
                           Shipping Method
                         </h2>
 
-                        <RadioGroup
-                          defaultValue="standard"
-                          value={watchShippingMethod}
-                          onValueChange={(value) =>
-                            setValue("shippingMethod", value)
-                          }
-                        >
-                          <div className="flex flex-col space-y-4">
-                            <div
-                              className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all ${
-                                watchShippingMethod === "standard"
-                                  ? "border-[#6B2F1A] bg-[#FFF5F1]"
-                                  : "border-gray-200 hover:border-[#6B2F1A]/30 hover:bg-[#FFF5F1]/50"
-                              }`}
-                              onClick={() =>
-                                setValue("shippingMethod", "standard")
-                              }
+                        <Controller
+                          name="shippingMethod"
+                          control={control}
+                          render={({ field }) => (
+                            <RadioGroup
+                              value={field.value}
+                              onValueChange={field.onChange}
+                              className="space-y-4"
                             >
-                              <div className="flex items-center">
-                                <RadioGroupItem
-                                  value="standard"
-                                  id="standard-shipping"
-                                  className="text-[#6B2F1A] border-gray-300"
-                                />
-                                <div className="ml-3">
-                                  <label
-                                    htmlFor="standard-shipping"
-                                    className="font-medium cursor-pointer"
-                                  >
-                                    Standard Shipping
-                                  </label>
-                                  <p className="text-sm text-gray-500">
-                                    Delivery in 5-7 business days
-                                  </p>
+                              <label
+                                className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all ${
+                                  field.value === "standard"
+                                    ? "border-[#6B2F1A] bg-[#FFF5F1]"
+                                    : "border-gray-200 hover:border-[#6B2F1A]/30 hover:bg-[#FFF5F1]/50"
+                                }`}
+                              >
+                                <div className="flex items-center">
+                                  <RadioGroupItem
+                                    value="standard"
+                                    id="standard-shipping"
+                                    className="text-[#6B2F1A] border-gray-300"
+                                  />
+                                  <div className="ml-3">
+                                    <span className="font-medium">
+                                      Standard Shipping
+                                    </span>
+                                    <p className="text-sm text-gray-500">
+                                      Delivery in 5-7 business days
+                                    </p>
+                                  </div>
                                 </div>
-                              </div>
-                              <span className="font-medium">
-                                {currency === "INR" && shippingCost > 0 ? (
-                                  formatPrice(shippingCost)
-                                ) : (
-                                  <span className="text-green-600">Free</span>
-                                )}
-                              </span>
-                            </div>
+                                <span className="font-medium">
+                                  {currency === "INR" && shippingCost > 0 ? (
+                                    formatPrice(shippingCost)
+                                  ) : (
+                                    <span className="text-green-600">Free</span>
+                                  )}
+                                </span>
+                              </label>
 
-                            <div
-                              className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all ${
-                                watchShippingMethod === "express"
-                                  ? "border-[#6B2F1A] bg-[#FFF5F1]"
-                                  : "border-gray-200 hover:border-[#6B2F1A]/30 hover:bg-[#FFF5F1]/50"
-                              }`}
-                              onClick={() =>
-                                setValue("shippingMethod", "express")
-                              }
-                            >
-                              <div className="flex items-center">
-                                <RadioGroupItem
-                                  value="express"
-                                  id="express-shipping"
-                                  className="text-[#6B2F1A] border-gray-300"
-                                />
-                                <div className="ml-3">
-                                  <label
-                                    htmlFor="express-shipping"
-                                    className="font-medium cursor-pointer"
-                                  >
-                                    Express Shipping
-                                  </label>
-                                  <p className="text-sm text-gray-500">
-                                    Delivery in 2-3 business days
-                                  </p>
+                              <label
+                                className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all ${
+                                  field.value === "express"
+                                    ? "border-[#6B2F1A] bg-[#FFF5F1]"
+                                    : "border-gray-200 hover:border-[#6B2F1A]/30 hover:bg-[#FFF5F1]/50"
+                                }`}
+                              >
+                                <div className="flex items-center">
+                                  <RadioGroupItem
+                                    value="express"
+                                    id="express-shipping"
+                                    className="text-[#6B2F1A] border-gray-300"
+                                  />
+                                  <div className="ml-3">
+                                    <span className="font-medium">
+                                      Express Shipping
+                                    </span>
+                                    <p className="text-sm text-gray-500">
+                                      Delivery in 2-3 business days
+                                    </p>
+                                  </div>
                                 </div>
-                              </div>
-                              <span className="font-medium">
-                                {currency === "INR" ? "₹100.00" : "$10.00"}
-                              </span>
-                            </div>
-                          </div>
-                        </RadioGroup>
+                                <span className="font-medium">
+                                  {currency === "INR" ? "₹100.00" : "$10.00"}
+                                </span>
+                              </label>
+                            </RadioGroup>
+                          )}
+                        />
 
                         {/* Show weight-based shipping info if applicable */}
                         {currency === "INR" &&
                           totalWeight > 0 &&
                           watchShippingMethod === "standard" && (
-                            <div className="mt-4 bg-[#f8f9fa] p-3 rounded-md border border-gray-200">
+                            <div className="mt-4 bg-[#F9FAFC] p-4 rounded-lg border border-gray-200">
                               <p className="text-sm text-gray-700 flex items-center">
                                 <Info className="h-4 w-4 mr-2 text-[#6B2F1A]" />
                                 Weight-based shipping calculation applied
@@ -1627,91 +1663,83 @@ useEffect(() => {
                 {/* Payment Methods */}
                 {currentStep === "payment" && (
                   <>
-                    <Card className="mb-6 border-gray-200 shadow-sm">
-                      <CardContent className="p-6">
-                        <h2 className="text-xl font-semibold mb-6 flex items-center text-[#6B2F1A]">
-                          <CreditCard className="h-5 w-5 mr-2" />
+                    <Card className="mb-6 border-0 rounded-xl overflow-hidden shadow-sm">
+                      <CardContent className="p-8">
+                        <h2 className="text-xl font-semibold mb-6 flex items-center text-gray-800">
+                          <CreditCard className="h-5 w-5 mr-2 text-[#6B2F1A]" />
                           Payment Method
                         </h2>
 
-                        <RadioGroup
-                          defaultValue="card"
-                          value={watchPaymentMethod}
-                          onValueChange={(value) =>
-                            setValue("paymentMethod", value)
-                          }
-                        >
-                          <div className="flex flex-col space-y-4">
-                            
-
-                            <div
-                              className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all ${
-                                watchPaymentMethod === "upi"
-                                  ? "border-[#6B2F1A] bg-[#FFF5F1]"
-                                  : "border-gray-200 hover:border-[#6B2F1A]/30 hover:bg-[#FFF5F1]/50"
-                              }`}
-                              onClick={() => setValue("paymentMethod", "upi")}
+                        <Controller
+                          name="paymentMethod"
+                          control={control}
+                          render={({ field }) => (
+                            <RadioGroup
+                              value={field.value}
+                              onValueChange={field.onChange}
+                              className="space-y-4"
                             >
-                              <div className="flex items-center">
-                                <RadioGroupItem
-                                  value="upi"
-                                  id="upi-payment"
-                                  className="text-[#6B2F1A] border-gray-300"
-                                />
-                                <div className="ml-3">
-                                  <label
-                                    htmlFor="upi-payment"
-                                    className="font-medium cursor-pointer"
-                                  >
-                                    UPI / Net Banking
-                                  </label>
-                                  <p className="text-sm text-gray-500">
-                                    Pay using UPI or bank transfer
-                                  </p>
+                              <label
+                                className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all ${
+                                  field.value === "upi"
+                                    ? "border-[#6B2F1A] bg-[#FFF5F1]"
+                                    : "border-gray-200 hover:border-[#6B2F1A]/30 hover:bg-[#FFF5F1]/50"
+                                }`}
+                              >
+                                <div className="flex items-center">
+                                  <RadioGroupItem
+                                    value="upi"
+                                    id="upi-payment"
+                                    className="text-[#6B2F1A] border-gray-300"
+                                  />
+                                  <div className="ml-3">
+                                    <span className="font-medium">
+                                      UPI / Net Banking
+                                    </span>
+                                    <p className="text-sm text-gray-500">
+                                      Pay using UPI or bank transfer
+                                    </p>
+                                  </div>
                                 </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="h-5 w-8 bg-purple-600 rounded text-white text-xs flex items-center justify-center">
-                                  UPI
+                                <div className="flex items-center gap-2">
+                                  <div className="h-5 w-8 bg-purple-600 rounded text-white text-xs flex items-center justify-center">
+                                    UPI
+                                  </div>
+                                  <div className="h-5 w-8 bg-green-500 rounded text-white text-xs flex items-center justify-center">
+                                    PAY
+                                  </div>
                                 </div>
-                                <div className="h-5 w-8 bg-green-500 rounded text-white text-xs flex items-center justify-center">
-                                  PAY
-                                </div>
-                              </div>
-                            </div>
+                              </label>
 
-                            <div
-                              className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all ${
-                                watchPaymentMethod === "cod"
-                                  ? "border-[#6B2F1A] bg-[#FFF5F1]"
-                                  : "border-gray-200 hover:border-[#6B2F1A]/30 hover:bg-[#FFF5F1]/50"
-                              }`}
-                              onClick={() => setValue("paymentMethod", "cod")}
-                            >
-                              <div className="flex items-center">
-                                <RadioGroupItem
-                                  value="cod"
-                                  id="cod-payment"
-                                  className="text-[#6B2F1A] border-gray-300"
-                                />
-                                <div className="ml-3">
-                                  <label
-                                    htmlFor="cod-payment"
-                                    className="font-medium cursor-pointer"
-                                  >
-                                    Cash on Delivery
-                                  </label>
-                                  <p className="text-sm text-gray-500">
-                                    Pay when you receive your order
-                                  </p>
+                              <label
+                                className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all ${
+                                  field.value === "cod"
+                                    ? "border-[#6B2F1A] bg-[#FFF5F1]"
+                                    : "border-gray-200 hover:border-[#6B2F1A]/30 hover:bg-[#FFF5F1]/50"
+                                }`}
+                              >
+                                <div className="flex items-center">
+                                  <RadioGroupItem
+                                    value="cod"
+                                    id="cod-payment"
+                                    className="text-[#6B2F1A] border-gray-300"
+                                  />
+                                  <div className="ml-3">
+                                    <span className="font-medium">
+                                      Cash on Delivery
+                                    </span>
+                                    <p className="text-sm text-gray-500">
+                                      Pay when you receive your order
+                                    </p>
+                                  </div>
                                 </div>
-                              </div>
-                              <div>
-                                <BanknoteIcon className="h-5 w-5 text-gray-400" />
-                              </div>
-                            </div>
-                          </div>
-                        </RadioGroup>
+                                <div>
+                                  <BanknoteIcon className="h-5 w-5 text-gray-400" />
+                                </div>
+                              </label>
+                            </RadioGroup>
+                          )}
+                        />
 
                         {watchPaymentMethod === "cod" && (
                           <Alert className="mt-4 bg-[#FFF5F1] text-[#6B2F1A] border-[#fee3d8]">
@@ -1726,20 +1754,37 @@ useEffect(() => {
                             </AlertDescription>
                           </Alert>
                         )}
+
+                        {watchPaymentMethod === "upi" && !razorpayLoaded && (
+                          <Alert className="mt-4 bg-yellow-50 text-amber-800 border-amber-200">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertTitle>Payment Service Notice</AlertTitle>
+                            <AlertDescription className="text-amber-800/80">
+                              The payment service is currently loading. If it
+                              doesn't become available, you may want to try
+                              refreshing the page or selecting Cash on Delivery
+                              instead.
+                            </AlertDescription>
+                          </Alert>
+                        )}
                       </CardContent>
                     </Card>
 
                     {/* Terms and Conditions */}
-                    <Card className="border-gray-200 shadow-sm">
-                      <CardContent className="p-6">
+                    <Card className="border-0 rounded-xl overflow-hidden shadow-sm">
+                      <CardContent className="p-8">
                         <div className="flex items-start space-x-3">
-                          <Checkbox
-                            id="termsAccepted"
-                            checked={watch("termsAccepted")}
-                            onCheckedChange={(checked) =>
-                              setValue("termsAccepted", checked === true)
-                            }
-                            className="text-[#6B2F1A] border-gray-300 focus:ring-[#6B2F1A]"
+                          <Controller
+                            name="termsAccepted"
+                            control={control}
+                            render={({ field }) => (
+                              <Checkbox
+                                id="termsAccepted"
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                className="mt-1 text-[#6B2F1A] border-gray-300 rounded focus:ring-[#6B2F1A]"
+                              />
+                            )}
                           />
                           <div>
                             <label
@@ -1752,14 +1797,14 @@ useEffect(() => {
                               By placing your order, you agree to our{" "}
                               <Link
                                 href="/terms"
-                                className="text-[#6B2F1A] hover:text-[#5A2814]"
+                                className="text-[#6B2F1A] hover:underline hover:text-[#5A2814] transition-all duration-300"
                               >
                                 Terms of Service
                               </Link>{" "}
                               and{" "}
                               <Link
                                 href="/privacy"
-                                className="text-[#6B2F1A] hover:text-[#5A2814]"
+                                className="text-[#6B2F1A] hover:underline hover:text-[#5A2814] transition-all duration-300"
                               >
                                 Privacy Policy
                               </Link>
@@ -1776,26 +1821,94 @@ useEffect(() => {
                   </>
                 )}
 
-                {/* Navigation Buttons */}
-                <div className="flex justify-between mt-8">
-                  {currentStep !== "contact" && (
+                {(currentStep === "contact" || currentStep === "shipping") && (
+                  <div className="flex justify-between mt-8">
+                    {currentStep === "shipping" && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleBack}
+                        className="border-[#6B2F1A]/20 text-[#6B2F1A] hover:bg-[#FFF5F1] hover:text-[#6B2F1A] hover:border-[#6B2F1A]/30 transition-all duration-300 py-2.5 px-5"
+                      >
+                        <ChevronLeft className="h-4 w-4 mr-2" />
+                        Back
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      className={`bg-[#6B2F1A] hover:bg-[#5A2814] transition-all duration-300 py-2.5 px-5 ${
+                        currentStep === "contact" ? "ml-auto" : ""
+                      }`}
+                      onClick={async () => {
+                        if (currentStep === "contact") {
+                          // Validate contact information
+                          const isContactValid = await trigger([
+                            "firstName",
+                            "lastName",
+                            "email",
+                            "phone",
+                          ]);
+
+                          // Also validate password if creating account
+                          if (watchCreateAccount) {
+                            await trigger(["password"]);
+                          }
+
+                          if (isContactValid) {
+                            setCurrentStep("shipping");
+                            window.scrollTo(0, 0);
+                          }
+                        } else if (currentStep === "shipping") {
+                          // Validate shipping & billing information
+                          const fieldsToValidate = [
+                            "billingAddress1",
+                            "billingCity",
+                            "billingState",
+                            "billingPostalCode",
+                            "billingCountry",
+                            "shippingMethod",
+                          ];
+
+                          if (!watchSameAsBilling) {
+                            fieldsToValidate.push(
+                              "shippingAddress1",
+                              "shippingCity",
+                              "shippingState",
+                              "shippingPostalCode",
+                              "shippingCountry"
+                            );
+                          }
+
+                          const isShippingValid = await trigger(
+                            fieldsToValidate
+                          );
+                          if (isShippingValid) {
+                            setCurrentStep("payment");
+                            window.scrollTo(0, 0);
+                          }
+                        }
+                      }}
+                    >
+                      Continue
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </div>
+                )}
+
+                {currentStep === "payment" && (
+                  <div className="flex justify-between mt-8">
                     <Button
                       type="button"
                       variant="outline"
                       onClick={handleBack}
-                      className="border-[#6B2F1A]/20 text-[#6B2F1A] hover:bg-[#fee3d8] hover:text-[#6B2F1A] hover:border-[#6B2F1A]/30"
+                      className="border-[#6B2F1A]/20 text-[#6B2F1A] hover:bg-[#FFF5F1] hover:text-[#6B2F1A] hover:border-[#6B2F1A]/30 transition-all duration-300 py-2.5 px-5"
                     >
                       <ChevronLeft className="h-4 w-4 mr-2" />
                       Back
                     </Button>
-                  )}
-
-                  <div
-                    className={`${currentStep === "contact" ? "ml-auto" : ""}`}
-                  >
                     <Button
                       type="submit"
-                      className="bg-[#6B2F1A] hover:bg-[#5A2814]"
+                      className="bg-[#6B2F1A] hover:bg-[#5A2814] transition-all duration-300 py-2.5 px-5"
                       disabled={isProcessing}
                     >
                       {isProcessing ? (
@@ -1803,38 +1916,33 @@ useEffect(() => {
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                           Processing...
                         </>
-                      ) : currentStep === "payment" ? (
-                        <>
-                          Place Order
-                          <ArrowRight className="h-4 w-4 ml-2" />
-                        </>
                       ) : (
                         <>
-                          Continue
+                          Place Order
                           <ArrowRight className="h-4 w-4 ml-2" />
                         </>
                       )}
                     </Button>
                   </div>
-                </div>
+                )}
               </form>
             </div>
 
             {/* Right Column - Order Summary */}
             <div className="lg:col-span-4">
               <div className="sticky top-8 space-y-6">
-                <Card className="border-gray-200 shadow-sm">
+                <Card className="border-0 rounded-xl overflow-hidden shadow-sm">
                   <CardContent className="p-6">
-                    <h2 className="text-xl font-semibold mb-6 flex items-center text-[#6B2F1A]">
-                      <ShoppingBag className="h-5 w-5 mr-2" />
+                    <h2 className="text-xl font-semibold mb-4 flex items-center text-gray-800">
+                      <ShoppingBag className="h-5 w-5 mr-2 text-[#6B2F1A]" />
                       Order Summary
                     </h2>
 
                     {/* Cart Items */}
-                    <div className="space-y-4 mb-6">
+                    <div className="space-y-4 mb-6 max-h-[320px] overflow-y-auto pr-2">
                       {cart.map((item, index) => (
-                        <div key={index} className="flex gap-4">
-                          <div className="relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden bg-gray-100 border border-gray-200">
+                        <div key={index} className="flex gap-3 py-2">
+                          <div className="relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
                             {item.image ? (
                               <Image
                                 src={
@@ -1857,12 +1965,12 @@ useEffect(() => {
                                 <ShoppingBag className="h-6 w-6 text-gray-400" />
                               </div>
                             )}
-                            <div className="absolute -top-1 -right-1 bg-[#6B2F1A] text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">
+                            <div className="absolute -top-1 -right-1 bg-[#6B2F1A] text-white w-5 h-5 rounded-full flex items-center justify-center text-xs font-medium">
                               {item.quantity || 1}
                             </div>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-medium text-gray-900 truncate">
+                            <h3 className="text-sm font-medium text-gray-900 line-clamp-1">
                               {item.title || "Product"}
                             </h3>
                             {item.variant && (
@@ -1872,7 +1980,7 @@ useEffect(() => {
                                     <Badge
                                       key={i}
                                       variant="outline"
-                                      className="text-xs px-1 py-0 border-[#6B2F1A]/30 text-[#6B2F1A]"
+                                      className="text-xs px-1.5 py-0.5 border-[#6B2F1A]/30 text-[#6B2F1A] rounded-md"
                                     >
                                       {attr.value}
                                     </Badge>
@@ -1924,13 +2032,22 @@ useEffect(() => {
                       ))}
                     </div>
 
-                    <Separator className="bg-gray-200" />
+                    <Separator className="bg-gray-200 my-4" />
 
                     {/* Price Breakdown */}
-                    <div className="py-4 space-y-3">
+                    <div className="space-y-3">
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Subtotal</span>
-                        <span>{formatPrice(subtotal)}</span>
+                        <span className="text-gray-600 flex items-center">
+                          Subtotal ({itemCount}{" "}
+                          {itemCount === 1 ? "item" : "items"})
+                          <span className="inline-flex ml-1 text-gray-400">
+                            <Info
+                              className="h-3.5 w-3.5"
+                              title="Includes 10% tax"
+                            />
+                          </span>
+                        </span>
+                        <span>{formatPrice(subtotalWithTax)}</span>
                       </div>
 
                       <div className="flex justify-between text-sm">
@@ -1944,23 +2061,13 @@ useEffect(() => {
 
                       {/* Display total weight if in INR mode */}
                       {currency === "INR" && totalWeight > 0 && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600 flex items-center">
-                            Total Weight
-                            <span className="inline-flex ml-1 text-gray-400">
-                              <Info className="h-3.5 w-3.5" />
-                            </span>
-                          </span>
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>Total Weight</span>
                           <span>{totalWeight}g</span>
                         </div>
                       )}
 
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Tax (10%)</span>
-                        <span>{formatPrice(tax)}</span>
-                      </div>
-
-                      <Separator className="bg-gray-200" />
+                      <Separator className="bg-gray-200 my-2" />
 
                       <div className="flex justify-between font-medium">
                         <span>Total</span>
@@ -1970,68 +2077,58 @@ useEffect(() => {
                       </div>
                     </div>
 
-                    {/* Weight-based shipping info */}
-                    {currency === "INR" &&
-                      totalWeight > 0 &&
-                      watchShippingMethod === "standard" && (
-                        <div className="mt-4 bg-[#FFF5F1] p-3 rounded-md">
-                          <h3 className="text-sm font-medium text-[#6B2F1A] mb-1 flex items-center">
-                            <Truck className="h-4 w-4 mr-1" />
-                            Weight-based shipping
-                          </h3>
-                          <p className="text-xs text-[#6B2F1A]/80">
-                            Standard shipping cost is calculated based on total
-                            product weight:
-                            <br />- First 500g: ₹50
-                            <br />- Each additional 500g: ₹40
+                    {/* Trust Elements */}
+                    <div className="mt-6 bg-[#F9FAFC] p-4 rounded-lg border border-gray-100">
+                      <h3 className="text-sm font-medium text-gray-700 mb-3">
+                        We Guarantee
+                      </h3>
+                      <div className="space-y-3">
+                        <div className="flex items-start space-x-3">
+                          <Shield className="h-4 w-4 text-[#6B2F1A] mt-0.5" />
+                          <p className="text-xs text-gray-600">
+                            <span className="font-medium">
+                              Secure Checkout:
+                            </span>{" "}
+                            Protected with 256-bit SSL encryption
                           </p>
                         </div>
-                      )}
-
-                    {/* Trust Elements */}
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                      <div className="flex items-start space-x-2 mb-2">
-                        <Shield className="h-4 w-4 text-[#6B2F1A] mt-0.5" />
-                        <p className="text-xs text-gray-600">
-                          <span className="font-medium">Secure Checkout:</span>{" "}
-                          Your information is protected using SSL encryption.
-                        </p>
-                      </div>
-                      <div className="flex items-start space-x-2 mb-2">
-                        <HeartHandshake className="h-4 w-4 text-[#6B2F1A] mt-0.5" />
-                        <p className="text-xs text-gray-600">
-                          <span className="font-medium">
-                            Satisfaction Guaranteed:
-                          </span>{" "}
-                          30-day money back guarantee.
-                        </p>
-                      </div>
-                      <div className="flex items-start space-x-2">
-                        <Wallet className="h-4 w-4 text-[#6B2F1A] mt-0.5" />
-                        <p className="text-xs text-gray-600">
-                          <span className="font-medium">
-                            Flexible Payments:
-                          </span>{" "}
-                          Pay with credit card, UPI, or cash on delivery.
-                        </p>
+                        <div className="flex items-start space-x-3">
+                          <HeartHandshake className="h-4 w-4 text-[#6B2F1A] mt-0.5" />
+                          <p className="text-xs text-gray-600">
+                            <span className="font-medium">
+                              Satisfaction Guaranteed:
+                            </span>{" "}
+                            30-day money back guarantee
+                          </p>
+                        </div>
+                        <div className="flex items-start space-x-3">
+                          <Wallet className="h-4 w-4 text-[#6B2F1A] mt-0.5" />
+                          <p className="text-xs text-gray-600">
+                            <span className="font-medium">
+                              Flexible Payments:
+                            </span>{" "}
+                            Multiple payment options available
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <div className="hidden lg:block">
-                  <Alert className="bg-[#FFF5F1] border-[#fee3d8]">
+                {currentStep === "payment" && (
+                  <Alert className="bg-[#F9FAFC] border-[#6B2F1A]/10 shadow-sm">
                     <div className="flex items-center gap-2">
                       <Lock className="h-4 w-4 text-[#6B2F1A]" />
-                      <AlertTitle className="text-[#6B2F1A]">
-                        Secure Checkout
+                      <AlertTitle className="text-gray-800 text-sm">
+                        Safe & Secure Checkout
                       </AlertTitle>
                     </div>
-                    <AlertDescription className="text-[#6B2F1A]/80 mt-2">
-                      Your transaction is secured with 256-bit SSL encryption
+                    <AlertDescription className="text-gray-600 text-xs mt-2">
+                      Your payment information is processed securely. We do not
+                      store your credit card details.
                     </AlertDescription>
                   </Alert>
-                </div>
+                )}
               </div>
             </div>
           </div>
