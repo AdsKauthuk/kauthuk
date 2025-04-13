@@ -80,7 +80,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
   // Use cart context to access currency preferences
   const { currency, formatPrice, toggleCurrency } = useCart();
   
-  // Safely handle image URLs
+  // Safely handle image URL
   const imageUrl =
     product?.ProductImages && product.ProductImages.length > 0
       ? `https://greenglow.in/kauthuk_test/${product.ProductImages[0].image_path}`
