@@ -208,9 +208,9 @@ const Footer = () => {
                     <Twitter size={16} />
                   </a>
                 )}
-                {companyContact.youtube_url && (
+                {companyContact.pinterest_url && (
                   <a
-                    href={companyContact.youtube_url}
+                    href={companyContact.pinterest_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="YouTube"

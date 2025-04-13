@@ -220,7 +220,7 @@ const Hero = () => {
                       className="text-white/90 text-sm md:text-base leading-relaxed"
                       style={{ fontFamily: 'Poppins, sans-serif' }}
                     >
-                      {slide.description || sampleSlide.description}
+                      {slide.subtitle || sampleSlide.description}
                     </p>
 
                     {/* Button styled to match the golden button in your design */}

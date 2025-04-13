@@ -335,7 +335,7 @@ model CompanyContact {
   facebook_url String? @db.VarChar(255)
   instagram_url String? @db.VarChar(255)
   twitter_url  String? @db.VarChar(255)
-  youtube_url  String? @db.VarChar(255)
+  pinterest_url  String? @db.VarChar(255)
   map_embed_url String? @db.Text
   map_latitude  String? @db.VarChar(50)
   map_longitude String? @db.VarChar(50)

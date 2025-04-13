@@ -55,7 +55,7 @@ const CompanyContactAdmin = () => {
     facebook_url: '',
     instagram_url: '',
     twitter_url: '',
-    youtube_url: '',
+    pinterest_url: '',
     map_embed_url: '',
     map_latitude: '',
     map_longitude: '',
@@ -346,11 +346,11 @@ const CompanyContactAdmin = () => {
               </div>
 
               <div>
-                <Label htmlFor="youtube_url">YouTube URL (Optional)</Label>
+                <Label htmlFor="pinterest_url">Pinterest URL (Optional)</Label>
                 <Input
-                  id="youtube_url"
-                  name="youtube_url"
-                  value={contactInfo.youtube_url || ''}
+                  id="pinterest_url"
+                  name="pinterest_url"
+                  value={contactInfo.pinterest_url || ''}
                   onChange={handleChange}
                   placeholder="https://youtube.com/c/yourbusiness"
                   className="mt-1"
