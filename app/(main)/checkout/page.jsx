@@ -69,6 +69,61 @@ import {
   createRazorpayOrder,
   verifyPayment,
 } from "@/actions/order";
+import { CountrySelect, StateSelect } from "@/components/CountryStateSelects";
+import Head from "next/head";
+
+// Razorpay Script Loader Component
+const RazorpayScript = ({ onLoad }) => {
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // If Razorpay is already loaded, don't load script again
+    if (typeof window !== "undefined" && window.Razorpay) {
+      console.log("Razorpay already loaded");
+      if (onLoad) onLoad();
+      return;
+    }
+
+    const loadScript = () => {
+      console.log("Loading Razorpay script");
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+
+      script.onload = () => {
+        console.log("Razorpay script loaded successfully");
+        if (onLoad) onLoad();
+      };
+
+      script.onerror = (e) => {
+        console.error("Error loading Razorpay script:", e);
+        setError("Failed to load payment service");
+      };
+
+      document.body.appendChild(script);
+    };
+
+    loadScript();
+
+    // Cleanup
+    return () => {
+      // Nothing specific to clean up
+    };
+  }, [onLoad]);
+
+  return (
+    <>
+      {error && (
+        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-600">{error}</p>
+          <p className="text-xs text-red-500 mt-1">
+            You can still complete your order using Cash on Delivery.
+          </p>
+        </div>
+      )}
+    </>
+  );
+};
 
 // Order Schema (with guest checkout support)
 const OrderSchema = z.object({
@@ -382,47 +437,64 @@ const CheckoutPage = () => {
   const initializeRazorpay = async (orderData) => {
     try {
       // Ensure we're running on the client side
-      if (typeof window === 'undefined') return;
-  
-      // Dynamically load Razorpay script if not already loaded
+      if (typeof window === "undefined") return;
+
+      // Check if Razorpay is loaded
       if (!window.Razorpay) {
-        await new Promise((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-          script.onload = resolve;
-          script.onerror = reject;
-          document.body.appendChild(script);
-        });
+        console.log("Trying to load Razorpay script directly...");
+
+        try {
+          await new Promise((resolve, reject) => {
+            const script = document.createElement("script");
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+            script.async = true;
+            script.onload = resolve;
+            script.onerror = reject;
+            document.body.appendChild(script);
+          });
+
+          // Verify Razorpay loaded
+          if (!window.Razorpay) {
+            throw new Error("Razorpay failed to load");
+          }
+        } catch (scriptError) {
+          console.error("Failed to load Razorpay script:", scriptError);
+          toast.error(
+            "Payment service is not available. Please choose Cash on Delivery."
+          );
+          setIsProcessing(false);
+          return;
+        }
       }
-  
+
       // Validate order data
       if (!orderData || !orderData.id || !total) {
-        throw new Error('Invalid order data');
+        throw new Error("Invalid order data");
       }
-  
+
       console.log("Creating Razorpay order for:", orderData);
-  
+
       // Create a Razorpay order on your server
       const razorpayOrderResponse = await createRazorpayOrder({
         amount: Math.round(total * 100), // Convert to smallest currency unit (paise)
         currency: currency,
         orderId: orderData.id,
       });
-  
+
       console.log("Razorpay order creation response:", razorpayOrderResponse);
-  
+
       if (!razorpayOrderResponse.success || !razorpayOrderResponse.orderId) {
         throw new Error(
           razorpayOrderResponse.error || "Failed to create payment order"
         );
       }
-  
+
       // Set up Razorpay options
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_jG2ZIwR6d1w09S",
+        key: "rzp_test_jG2ZIwR6d1w09S", // Hardcode for testing
         amount: Math.round(total * 100), // Convert to paise
         currency: currency,
-        name: "Your Company Name",
+        name: "Kauthuk",
         description: `Order #${orderData.id}`,
         order_id: razorpayOrderResponse.orderId,
         handler: function (response) {
@@ -430,7 +502,7 @@ const CheckoutPage = () => {
           handlePaymentSuccess(response, orderData.id);
         },
         prefill: {
-          name: `${getValues("firstName")} ${getValues("lastName")}`,
+          name: `${getValues("firstName")} ${getValues("lastName")}`.trim(),
           email: getValues("email"),
           contact: getValues("phone"),
         },
@@ -448,17 +520,10 @@ const CheckoutPage = () => {
           },
         },
       };
-  
-      console.log("Initializing Razorpay with options:", {
-        key: options.key,
-        amount: options.amount,
-        currency: options.currency,
-        order_id: options.order_id
-      });
-  
+
       // Create and open Razorpay payment form
       const paymentObject = new window.Razorpay(options);
-  
+
       // Add event listeners for different payment scenarios
       paymentObject.on("payment.failed", function (response) {
         const error = response.error || {};
@@ -466,7 +531,7 @@ const CheckoutPage = () => {
         toast.error(`Payment failed: ${error.description || "Unknown error"}`);
         setIsProcessing(false);
       });
-  
+
       console.log("Opening Razorpay payment form");
       paymentObject.open();
     } catch (error) {
@@ -477,32 +542,34 @@ const CheckoutPage = () => {
       setIsProcessing(false);
     }
   };
-  
+
   const handlePaymentSuccess = async (response, orderId) => {
     try {
       setIsProcessing(true);
       console.log("Payment success response:", response);
-      
+
       // Comprehensive validation of payment response
       const requiredFields = [
-        'razorpay_payment_id', 
-        'razorpay_order_id', 
-        'razorpay_signature'
+        "razorpay_payment_id",
+        "razorpay_order_id",
+        "razorpay_signature",
       ];
-  
-      const missingFields = requiredFields.filter(field => !response[field]);
-      
+
+      const missingFields = requiredFields.filter((field) => !response[field]);
+
       if (missingFields.length > 0) {
         console.error("Missing required payment verification fields", {
-          response, 
-          missingFields
+          response,
+          missingFields,
         });
-        
-        toast.error(`Payment verification failed - missing: ${missingFields.join(', ')}`);
+
+        toast.error(
+          `Payment verification failed - missing: ${missingFields.join(", ")}`
+        );
         setIsProcessing(false);
         return;
       }
-  
+
       // Verify the payment
       const verificationResult = await verifyPayment({
         paymentData: {
@@ -512,40 +579,39 @@ const CheckoutPage = () => {
         },
         orderId: orderId,
       });
-  
+
       if (verificationResult.success) {
         setPaymentSuccess(true);
         clearCart();
         toast.success("Payment successful!");
-        
+
         // Optional: Redirect or show success page
         // router.push('/order-confirmation');
       } else {
-        throw new Error(verificationResult.error || "Payment verification failed");
+        throw new Error(
+          verificationResult.error || "Payment verification failed"
+        );
       }
     } catch (error) {
       console.error("Comprehensive payment verification error:", {
         error,
         errorMessage: error.message,
-        errorStack: error.stack
+        errorStack: error.stack,
       });
-  
+
       toast.error(
-        "Payment verification failed. Please contact support with the following details: " + 
-        (error.message || "Unknown error occurred")
+        "Payment verification failed. Please contact support with the following details: " +
+          (error.message || "Unknown error occurred")
       );
-      
+
       setIsProcessing(false);
     }
   };
-  
-
-  
 
   const processOrder = async (data) => {
     try {
       setIsProcessing(true);
-  
+
       // Combine shipping and billing if sameAsBilling is true
       if (data.sameAsBilling) {
         data.shippingAddress1 = data.billingAddress1;
@@ -555,7 +621,7 @@ const CheckoutPage = () => {
         data.shippingPostalCode = data.billingPostalCode;
         data.shippingCountry = data.billingCountry;
       }
-  
+
       // Prepare the order data
       const orderData = {
         ...data,
@@ -571,17 +637,17 @@ const CheckoutPage = () => {
         paymentStatus: data.paymentMethod === "cod" ? "pending" : "pending",
         orderStatus: "placed",
       };
-  
+
       // Create the order in the database
       const result = await createGuestOrder(orderData);
-  
+
       if (!result.success) {
         throw new Error(result.error || "Failed to create order");
       }
-  
+
       setOrder(result.order);
       setOrderCreated(true);
-  
+
       // Handle different payment methods
       if (data.paymentMethod === "cod") {
         // For COD, mark as success immediately
@@ -590,24 +656,31 @@ const CheckoutPage = () => {
           clearCart();
           setIsProcessing(false);
         }, 1500);
-      } else if (data.paymentMethod === "card" || data.paymentMethod === "upi") {
+      } else if (
+        data.paymentMethod === "card" ||
+        data.paymentMethod === "upi"
+      ) {
         // For online payments, check if Razorpay is available
         if (!razorpayLoaded) {
-          toast.error("Payment service is not available. Please try again later or choose Cash on Delivery.");
+          toast.error(
+            "Payment service is not available. Please try again later or choose Cash on Delivery."
+          );
           setIsProcessing(false);
           return;
         }
-        
+
         try {
           // Initialize Razorpay with a proper order object format
           await initializeRazorpay({
             id: result.order.id,
             total: total,
-            currency: currency
+            currency: currency,
           });
         } catch (paymentError) {
           console.error("Payment initialization error:", paymentError);
-          toast.error("There was an issue with the payment service. Please try again or choose Cash on Delivery.");
+          toast.error(
+            "There was an issue with the payment service. Please try again or choose Cash on Delivery."
+          );
           setIsProcessing(false);
         }
       }
@@ -619,7 +692,6 @@ const CheckoutPage = () => {
       setIsProcessing(false);
     }
   };
-  
 
   const onSubmit = async (data) => {
     try {
@@ -775,11 +847,16 @@ const CheckoutPage = () => {
 
   return (
     <>
-      {/* <Script
-        src="https://checkout.razorpay.com/v1/checkout.js"
-        strategy="lazyOnload"
-        onLoad={() => setRazorpayLoaded(true)}
-      /> */}
+      <RazorpayScript onLoad={() => setRazorpayLoaded(true)} />
+      <Head>
+        <title>Checkout - Kauthuk</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link
+          rel="preconnect"
+          href="https://checkout.razorpay.com"
+          crossOrigin="anonymous"
+        />
+      </Head>
 
       <div className="min-h-screen bg-[#FAFAFA] py-8">
         <div className="container mx-auto px-4">
@@ -1264,27 +1341,23 @@ const CheckoutPage = () => {
                             )}
                           </div>
                           <div>
-                            <Label
-                              htmlFor="billingState"
-                              className="text-sm font-medium text-gray-700 mb-1.5 block"
-                            >
-                              State/Province*
-                            </Label>
-                            <Input
-                              id="billingState"
-                              {...register("billingState")}
-                              placeholder="State"
-                              className={`w-full rounded-lg ${
-                                errors.billingState
-                                  ? "border-red-300 focus:ring-red-500"
-                                  : "border-gray-300 focus:ring-[#6B2F1A]"
-                              }`}
-                            />
-                            {errors.billingState && (
-                              <p className="text-red-500 text-sm mt-1.5">
-                                {errors.billingState.message}
-                              </p>
-                            )}
+                            <div>
+                              <Controller
+                                name="billingState"
+                                control={control}
+                                render={({ field }) => (
+                                  <StateSelect
+                                    id="billingState"
+                                    label="State/Province"
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    countryId={getValues("billingCountry")}
+                                    error={errors.billingState?.message}
+                                    required={true}
+                                  />
+                                )}
+                              />
+                            </div>
                           </div>
                           <div>
                             <Label
@@ -1310,52 +1383,22 @@ const CheckoutPage = () => {
                             )}
                           </div>
                           <div>
-                            <Label
-                              htmlFor="billingCountry"
-                              className="text-sm font-medium text-gray-700 mb-1.5 block"
-                            >
-                              Country*
-                            </Label>
-                            <Controller
-                              name="billingCountry"
-                              control={control}
-                              render={({ field }) => (
-                                <Select
-                                  value={field.value}
-                                  onValueChange={field.onChange}
-                                >
-                                  <SelectTrigger
-                                    className={`w-full rounded-lg ${
-                                      errors.billingCountry
-                                        ? "border-red-300 focus:ring-red-500"
-                                        : "border-gray-300 focus:ring-[#6B2F1A]"
-                                    }`}
-                                  >
-                                    <SelectValue placeholder="Select a country" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="India">India</SelectItem>
-                                    <SelectItem value="United States">
-                                      United States
-                                    </SelectItem>
-                                    <SelectItem value="United Kingdom">
-                                      United Kingdom
-                                    </SelectItem>
-                                    <SelectItem value="Canada">
-                                      Canada
-                                    </SelectItem>
-                                    <SelectItem value="Australia">
-                                      Australia
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              )}
-                            />
-                            {errors.billingCountry && (
-                              <p className="text-red-500 text-sm mt-1.5">
-                                {errors.billingCountry.message}
-                              </p>
-                            )}
+                            <div>
+                              <Controller
+                                name="billingCountry"
+                                control={control}
+                                render={({ field }) => (
+                                  <CountrySelect
+                                    id="billingCountry"
+                                    label="Country"
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    error={errors.billingCountry?.message}
+                                    required={true}
+                                  />
+                                )}
+                              />
+                            </div>
                           </div>
                         </div>
 
@@ -1486,27 +1529,21 @@ const CheckoutPage = () => {
                               )}
                             </div>
                             <div>
-                              <Label
-                                htmlFor="shippingState"
-                                className="text-sm font-medium text-gray-700 mb-1.5 block"
-                              >
-                                State/Province*
-                              </Label>
-                              <Input
-                                id="shippingState"
-                                {...register("shippingState")}
-                                placeholder="State"
-                                className={`w-full rounded-lg ${
-                                  errors.shippingState
-                                    ? "border-red-300 focus:ring-red-500"
-                                    : "border-gray-300 focus:ring-[#6B2F1A]"
-                                }`}
+                              <Controller
+                                name="shippingState"
+                                control={control}
+                                render={({ field }) => (
+                                  <StateSelect
+                                    id="shippingState"
+                                    label="State/Province"
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    countryId={getValues("shippingCountry")}
+                                    error={errors.shippingState?.message}
+                                    required={true}
+                                  />
+                                )}
                               />
-                              {errors.shippingState && (
-                                <p className="text-red-500 text-sm mt-1.5">
-                                  {errors.shippingState.message}
-                                </p>
-                              )}
                             </div>
                             <div>
                               <Label
@@ -1532,54 +1569,20 @@ const CheckoutPage = () => {
                               )}
                             </div>
                             <div>
-                              <Label
-                                htmlFor="shippingCountry"
-                                className="text-sm font-medium text-gray-700 mb-1.5 block"
-                              >
-                                Country*
-                              </Label>
                               <Controller
                                 name="shippingCountry"
                                 control={control}
                                 render={({ field }) => (
-                                  <Select
+                                  <CountrySelect
+                                    id="shippingCountry"
+                                    label="Country"
                                     value={field.value}
-                                    onValueChange={field.onChange}
-                                  >
-                                    <SelectTrigger
-                                      className={`w-full rounded-lg ${
-                                        errors.shippingCountry
-                                          ? "border-red-300 focus:ring-red-500"
-                                          : "border-gray-300 focus:ring-[#6B2F1A]"
-                                      }`}
-                                    >
-                                      <SelectValue placeholder="Select a country" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="India">
-                                        India
-                                      </SelectItem>
-                                      <SelectItem value="United States">
-                                        United States
-                                      </SelectItem>
-                                      <SelectItem value="United Kingdom">
-                                        United Kingdom
-                                      </SelectItem>
-                                      <SelectItem value="Canada">
-                                        Canada
-                                      </SelectItem>
-                                      <SelectItem value="Australia">
-                                        Australia
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                    onChange={field.onChange}
+                                    error={errors.shippingCountry?.message}
+                                    required={true}
+                                  />
                                 )}
                               />
-                              {errors.shippingCountry && (
-                                <p className="text-red-500 text-sm mt-1.5">
-                                  {errors.shippingCountry.message}
-                                </p>
-                              )}
                             </div>
                           </div>
                         </CardContent>

@@ -9,13 +9,17 @@ import { baseEncode } from "@/lib/decode-product-data";
 
 // Email configuration
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || "kauthuk.com",
-  port: 587,
-  secure: false, // true for 465, false for other ports
+  host: "kauthuk.com",           // From EMAIL_HOST
+  port: 587,                     // Standard SMTP port for TLS
+  secure: false,                 // false for TLS on port 587
   auth: {
-    user: process.env.EMAIL_USERNAME || "admin@kauthuk.com",
-    pass: process.env.EMAIL_PASSWORD || "anoop123456",
+    user: "admin@kauthuk.com",   // From EMAIL_USERNAME
+    pass: "anoop123456",         // From EMAIL_PASSWORD
   },
+  // Add timeout settings to improve connection reliability
+  connectionTimeout: 10000,      // 10 seconds
+  greetingTimeout: 10000,
+  socketTimeout: 15000,
 });
 
 // Helper function to send order confirmation email
@@ -133,7 +137,7 @@ async function sendOrderConfirmationEmail(order, user, items) {
 
     // Send the email
     const mailOptions = {
-      from: '"Kauthuk Shop" <admin@kauthuk.com>',
+      from: '"Kauthuk Shop" <admin@kauthuk.com>',  // Match the EMAIL_USERNAME
       to: user.email,
       subject: `Order Confirmation #${order.id} - Kauthuk`,
       html: emailHtml,
@@ -524,37 +528,98 @@ export async function createGuestOrder(orderData) {
       // Save the billing address
       let billingAddressId = null;
 
-      // Fixed: better handling for country and state IDs
+      // Improved handling for country and state IDs
       if (userId) {
-        // Try to find the country and state IDs
+        // Country lookup
         let countryId = 1; // Default to India
 
         try {
-          const country = await tx.country.findFirst({
-            where: {
-              country_enName: { contains: orderData.billingCountry },
-            },
-          });
+          // Check if orderData.billingCountry is an ID (from select dropdown)
+          if (!isNaN(parseInt(orderData.billingCountry))) {
+            // Use findUnique when we have an ID for better performance
+            const country = await tx.country.findUnique({
+              where: {
+                id: parseInt(orderData.billingCountry)
+              }
+            });
+            
+            if (country) {
+              countryId = country.id;
+            }
+          } 
+          // If it's not an ID, try to find by name
+          else if (orderData.billingCountry) {
+            const country = await tx.country.findFirst({
+              where: {
+                country_enName: orderData.billingCountry
+              }
+            });
 
-          if (country) {
-            countryId = country.id;
+            if (!country) {
+              // Try partial match as fallback
+              const countryPartial = await tx.country.findFirst({
+                where: {
+                  country_enName: {
+                    contains: orderData.billingCountry
+                  }
+                }
+              });
+              
+              if (countryPartial) {
+                countryId = countryPartial.id;
+              }
+            } else {
+              countryId = country.id;
+            }
           }
         } catch (err) {
           console.error("Error finding country:", err);
         }
 
+        // State lookup
         let stateId = 1; // Default state
 
         try {
-          const state = await tx.states.findFirst({
-            where: {
-              country_id: countryId,
-              state_en: { contains: orderData.billingState, mode: "insensitive" },
-            },
-          });
+          // Check if orderData.billingState is an ID
+          if (!isNaN(parseInt(orderData.billingState))) {
+            // Use findUnique for direct ID lookup
+            const state = await tx.states.findUnique({
+              where: {
+                id: parseInt(orderData.billingState)
+              }
+            });
+            
+            if (state) {
+              stateId = state.id;
+            }
+          } 
+          // If it's not an ID, try to find by name
+          else if (orderData.billingState) {
+            // Try exact match first - findFirst is still needed here as we're searching by composite criteria
+            const state = await tx.states.findFirst({
+              where: {
+                country_id: countryId,
+                state_en: orderData.billingState
+              }
+            });
 
-          if (state) {
-            stateId = state.id;
+            if (!state) {
+              // Try partial match without the problematic mode parameter
+              const statePartial = await tx.states.findFirst({
+                where: {
+                  country_id: countryId,
+                  state_en: {
+                    contains: orderData.billingState
+                  }
+                }
+              });
+              
+              if (statePartial) {
+                stateId = statePartial.id;
+              }
+            } else {
+              stateId = state.id;
+            }
           }
         } catch (err) {
           console.error("Error finding state:", err);
@@ -580,35 +645,93 @@ export async function createGuestOrder(orderData) {
 
         // If shipping address is different, save it too
         if (!orderData.sameAsBilling) {
-          // Get country and state IDs for shipping
+          // Shipping country lookup
           let shippingCountryId = countryId;
 
           try {
-            const country = await tx.country.findFirst({
-              where: {
-                country_enName: { contains: orderData.shippingCountry, mode: "insensitive" },
-              },
-            });
+            // Check if orderData.shippingCountry is an ID
+            if (!isNaN(parseInt(orderData.shippingCountry))) {
+              const country = await tx.country.findUnique({
+                where: {
+                  id: parseInt(orderData.shippingCountry)
+                }
+              });
+              
+              if (country) {
+                shippingCountryId = country.id;
+              }
+            } 
+            // If it's not an ID, try to find by name
+            else if (orderData.shippingCountry) {
+              const country = await tx.country.findFirst({
+                where: {
+                  country_enName: orderData.shippingCountry
+                }
+              });
 
-            if (country) {
-              shippingCountryId = country.id;
+              if (!country) {
+                // Try partial match as fallback
+                const countryPartial = await tx.country.findFirst({
+                  where: {
+                    country_enName: {
+                      contains: orderData.shippingCountry
+                    }
+                  }
+                });
+                
+                if (countryPartial) {
+                  shippingCountryId = countryPartial.id;
+                }
+              } else {
+                shippingCountryId = country.id;
+              }
             }
           } catch (err) {
             console.error("Error finding shipping country:", err);
           }
 
+          // Shipping state lookup
           let shippingStateId = stateId;
 
           try {
-            const state = await tx.states.findFirst({
-              where: {
-                country_id: shippingCountryId,
-                state_en: { contains: orderData.shippingState, mode: "insensitive" },
-              },
-            });
+            // Check if orderData.shippingState is an ID
+            if (!isNaN(parseInt(orderData.shippingState))) {
+              const state = await tx.states.findUnique({
+                where: {
+                  id: parseInt(orderData.shippingState)
+                }
+              });
+              
+              if (state) {
+                shippingStateId = state.id;
+              }
+            } 
+            // If it's not an ID, try to find by name
+            else if (orderData.shippingState) {
+              const state = await tx.states.findFirst({
+                where: {
+                  country_id: shippingCountryId,
+                  state_en: orderData.shippingState
+                }
+              });
 
-            if (state) {
-              shippingStateId = state.id;
+              if (!state) {
+                // Try partial match without the mode parameter
+                const statePartial = await tx.states.findFirst({
+                  where: {
+                    country_id: shippingCountryId,
+                    state_en: {
+                      contains: orderData.shippingState
+                    }
+                  }
+                });
+                
+                if (statePartial) {
+                  shippingStateId = statePartial.id;
+                }
+              } else {
+                shippingStateId = state.id;
+              }
             }
           } catch (err) {
             console.error("Error finding shipping state:", err);
@@ -646,7 +769,7 @@ export async function createGuestOrder(orderData) {
         }
       };
 
-      // Create the order - FIXED: removed billing_address_id field which doesn't exist in schema
+      // Create the order
       const order = await tx.order.create({
         data: {
           user_id: userId,
@@ -742,14 +865,19 @@ export async function createGuestOrder(orderData) {
 
     // Send order confirmation email
     if (result.userInfo && result.userInfo.email) {
-      await sendOrderConfirmationEmail(result.order, result.userInfo, result.items);
+      try {
+        await sendOrderConfirmationEmail(result.order, result.userInfo, result.items);
+      } catch (emailError) {
+        console.error("Error sending order confirmation email:", emailError);
+        // Continue processing despite email error
+      }
     }
 
     return {
       success: true,
       order: result.order,
       userId: result.userId,
-      emailSent: true,
+      emailSent: result.userInfo && result.userInfo.email ? true : false,
     };
   } catch (error) {
     console.error("Error creating order:", error);
@@ -765,36 +893,41 @@ export async function createGuestOrder(orderData) {
  * @param {Object} data - Order data including amount, currency and order ID
  * @returns {Promise<Object>} Razorpay order details
  */
+// In your server action (order.js)
 export async function createRazorpayOrder(data) {
   try {
-    // Validate data
-    if (!data.amount) {
+    // Call the actual Razorpay API to create an order
+    const response = await fetch('https://api.razorpay.com/v1/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${Buffer.from(`${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_KEY_SECRET}`).toString('base64')}`
+      },
+      body: JSON.stringify({
+        amount: data.amount,
+        currency: data.currency,
+        receipt: `receipt_${data.orderId}`,
+        notes: {
+          order_id: data.orderId
+        }
+      })
+    });
+    
+    const responseData = await response.json();
+    
+    if (response.ok) {
       return {
-        success: false,
-        error: "Order amount is required",
+        success: true,
+        orderId: responseData.id // This should be like "order_123456789"
       };
+    } else {
+      throw new Error(responseData.error?.description || 'Failed to create Razorpay order');
     }
-
-    // In a real implementation, you would make an API call to Razorpay
-    // For this implementation, we'll simulate a successful response
-
-    // Create a simulated Razorpay order ID
-    const orderId = `rzp_order_${Date.now()}_${Math.random()
-      .toString(36)
-      .substring(2, 7)}`;
-
-    return {
-      success: true,
-      orderId,
-      amount: parseFloat(data.amount),
-      currency: data.currency || "INR",
-      receipt: `receipt_${data.orderId || Date.now()}`,
-    };
   } catch (error) {
-    console.error("Error creating Razorpay order:", error);
+    console.error('Error creating Razorpay order:', error);
     return {
       success: false,
-      error: error.message || "Failed to create payment order",
+      error: error.message
     };
   }
 }
