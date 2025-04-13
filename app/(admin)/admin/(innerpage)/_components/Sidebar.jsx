@@ -19,6 +19,7 @@ import {
   Package,
   Palette,
   Activity,
+  Images,
   Box,
   Star,
   Phone,
@@ -89,6 +90,7 @@ const iconMap = {
   Phone: <Phone size={18} />,
   Menu: <MenuIcon size={18} />,
   Activity: <Activity size={18} />,
+  Images: <Images size={18} />,
 };
 
 // Component to render the appropriate icon
