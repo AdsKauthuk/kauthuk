@@ -400,7 +400,7 @@ const ProductDetails = () => {
 
   return (
     <>
-      <div className="container mx-auto px-4 py-6">
+      <div className="container px-4 py-6">
         {/* Breadcrumb */}
         <div className="mb-4">
           <Breadcrumb className="text-xs text-gray-500">
@@ -534,18 +534,7 @@ const ProductDetails = () => {
               </div>
 
               <div className="flex flex-wrap items-center gap-2 mt-2">
-                <Badge
-                  variant={
-                    product.status === "active" ? "default" : "secondary"
-                  }
-                  className={
-                    product.status === "active"
-                      ? "bg-[#6B2F1A] hover:bg-[#5A2814] font-poppins"
-                      : "font-poppins"
-                  }
-                >
-                  {product.status === "active" ? "Active" : "Inactive"}
-                </Badge>
+                
 
                 {product.hasVariants && (
                   <Badge
@@ -559,61 +548,8 @@ const ProductDetails = () => {
               </div>
             </div>
 
-            {/* Price section */}
-            <div className="flex flex-col">
-              <div className="flex items-end gap-2">
-                <div className="flex items-center">
-                  <IndianRupee className="h-5 w-5 text-[#6B2F1A]" />
-                  <span className="text-2xl md:text-3xl font-bold text-[#6B2F1A]">
-                    {formatPrice(currentPrice)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Stock status */}
-              <div className="mt-2 flex items-center font-poppins">
-                {currentStockStatus === "yes" && currentStock > 0 ? (
-                  <>
-                    <span className="inline-block w-3 h-3 rounded-full bg-green-500 mr-2"></span>
-                    <span className="text-green-700 font-medium">
-                      In Stock{" "}
-                      {currentStock > 0 && `(${currentStock} available)`}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <span className="inline-block w-3 h-3 rounded-full bg-red-500 mr-2"></span>
-                    <span className="text-red-700 font-medium">
-                      Out of Stock
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Product highlights - Quick overview */}
-            {product.description && (
-              <div className="bg-[#FFF5F1] rounded-lg p-4 mt-2">
-                <h3 className="font-playfair text-sm font-medium text-[#6B2F1A] mb-2">
-                  Product Details
-                </h3>
-                <div
-                  className="font-poppins text-sm text-gray-700"
-                  dangerouslySetInnerHTML={{
-                    __html:
-                      product.description.length > 300
-                        ? `${product.description.slice(
-                            0,
-                            300
-                          )}... <a href="#product-details" class="text-[#6B2F1A] font-medium">Read more</a>`
-                        : product.description,
-                  }}
-                />
-              </div>
-            )}
-
-            {/* Social sharing buttons - UPDATED */}
-            <div className="flex items-center gap-2 pt-2">
+{/* Social sharing buttons - UPDATED */}
+<div className="flex items-center gap-2 pt-2">
               <span className="text-sm text-gray-500 font-poppins">Share:</span>
               <div className="flex gap-2">
                 <button
@@ -676,6 +612,59 @@ const ProductDetails = () => {
               </div>
             </div>
 
+            
+
+            {/* Product highlights - Quick overview */}
+            {product.description && (
+              <div className="bg-[#FFF5F1] rounded-lg p-1 mt-2">
+                
+                <div
+                  className="font-poppins text-sm text-gray-700"
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      product.description.length > 300
+                        ? `${product.description.slice(
+                            0,
+                            300
+                          )}... <a href="#product-details" class="text-[#6B2F1A] font-medium">Read more</a>`
+                        : product.description,
+                  }}
+                />
+              </div>
+            )}
+
+            
+{/* Price section */}
+<div className="flex flex-col">
+              <div className="flex items-end gap-2">
+                <div className="flex items-center">
+                  <IndianRupee className="h-5 w-5 text-[#6B2F1A]" />
+                  <span className="text-2xl md:text-3xl font-bold text-[#6B2F1A]">
+                    {formatPrice(currentPrice)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Stock status */}
+              <div className="mt-2 flex items-center font-poppins">
+                {currentStockStatus === "yes" && currentStock > 0 ? (
+                  <>
+                    <span className="inline-block w-3 h-3 rounded-full bg-green-500 mr-2"></span>
+                    <span className="text-green-700 font-medium">
+                      In Stock{" "}
+                      {currentStock > 0 && `(${currentStock} available)`}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="inline-block w-3 h-3 rounded-full bg-red-500 mr-2"></span>
+                    <span className="text-red-700 font-medium">
+                      Out of Stock
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
             <Separator className="bg-[#6B2F1A]/10" />
 
             {/* Variant selection */}
@@ -1347,7 +1336,7 @@ const ProductDetails = () => {
       // Loading skeleton for the product details page - modernized
       const ProductDetailsSkeleton = () => {
         return (
-          <div className="container mx-auto px-4 py-6">
+          <div className="container px-4 py-6">
             <div className="mb-4">
               <div className="h-3 w-64 bg-gray-200 rounded animate-pulse"></div>
             </div>
