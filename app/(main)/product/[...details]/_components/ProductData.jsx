@@ -941,14 +941,7 @@ const ProductDetails = () => {
               <div className="mt-10" id="product-details">
                 <Tabs defaultValue="description" className="w-full">
                   <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 mb-5">
-                    <TabsTrigger
-                      value="description"
-                      className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-[#6B2F1A] data-[state=active]:shadow-none py-2.5 data-[state=active]:text-[#6B2F1A] font-poppins text-sm"
-                    >
-                      Description
-                    </TabsTrigger>
-      
-                    {product.highlights && (
+                  {product.highlights && (
                       <TabsTrigger
                         value="highlights"
                         className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-[#6B2F1A] data-[state=active]:shadow-none py-2.5 data-[state=active]:text-[#6B2F1A] font-poppins text-sm"
@@ -956,6 +949,15 @@ const ProductDetails = () => {
                         Highlights
                       </TabsTrigger>
                     )}
+
+                    <TabsTrigger
+                      value="description"
+                      className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-[#6B2F1A] data-[state=active]:shadow-none py-2.5 data-[state=active]:text-[#6B2F1A] font-poppins text-sm"
+                    >
+                      Description
+                    </TabsTrigger>
+      
+                    
       
                     {product.terms_condition && (
                       <TabsTrigger
@@ -978,20 +980,6 @@ const ProductDetails = () => {
                       )}
                   </TabsList>
       
-                  <TabsContent value="description" className="mt-0">
-                    <Card className="border-[#6B2F1A]/10 shadow-sm">
-                      <CardContent className="p-6">
-                        <div className="prose max-w-none font-poppins">
-                          <div
-                            dangerouslySetInnerHTML={{
-                              __html: product.description || "",
-                            }}
-                          />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-      
                   {product.highlights && (
                     <TabsContent value="highlights" className="mt-0">
                       <Card className="border-[#6B2F1A]/10 shadow-sm">
@@ -1007,6 +995,22 @@ const ProductDetails = () => {
                       </Card>
                     </TabsContent>
                   )}
+
+                  <TabsContent value="description" className="mt-0">
+                    <Card className="border-[#6B2F1A]/10 shadow-sm">
+                      <CardContent className="p-6">
+                        <div className="prose max-w-none font-poppins">
+                          <div
+                            dangerouslySetInnerHTML={{
+                              __html: product.description || "",
+                            }}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+      
+                  
       
                   {product.terms_condition && (
                     <TabsContent value="terms" className="mt-0">
