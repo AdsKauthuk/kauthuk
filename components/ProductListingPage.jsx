@@ -50,6 +50,7 @@ import {
 import { getProducts } from "@/actions/product";
 import { getCategories } from "@/actions/category"; // Assuming you have this action
 import { toast } from "sonner";
+import { useCart } from "@/providers/CartProvider";
 
 const shimmer = (w, h) => `
 <svg width="${w}" height="${h}" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
