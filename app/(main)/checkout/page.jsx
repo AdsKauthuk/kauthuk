@@ -381,24 +381,30 @@ const CheckoutPage = () => {
 
   const initializeRazorpay = async (orderData) => {
     try {
-      if (typeof window === "undefined") {
-        return; // Exit if running server-side
+      // Ensure we're running on the client side
+      if (typeof window === 'undefined') return;
+  
+      // Dynamically load Razorpay script if not already loaded
+      if (!window.Razorpay) {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+          script.onload = resolve;
+          script.onerror = reject;
+          document.body.appendChild(script);
+        });
       }
   
-      // First, ensure Razorpay script is loaded
-      if (!window.Razorpay) {
-        toast.error(
-          "Payment service is not available. Please try again later."
-        );
-        setIsProcessing(false);
-        return;
+      // Validate order data
+      if (!orderData || !orderData.id || !total) {
+        throw new Error('Invalid order data');
       }
   
       console.log("Creating Razorpay order for:", orderData);
   
       // Create a Razorpay order on your server
       const razorpayOrderResponse = await createRazorpayOrder({
-        amount: total,
+        amount: Math.round(total * 100), // Convert to smallest currency unit (paise)
         currency: currency,
         orderId: orderData.id,
       });
@@ -414,9 +420,9 @@ const CheckoutPage = () => {
       // Set up Razorpay options
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_jG2ZIwR6d1w09S",
-        amount: Math.round(total * 100), // Convert to smallest currency unit
+        amount: Math.round(total * 100), // Convert to paise
         currency: currency,
-        name: "Kauthuk",
+        name: "Your Company Name",
         description: `Order #${orderData.id}`,
         order_id: razorpayOrderResponse.orderId,
         handler: function (response) {
@@ -472,16 +478,27 @@ const CheckoutPage = () => {
     }
   };
   
-
   const handlePaymentSuccess = async (response, orderId) => {
     try {
       setIsProcessing(true);
       console.log("Payment success response:", response);
       
-      // Make sure we have all required fields from Razorpay
-      if (!response.razorpay_payment_id || !response.razorpay_order_id || !response.razorpay_signature) {
-        console.error("Missing required payment verification fields", response);
-        toast.error("Payment verification failed - missing required data");
+      // Comprehensive validation of payment response
+      const requiredFields = [
+        'razorpay_payment_id', 
+        'razorpay_order_id', 
+        'razorpay_signature'
+      ];
+  
+      const missingFields = requiredFields.filter(field => !response[field]);
+      
+      if (missingFields.length > 0) {
+        console.error("Missing required payment verification fields", {
+          response, 
+          missingFields
+        });
+        
+        toast.error(`Payment verification failed - missing: ${missingFields.join(', ')}`);
         setIsProcessing(false);
         return;
       }
@@ -500,15 +517,30 @@ const CheckoutPage = () => {
         setPaymentSuccess(true);
         clearCart();
         toast.success("Payment successful!");
+        
+        // Optional: Redirect or show success page
+        // router.push('/order-confirmation');
       } else {
         throw new Error(verificationResult.error || "Payment verification failed");
       }
     } catch (error) {
-      console.error("Payment verification error:", error);
-      toast.error("Payment verification failed. Please contact support.");
+      console.error("Comprehensive payment verification error:", {
+        error,
+        errorMessage: error.message,
+        errorStack: error.stack
+      });
+  
+      toast.error(
+        "Payment verification failed. Please contact support with the following details: " + 
+        (error.message || "Unknown error occurred")
+      );
+      
       setIsProcessing(false);
     }
   };
+  
+
+  
 
   const processOrder = async (data) => {
     try {
@@ -743,11 +775,11 @@ const CheckoutPage = () => {
 
   return (
     <>
-      <Script
+      {/* <Script
         src="https://checkout.razorpay.com/v1/checkout.js"
         strategy="lazyOnload"
         onLoad={() => setRazorpayLoaded(true)}
-      />
+      /> */}
 
       <div className="min-h-screen bg-[#FAFAFA] py-8">
         <div className="container mx-auto px-4">
