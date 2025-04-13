@@ -35,6 +35,7 @@ import {
   CheckCircleIcon,
   Globe2Icon,
   LoaderIcon,
+  FileTextIcon,
 } from "lucide-react";
 
 const CompanyContactAdmin = () => {
@@ -56,6 +57,7 @@ const CompanyContactAdmin = () => {
     instagram_url: '',
     twitter_url: '',
     pinterest_url: '',
+    description: '',
     map_embed_url: '',
     map_latitude: '',
     map_longitude: '',
@@ -143,7 +145,7 @@ const CompanyContactAdmin = () => {
 
         <Tabs defaultValue="address" className="w-full">
           <div className="px-6 pt-4 border-b border-gray-200 dark:border-gray-800">
-            <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:grid-cols-4 h-auto gap-2 sm:gap-4 bg-transparent">
+            <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:grid-cols-5 h-auto gap-2 sm:gap-4 bg-transparent">
               <TabsTrigger 
                 value="address" 
                 className="data-[state=active]:bg-blue-100 dark:data-[state=active]:bg-blue-900/30 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-300 rounded-md"
@@ -164,6 +166,13 @@ const CompanyContactAdmin = () => {
               >
                 <LinkIcon className="h-4 w-4 mr-1" />
                 Social Media
+              </TabsTrigger>
+              <TabsTrigger 
+                value="description" 
+                className="data-[state=active]:bg-blue-100 dark:data-[state=active]:bg-blue-900/30 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-300 rounded-md"
+              >
+                <FileTextIcon className="h-4 w-4 mr-1" />
+                Description
               </TabsTrigger>
               <TabsTrigger 
                 value="map" 
@@ -352,9 +361,27 @@ const CompanyContactAdmin = () => {
                   name="pinterest_url"
                   value={contactInfo.pinterest_url || ''}
                   onChange={handleChange}
-                  placeholder="https://youtube.com/c/yourbusiness"
+                  placeholder="https://pinterest.com/yourbusiness"
                   className="mt-1"
                 />
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Description Tab */}
+          <TabsContent value="description" className="p-6 pt-4">
+            <div className="grid grid-cols-1 gap-6">
+              <div>
+                <Label htmlFor="description">Company Description</Label>
+                <Textarea
+                  id="description"
+                  name="description"
+                  value={contactInfo.description || ''}
+                  onChange={handleChange}
+                  placeholder="Enter a brief description of your company, mission statement, or any additional information you want to share with your customers..."
+                  className="mt-1 min-h-[200px] resize-y"
+                />
+               
               </div>
             </div>
           </TabsContent>

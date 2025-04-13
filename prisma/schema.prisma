@@ -14,14 +14,14 @@ datasource db {
 }
 
 model Category {
-  id          Int         @id @default(autoincrement())
-  catName     String      @unique @db.VarChar(100)
-  showHome    Statuses    @default(active)
-  description String?     @db.Text
-  image       String?     @db.VarChar(255)
-  banner      String?     @db.VarChar(255)  // Added banner field
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id          Int      @id @default(autoincrement())
+  catName     String   @unique @db.VarChar(100)
+  showHome    Statuses @default(active)
+  description String?  @db.Text
+  image       String?  @db.VarChar(255)
+  banner      String?  @db.VarChar(255) // Added banner field
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   SubCategory SubCategory[]
 }
@@ -32,7 +32,7 @@ model SubCategory {
   subcategory String   @db.VarChar(100)
   description String?  @db.Text
   image       String?  @db.VarChar(255)
-  banner      String?  @db.VarChar(255)  // Added banner field
+  banner      String?  @db.VarChar(255) // Added banner field
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -64,7 +64,7 @@ model Product {
   title            String   @db.VarChar(255)
   description      String   @db.Text
   status           Statuses @default(active)
-  featured         YesNo    @default(no)  // Added featured field
+  featured         YesNo    @default(no) // Added featured field
   hasVariants      Boolean  @default(false)
   base_price       Decimal  @db.Decimal(10, 2)
   price_rupees     Decimal  @db.Decimal(10, 2)
@@ -230,38 +230,38 @@ model Slider {
 
 // Menu model to represent each menu item in the sidebar
 model Menu {
-  id           Int       @id @default(autoincrement())
-  name         String    @unique @db.VarChar(100) // Unique identifier for the menu (e.g., "products", "orders")
-  display_name String    @db.VarChar(100) // Display name (e.g., "Products", "Orders")
-  path         String    @db.VarChar(255) // URL path (e.g., "/admin/product")
-  icon         String?   @db.VarChar(50)  // Icon name (e.g., "Package")
-  parent_id    Int?      // For submenu items, reference to parent menu
-  sort_order   Int       @default(0)      // For ordering the menu items
-  is_submenu   Boolean   @default(false)  // Whether this is a submenu
-  is_header    Boolean   @default(false)  // Whether this is a section header
-  status       Statuses  @default(active) // Menu can be disabled globally
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id           Int      @id @default(autoincrement())
+  name         String   @unique @db.VarChar(100) // Unique identifier for the menu (e.g., "products", "orders")
+  display_name String   @db.VarChar(100) // Display name (e.g., "Products", "Orders")
+  path         String   @db.VarChar(255) // URL path (e.g., "/admin/product")
+  icon         String?  @db.VarChar(50) // Icon name (e.g., "Package")
+  parent_id    Int? // For submenu items, reference to parent menu
+  sort_order   Int      @default(0) // For ordering the menu items
+  is_submenu   Boolean  @default(false) // Whether this is a submenu
+  is_header    Boolean  @default(false) // Whether this is a section header
+  status       Statuses @default(active) // Menu can be disabled globally
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Self-relation for parent-child menu structure
   parent   Menu?  @relation("MenuHierarchy", fields: [parent_id], references: [id], onDelete: SetNull)
   children Menu[] @relation("MenuHierarchy")
-  
+
   // Relation to permissions
   MenuPermissions MenuPermission[]
 }
 
 // Menu permissions model to handle role-based access control
 model MenuPermission {
-  id          Int           @id @default(autoincrement())
-  menu_id     Int
-  admin_id    Int
-  can_view    Boolean       @default(true)  // Permission to see the menu
-  can_create  Boolean       @default(false) // Permission to create new items
-  can_edit    Boolean       @default(false) // Permission to edit existing items
-  can_delete  Boolean       @default(false) // Permission to delete items
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id         Int      @id @default(autoincrement())
+  menu_id    Int
+  admin_id   Int
+  can_view   Boolean  @default(true) // Permission to see the menu
+  can_create Boolean  @default(false) // Permission to create new items
+  can_edit   Boolean  @default(false) // Permission to edit existing items
+  can_delete Boolean  @default(false) // Permission to delete items
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   Menu  Menu  @relation(fields: [menu_id], references: [id], onDelete: Cascade)
   Admin Admin @relation(fields: [admin_id], references: [id], onDelete: Cascade)
@@ -271,13 +271,13 @@ model MenuPermission {
 
 // Update Admin model to include the relation to MenuPermission
 model Admin {
-  id              Int             @id @default(autoincrement())
-  username        String          @unique @db.VarChar(255)
-  password        String          @db.VarChar(255)
-  user_type       AdminEnum       @default(admin)
-  status          Statuses        @default(active)
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  id              Int              @id @default(autoincrement())
+  username        String           @unique @db.VarChar(255)
+  password        String           @db.VarChar(255)
+  user_type       AdminEnum        @default(admin)
+  status          Statuses         @default(active)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
   MenuPermissions MenuPermission[]
 }
 
@@ -300,18 +300,18 @@ model Newsletter {
 
 // User model with enhanced contact information
 model User {
-  id              Int      @id @default(autoincrement())
-  name            String   @db.VarChar(255)
-  email           String   @unique(map: "user_email") @db.VarChar(191)
-  password        String   @db.VarChar(255)
-  mobile          String?  @db.VarChar(20)
-  mobile_verified YesNo    @default(no)
-  profile_picture String?  @db.VarChar(255) // User profile image
-  status          Statuses @default(active)
-  newsletter_opt_in Boolean @default(false)  // Whether user has opted in to newsletter
-  last_login      DateTime? 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                Int       @id @default(autoincrement())
+  name              String    @db.VarChar(255)
+  email             String    @unique(map: "user_email") @db.VarChar(191)
+  password          String    @db.VarChar(255)
+  mobile            String?   @db.VarChar(20)
+  mobile_verified   YesNo     @default(no)
+  profile_picture   String?   @db.VarChar(255) // User profile image
+  status            Statuses  @default(active)
+  newsletter_opt_in Boolean   @default(false) // Whether user has opted in to newsletter
+  last_login        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   DeliveryAddresses DeliveryAddress[]
   BillingAddresses  BillingAddress[]
@@ -321,21 +321,22 @@ model User {
 
 // Company Contact Information model
 model CompanyContact {
-  id           Int     @id @default(autoincrement())
+  id            Int     @id @default(autoincrement())
   address_line1 String  @db.Text
   address_line2 String? @db.Text
-  city         String  @db.VarChar(100)
-  state        String  @db.VarChar(100)
-  postal_code  String  @db.VarChar(20)
-  country      String  @db.VarChar(100)
-  email        String  @db.VarChar(191)
-  phone        String  @db.VarChar(20)
-  alt_phone    String? @db.VarChar(20)
-  whatsapp     String? @db.VarChar(20)
-  facebook_url String? @db.VarChar(255)
+  city          String  @db.VarChar(100)
+  state         String  @db.VarChar(100)
+  postal_code   String  @db.VarChar(20)
+  country       String  @db.VarChar(100)
+  email         String  @db.VarChar(191)
+  phone         String  @db.VarChar(20)
+  alt_phone     String? @db.VarChar(20)
+  whatsapp      String? @db.VarChar(20)
+  description   String? @db.Text
+  facebook_url  String? @db.VarChar(255)
   instagram_url String? @db.VarChar(255)
-  twitter_url  String? @db.VarChar(255)
-  pinterest_url  String? @db.VarChar(255)
+  twitter_url   String? @db.VarChar(255)
+  pinterest_url String? @db.VarChar(255)
   map_embed_url String? @db.Text
   map_latitude  String? @db.VarChar(50)
   map_longitude String? @db.VarChar(50)
@@ -376,22 +377,22 @@ model States {
 
 // Enhanced Delivery Address model
 model DeliveryAddress {
-  id         Int      @id @default(autoincrement())
-  user_id    Int
-  name       String   @db.VarChar(255)
-  address    String   @db.Text
-  apartment  String?  @db.VarChar(255) // Apt, Suite, etc.
-  city       String   @db.VarChar(100)
-  country_id Int
-  state_id   Int
-  pin        String   @db.VarChar(20)
-  phone      String   @db.VarChar(20)
-  alt_phone  String?  @db.VarChar(20) // Alternative phone
-  landmarks  String?  @db.VarChar(255) // Nearby landmarks for delivery
-  is_default Boolean  @default(false)
-  address_type String? @db.VarChar(50) // Home, Office, etc.
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  user_id      Int
+  name         String   @db.VarChar(255)
+  address      String   @db.Text
+  apartment    String?  @db.VarChar(255) // Apt, Suite, etc.
+  city         String   @db.VarChar(100)
+  country_id   Int
+  state_id     Int
+  pin          String   @db.VarChar(20)
+  phone        String   @db.VarChar(20)
+  alt_phone    String?  @db.VarChar(20) // Alternative phone
+  landmarks    String?  @db.VarChar(255) // Nearby landmarks for delivery
+  is_default   Boolean  @default(false)
+  address_type String?  @db.VarChar(50) // Home, Office, etc.
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   User    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
   Country Country @relation(fields: [country_id], references: [id])
@@ -400,23 +401,23 @@ model DeliveryAddress {
 
 // Enhanced Billing Address model
 model BillingAddress {
-  id         Int      @id @default(autoincrement())
-  user_id    Int
-  name       String   @db.VarChar(255)
-  address    String   @db.Text
-  apartment  String?  @db.VarChar(255) // Apt, Suite, etc.
-  city       String   @db.VarChar(100)
-  country_id Int
-  state_id   Int
-  pin        String   @db.VarChar(20)
-  phone      String   @db.VarChar(20)
-  alt_phone  String?  @db.VarChar(20) // Alternative phone
-  company_name String? @db.VarChar(255) // For business billing
-  gstin      String?  @db.VarChar(50) // GST Number for Indian businesses
-  tax_id     String?  @db.VarChar(50) // Tax ID for international businesses
-  is_default Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  user_id      Int
+  name         String   @db.VarChar(255)
+  address      String   @db.Text
+  apartment    String?  @db.VarChar(255) // Apt, Suite, etc.
+  city         String   @db.VarChar(100)
+  country_id   Int
+  state_id     Int
+  pin          String   @db.VarChar(20)
+  phone        String   @db.VarChar(20)
+  alt_phone    String?  @db.VarChar(20) // Alternative phone
+  company_name String?  @db.VarChar(255) // For business billing
+  gstin        String?  @db.VarChar(50) // GST Number for Indian businesses
+  tax_id       String?  @db.VarChar(50) // Tax ID for international businesses
+  is_default   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   User    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
   Country Country @relation(fields: [country_id], references: [id])
@@ -491,17 +492,17 @@ model ShippingDetail {
 
 // Contact Form Submissions model
 model ContactSubmission {
-  id         Int      @id @default(autoincrement())
-  name       String   @db.VarChar(255)
-  email      String   @db.VarChar(255)
-  phone      String?  @db.VarChar(20)
-  subject    String?  @db.VarChar(255)
-  message    String   @db.Text
-  status     ContactStatus @default(new)
-  responded  Boolean  @default(false)
-  response   String?  @db.Text
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        Int           @id @default(autoincrement())
+  name      String        @db.VarChar(255)
+  email     String        @db.VarChar(255)
+  phone     String?       @db.VarChar(20)
+  subject   String?       @db.VarChar(255)
+  message   String        @db.Text
+  status    ContactStatus @default(new)
+  responded Boolean       @default(false)
+  response  String?       @db.Text
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 }
 
 enum ContactStatus {
