@@ -246,31 +246,75 @@ const CategoryPage = () => {
     );
   }
 
+  // Check if banner image exists
+  const hasBanner = category?.banner || false;
+
   return (
     <div className="bg-[#FFFBF9] min-h-screen">
-      {/* Category Hero Section */}
-      <div className="bg-gradient-to-r from-[#6B2F1A] to-[#8B4A30] text-white relative overflow-hidden">
-        {/* Decorative Elements */}
-        <div className="absolute -right-24 top-0 w-64 h-64 rounded-full bg-white/5 opacity-50"></div>
-        <div className="absolute -left-16 bottom-0 w-48 h-48 rounded-full bg-white/5 opacity-50"></div>
+      {/* Category Hero Section - Modified for banner image */}
+      <div 
+        className={`relative overflow-hidden ${hasBanner ? 'text-[#6B2F1A]' : 'bg-[#b38d4a] text-white'}`}
+        style={{
+          minHeight: '200px'
+        }}
+      >
+        {/* Banner image if it exists */}
+        {hasBanner && (
+          <div className="absolute inset-0 w-full h-full">
+            <Image
+              src={`https://greenglow.in/kauthuk_test/${category.banner}`}
+              alt={category?.catName || "Category banner"}
+              fill
+              priority
+              className="object-cover"
+              sizes="100vw"
+              placeholder="blur"
+              blurDataURL={`data:image/svg+xml;base64,${toBase64(shimmer(700, 475))}`}
+            />
+            {/* Semi-transparent overlay for better text visibility */}
+            <div className="absolute inset-0 bg-black/20"></div>
+          </div>
+        )}
+        
+        {/* Decorative Elements - only show if no banner image */}
+        {!hasBanner && (
+          <>
+            <div className="absolute -right-24 top-0 w-64 h-64 rounded-full bg-white/5 opacity-50"></div>
+            <div className="absolute -left-16 bottom-0 w-48 h-48 rounded-full bg-white/5 opacity-50"></div>
+          </>
+        )}
         
         <div className="container mx-auto px-4 py-16 relative z-10">
           <Breadcrumb className="mb-8">
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href="/" className="text-white/80 hover:text-white font-poppins text-sm">
+                <BreadcrumbLink 
+                  href="/" 
+                  className={`hover:opacity-100 font-poppins text-sm ${
+                    hasBanner ? 'text-[#6B2F1A]/80 hover:text-[#6B2F1A]' : 'text-white/80 hover:text-white'
+                  }`}
+                >
                   Home
                 </BreadcrumbLink>
               </BreadcrumbItem>
-              <BreadcrumbSeparator className="text-white/60" />
+              <BreadcrumbSeparator className={hasBanner ? 'text-[#6B2F1A]/60' : 'text-white/60'} />
               <BreadcrumbItem>
-                <BreadcrumbLink href="/products" className="text-white/80 hover:text-white font-poppins text-sm">
+                <BreadcrumbLink 
+                  href="/products" 
+                  className={`hover:opacity-100 font-poppins text-sm ${
+                    hasBanner ? 'text-[#6B2F1A]/80 hover:text-[#6B2F1A]' : 'text-white/80 hover:text-white'
+                  }`}
+                >
                   Products
                 </BreadcrumbLink>
               </BreadcrumbItem>
-              <BreadcrumbSeparator className="text-white/60" />
+              <BreadcrumbSeparator className={hasBanner ? 'text-[#6B2F1A]/60' : 'text-white/60'} />
               <BreadcrumbItem>
-                <BreadcrumbLink className="text-white font-medium font-poppins text-sm">
+                <BreadcrumbLink 
+                  className={`font-medium font-poppins text-sm ${
+                    hasBanner ? 'text-[#6B2F1A]' : 'text-white'
+                  }`}
+                >
                   {category?.catName || "Category"}
                 </BreadcrumbLink>
               </BreadcrumbItem>
@@ -279,11 +323,12 @@ const CategoryPage = () => {
           
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div>
-              <h1 className="playfair-italic text-4xl md:text-5xl font-bold mb-4">{category?.catName || "Category"}</h1>
-              
+              <h1 className={`playfair-italic text-4xl md:text-5xl font-bold mb-4 ${
+                hasBanner ? 'text-[#6B2F1A]' : 'text-white'
+              }`}>
+                {category?.catName || "Category"}
+              </h1>
             </div>
-            
-            
           </div>
         </div>
       </div>

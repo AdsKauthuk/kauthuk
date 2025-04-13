@@ -34,27 +34,11 @@ export async function createSubcategory(data) {
       },
     });
 
-    // Handle image upload if present
-    // For FormData, we use the get method to retrieve the file
+    // Connect to FTP if we have any images to upload
     const image = data.get ? data.get('image') : (data.image && data.image.length > 0 ? data.image[0] : null);
+    const banner = data.get ? data.get('banner') : (data.banner && data.banner.length > 0 ? data.banner[0] : null);
     
-    if (image && image instanceof File) {
-      // Add current timestamp to the image filename
-      const timestamp = Date.now();
-      const newImageName = `subcat_${timestamp}_${image.name}`;
-
-      // Temporary save location on the server
-      const tempImagePath = path.join(localTempDir, newImageName);
-
-      // Convert ArrayBuffer to Buffer before writing to the file system
-      const buffer = Buffer.from(await image.arrayBuffer());
-
-      // Save the uploaded file temporarily
-      await fs.writeFile(tempImagePath, buffer);
-
-      console.log("Temporary subcategory image saved at:", tempImagePath);
-
-      // Connect to FTP server
+    if ((image && image instanceof File) || (banner && banner instanceof File)) {
       await ftpClient.access({
         host: "ftp.greenglow.in", 
         port: 21,
@@ -70,6 +54,24 @@ export async function createSubcategory(data) {
       } catch (error) {
         console.warn("Directory may already exist:", error.message);
       }
+    }
+
+    // Handle image upload if present
+    if (image && image instanceof File) {
+      // Add current timestamp to the image filename
+      const timestamp = Date.now();
+      const newImageName = `subcat_${timestamp}_${image.name}`;
+
+      // Temporary save location on the server
+      const tempImagePath = path.join(localTempDir, newImageName);
+
+      // Convert ArrayBuffer to Buffer before writing to the file system
+      const buffer = Buffer.from(await image.arrayBuffer());
+
+      // Save the uploaded file temporarily
+      await fs.writeFile(tempImagePath, buffer);
+
+      console.log("Temporary subcategory image saved at:", tempImagePath);
 
       // Upload image to FTP server
       const remoteFilePath = `/kauthuk_test/${newImageName}`;
@@ -87,6 +89,41 @@ export async function createSubcategory(data) {
 
       // Remove local temporary file
       await fs.unlink(tempImagePath);
+    }
+
+    // Handle banner upload if present
+    if (banner && banner instanceof File) {
+      // Add current timestamp to the banner filename
+      const timestamp = Date.now();
+      const newBannerName = `subcat_banner_${timestamp}_${banner.name}`;
+
+      // Temporary save location on the server
+      const tempBannerPath = path.join(localTempDir, newBannerName);
+
+      // Convert ArrayBuffer to Buffer before writing to the file system
+      const buffer = Buffer.from(await banner.arrayBuffer());
+
+      // Save the uploaded file temporarily
+      await fs.writeFile(tempBannerPath, buffer);
+
+      console.log("Temporary subcategory banner saved at:", tempBannerPath);
+
+      // Upload banner to FTP server
+      const remoteBannerPath = `/kauthuk_test/${newBannerName}`;
+      await ftpClient.uploadFrom(tempBannerPath, remoteBannerPath);
+
+      console.log("Subcategory banner uploaded successfully to:", remoteBannerPath);
+
+      // Update subcategory entry with banner path
+      await db.subCategory.update({
+        where: { id: subcategory.id },
+        data: { banner: newBannerName },
+      });
+
+      console.log("Subcategory updated with banner path");
+
+      // Remove local temporary file
+      await fs.unlink(tempBannerPath);
     }
 
     return subcategory;
@@ -207,27 +244,11 @@ export async function updateSubcategory(data) {
       description: description ? description.toString() : existingSubcategory.description,
     };
 
-    // Handle image upload if present
-    // For FormData, we use the get method to retrieve the file
+    // Connect to FTP if we have any images to upload
     const image = data.get ? data.get('image') : (data.image && data.image.length > 0 ? data.image[0] : null);
+    const banner = data.get ? data.get('banner') : (data.banner && data.banner.length > 0 ? data.banner[0] : null);
     
-    if (image && image instanceof File) {
-      // Add current timestamp to the image filename
-      const timestamp = Date.now();
-      const newImageName = `subcat_${timestamp}_${image.name}`;
-
-      // Temporary save location on the server
-      const tempImagePath = path.join(localTempDir, newImageName);
-
-      // Convert ArrayBuffer to Buffer before writing to the file system
-      const buffer = Buffer.from(await image.arrayBuffer());
-
-      // Save the uploaded file temporarily
-      await fs.writeFile(tempImagePath, buffer);
-
-      console.log("Temporary subcategory image saved at:", tempImagePath);
-
-      // Connect to FTP server
+    if ((image && image instanceof File) || (banner && banner instanceof File)) {
       await ftpClient.access({
         host: "ftp.greenglow.in", 
         port: 21,
@@ -243,6 +264,24 @@ export async function updateSubcategory(data) {
       } catch (error) {
         console.warn("Directory may already exist:", error.message);
       }
+    }
+
+    // Handle image upload if present
+    if (image && image instanceof File) {
+      // Add current timestamp to the image filename
+      const timestamp = Date.now();
+      const newImageName = `subcat_${timestamp}_${image.name}`;
+
+      // Temporary save location on the server
+      const tempImagePath = path.join(localTempDir, newImageName);
+
+      // Convert ArrayBuffer to Buffer before writing to the file system
+      const buffer = Buffer.from(await image.arrayBuffer());
+
+      // Save the uploaded file temporarily
+      await fs.writeFile(tempImagePath, buffer);
+
+      console.log("Temporary subcategory image saved at:", tempImagePath);
 
       // Upload image to FTP server
       const remoteFilePath = `/kauthuk_test/${newImageName}`;
@@ -264,6 +303,47 @@ export async function updateSubcategory(data) {
           console.log("Old subcategory image removed from FTP server:", oldRemoteFilePath);
         } catch (err) {
           console.warn("Failed to remove old subcategory image from FTP server:", err);
+        }
+      }
+    }
+
+    // Handle banner upload if present
+    if (banner && banner instanceof File) {
+      // Add current timestamp to the banner filename
+      const timestamp = Date.now();
+      const newBannerName = `subcat_banner_${timestamp}_${banner.name}`;
+
+      // Temporary save location on the server
+      const tempBannerPath = path.join(localTempDir, newBannerName);
+
+      // Convert ArrayBuffer to Buffer before writing to the file system
+      const buffer = Buffer.from(await banner.arrayBuffer());
+
+      // Save the uploaded file temporarily
+      await fs.writeFile(tempBannerPath, buffer);
+
+      console.log("Temporary subcategory banner saved at:", tempBannerPath);
+
+      // Upload banner to FTP server
+      const remoteBannerPath = `/kauthuk_test/${newBannerName}`;
+      await ftpClient.uploadFrom(tempBannerPath, remoteBannerPath);
+
+      console.log("Subcategory banner uploaded successfully to:", remoteBannerPath);
+
+      // Update banner path in update data
+      updateData.banner = newBannerName;
+
+      // Remove local temporary file
+      await fs.unlink(tempBannerPath);
+
+      // Delete the old banner from FTP if it exists
+      if (existingSubcategory.banner) {
+        const oldRemoteBannerPath = `/kauthuk_test/${existingSubcategory.banner}`;
+        try {
+          await ftpClient.remove(oldRemoteBannerPath);
+          console.log("Old subcategory banner removed from FTP server:", oldRemoteBannerPath);
+        } catch (err) {
+          console.warn("Failed to remove old subcategory banner from FTP server:", err);
         }
       }
     }
@@ -308,18 +388,18 @@ export async function deleteSubcategoryById(id) {
       throw new Error("Invalid subcategory ID format");
     }
 
-    // Fetch the subcategory to check if it has an associated image
+    // Fetch the subcategory to check if it has an associated image or banner
     const subcategory = await db.subCategory.findUnique({
       where: { id: subcategoryId },
-      select: { image: true },
+      select: { image: true, banner: true },
     });
 
     if (!subcategory) {
       throw new Error("Subcategory not found");
     }
 
-    // Delete the image from FTP if it exists
-    if (subcategory.image) {
+    // Delete the image and banner from FTP if they exist
+    if (subcategory.image || subcategory.banner) {
       await ftpClient.access({
         host: "ftp.greenglow.in",
         port: 21,
@@ -329,16 +409,32 @@ export async function deleteSubcategoryById(id) {
 
       console.log("Connected to FTP server");
 
-      // Delete the image
-      const remoteFilePath = `/kauthuk_test/${subcategory.image}`;
-      try {
-        await ftpClient.remove(remoteFilePath);
-        console.log("Subcategory image deleted from FTP:", remoteFilePath);
-      } catch (ftpError) {
-        console.warn(
-          "Error deleting subcategory image or file not found:",
-          ftpError.message
-        );
+      // Delete the image if it exists
+      if (subcategory.image) {
+        const remoteFilePath = `/kauthuk_test/${subcategory.image}`;
+        try {
+          await ftpClient.remove(remoteFilePath);
+          console.log("Subcategory image deleted from FTP:", remoteFilePath);
+        } catch (ftpError) {
+          console.warn(
+            "Error deleting subcategory image or file not found:",
+            ftpError.message
+          );
+        }
+      }
+
+      // Delete the banner if it exists
+      if (subcategory.banner) {
+        const remoteBannerPath = `/kauthuk_test/${subcategory.banner}`;
+        try {
+          await ftpClient.remove(remoteBannerPath);
+          console.log("Subcategory banner deleted from FTP:", remoteBannerPath);
+        } catch (ftpError) {
+          console.warn(
+            "Error deleting subcategory banner or file not found:",
+            ftpError.message
+          );
+        }
       }
     }
 
@@ -382,6 +478,7 @@ export async function getSubcategoriesWithProductCount(categoryId) {
         id: true,
         subcategory: true,
         image: true,
+        banner: true,
         description: true,
         _count: {
           select: {

@@ -481,16 +481,10 @@ const Header = () => {
                     <User className="h-4 w-4" />
                   </div>
                   <div>
-                    <div
-                      className="font-medium text-gray-900"
-                      style={{ fontFamily: "Poppins, sans-serif" }}
-                    >
+                    <div className="font-semibold text-gray-900 font-poppins">
                       {user?.name || "User"}
                     </div>
-                    <div
-                      className="text-xs text-gray-500 truncate max-w-[200px]"
-                      style={{ fontFamily: "Poppins, sans-serif" }}
-                    >
+                    <div className="text-xs text-gray-500 truncate max-w-[200px] font-poppins">
                       {user?.email || ""}
                     </div>
                   </div>
@@ -501,10 +495,7 @@ const Header = () => {
             {/* Mobile Nav Menu */}
             <div className="p-4">
               <div className="mb-6">
-                <div
-                  className="text-sm font-medium text-gray-500 mb-2"
-                  style={{ fontFamily: "Poppins, sans-serif" }}
-                >
+                <div className="text-sm uppercase font-bold text-[#6B2F1A] mb-2 font-playfair">
                   Categories
                 </div>
                 <div className="space-y-2">
@@ -512,7 +503,7 @@ const Header = () => {
                     <Link
                       key={category.id}
                       href={category.href}
-                      className="flex items-center py-2 border-b border-gray-100 text-gray-800"
+                      className="flex items-center py-2 border-b border-gray-100 text-[#6B2F1A] poppins-black"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       <span className="mr-2 relative w-5 h-5 flex items-center justify-center">
@@ -527,7 +518,7 @@ const Header = () => {
                           }}
                         />
                       </span>
-                      <span style={{ fontFamily: "Poppins, sans-serif" }}>
+                      <span className="font-bold text-base uppercase">
                         {category.name}
                       </span>
                     </Link>
@@ -536,10 +527,7 @@ const Header = () => {
               </div>
 
               <div className="mb-6">
-                <div
-                  className="text-sm font-medium text-gray-500 mb-2"
-                  style={{ fontFamily: "Poppins, sans-serif" }}
-                >
+                <div className="text-sm uppercase font-bold text-[#6B2F1A] mb-2 font-playfair">
                   Account
                 </div>
                 <div className="space-y-2">
@@ -547,24 +535,15 @@ const Header = () => {
                     <>
                       <Link
                         href="/my-account"
-                        className="block py-2 border-b border-gray-100 text-gray-800"
+                        className="block py-2 border-b border-gray-100 text-[#6B2F1A] font-poppins"
                         onClick={() => setIsMobileMenuOpen(false)}
-                        style={{ fontFamily: "Poppins, sans-serif" }}
                       >
                         My Account
                       </Link>
-                      <Link
-                        href="/my-account/orders"
-                        className="block py-2 border-b border-gray-100 text-gray-800"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        style={{ fontFamily: "Poppins, sans-serif" }}
-                      >
-                        My Orders
-                      </Link>
+                     
                       <button
                         onClick={handleLogout}
-                        className="block w-full text-left py-2 border-b border-gray-100 text-red-600"
-                        style={{ fontFamily: "Poppins, sans-serif" }}
+                        className="block w-full text-left py-2 border-b border-gray-100 text-red-600 font-poppins"
                       >
                         Logout
                       </button>
@@ -573,17 +552,15 @@ const Header = () => {
                     <>
                       <Link
                         href="/login"
-                        className="block py-2 border-b border-gray-100 text-gray-800"
+                        className="block py-2 border-b border-gray-100 text-[#6B2F1A] font-poppins"
                         onClick={() => setIsMobileMenuOpen(false)}
-                        style={{ fontFamily: "Poppins, sans-serif" }}
                       >
                         Login
                       </Link>
                       <Link
                         href="/register"
-                        className="block py-2 border-b border-gray-100 text-gray-800"
+                        className="block py-2 border-b border-gray-100 text-[#6B2F1A] font-poppins"
                         onClick={() => setIsMobileMenuOpen(false)}
-                        style={{ fontFamily: "Poppins, sans-serif" }}
                       >
                         Register
                       </Link>
@@ -591,17 +568,15 @@ const Header = () => {
                   )}
                   <Link
                     href="/cart"
-                    className="block py-2 border-b border-gray-100 text-gray-800"
+                    className="block py-2 border-b border-gray-100 text-[#6B2F1A] font-poppins"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    style={{ fontFamily: "Poppins, sans-serif" }}
                   >
                     Cart ({itemCount})
                   </Link>
                   <Link
                     href="/wishlist"
-                    className="block py-2 border-b border-gray-100 text-gray-800"
+                    className="block py-2 border-b border-gray-100 text-[#6B2F1A] font-poppins"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    style={{ fontFamily: "Poppins, sans-serif" }}
                   >
                     Wishlist
                   </Link>

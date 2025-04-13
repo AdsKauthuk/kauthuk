@@ -39,6 +39,26 @@ import { getProducts } from "@/actions/product";
 // Import ProductCard from your existing component
 import ProductCard from "@/components/ProductCard";
 
+const shimmer = (w, h) => `
+<svg width="${w}" height="${h}" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <linearGradient id="g">
+      <stop stop-color="#f6f7f8" offset="0%" />
+      <stop stop-color="#edeef1" offset="20%" />
+      <stop stop-color="#f6f7f8" offset="40%" />
+      <stop stop-color="#f6f7f8" offset="100%" />
+    </linearGradient>
+  </defs>
+  <rect width="${w}" height="${h}" fill="#f6f7f8" />
+  <rect id="r" width="${w}" height="${h}" fill="url(#g)" />
+  <animate xlink:href="#r" attributeName="x" from="-${w}" to="${w}" dur="1s" repeatCount="indefinite"  />
+</svg>`;
+
+const toBase64 = (str) =>
+  typeof window === "undefined"
+    ? Buffer.from(str).toString('base64')
+    : window.btoa(str);
+
 const SubcategoryPage = () => {
   const params = useParams();
   const router = useRouter();
@@ -180,13 +200,43 @@ const SubcategoryPage = () => {
     );
   }
 
+  // Check if banner image exists
+  const hasBanner = subcategory?.banner || false;
+
   return (
     <div className="bg-[#FFFBF9] min-h-screen">
-      {/* Subcategory Hero Section */}
-      <div className="bg-gradient-to-r from-[#6B2F1A] to-[#8B4A30] text-white relative overflow-hidden">
-        {/* Decorative Elements */}
-        <div className="absolute -right-24 top-0 w-64 h-64 rounded-full bg-white/5 opacity-50"></div>
-        <div className="absolute -left-16 bottom-0 w-48 h-48 rounded-full bg-white/5 opacity-50"></div>
+      {/* Subcategory Hero Section - Modified for banner image */}
+      <div 
+        className={`relative overflow-hidden ${hasBanner ? 'text-[#6B2F1A]' : 'bg-[#b38d4a] text-white'}`}
+        style={{
+          minHeight: '200px'
+        }}
+      >
+        {/* Banner image if it exists */}
+        {hasBanner && (
+          <div className="absolute inset-0 w-full h-full">
+            <Image
+              src={`https://greenglow.in/kauthuk_test/${subcategory.banner}`}
+              alt={subcategory?.subcategory || "Subcategory banner"}
+              fill
+              priority
+              className="object-cover"
+              sizes="100vw"
+              placeholder="blur"
+              blurDataURL={`data:image/svg+xml;base64,${toBase64(shimmer(700, 475))}`}
+            />
+            {/* Semi-transparent overlay for better text visibility */}
+            <div className="absolute inset-0 bg-black/20"></div>
+          </div>
+        )}
+        
+        {/* Decorative Elements - only show if no banner image */}
+        {!hasBanner && (
+          <>
+            <div className="absolute -right-24 top-0 w-64 h-64 rounded-full bg-white/5 opacity-50"></div>
+            <div className="absolute -left-16 bottom-0 w-48 h-48 rounded-full bg-white/5 opacity-50"></div>
+          </>
+        )}
 
         <div className="container mx-auto px-4 py-16 relative z-10">
           <Breadcrumb className="mb-8">
@@ -194,36 +244,46 @@ const SubcategoryPage = () => {
               <BreadcrumbItem>
                 <BreadcrumbLink
                   href="/"
-                  className="text-white/80 hover:text-white font-poppins text-sm"
+                  className={`hover:opacity-100 font-poppins text-sm ${
+                    hasBanner ? 'text-[#6B2F1A]/80 hover:text-[#6B2F1A]' : 'text-white/80 hover:text-white'
+                  }`}
                 >
                   Home
                 </BreadcrumbLink>
               </BreadcrumbItem>
-              <BreadcrumbSeparator className="text-white/60" />
+              <BreadcrumbSeparator className={hasBanner ? 'text-[#6B2F1A]/60' : 'text-white/60'} />
               <BreadcrumbItem>
                 <BreadcrumbLink
                   href="/products"
-                  className="text-white/80 hover:text-white font-poppins text-sm"
+                  className={`hover:opacity-100 font-poppins text-sm ${
+                    hasBanner ? 'text-[#6B2F1A]/80 hover:text-[#6B2F1A]' : 'text-white/80 hover:text-white'
+                  }`}
                 >
                   Products
                 </BreadcrumbLink>
               </BreadcrumbItem>
               {parentCategory && (
                 <>
-                  <BreadcrumbSeparator className="text-white/60" />
+                  <BreadcrumbSeparator className={hasBanner ? 'text-[#6B2F1A]/60' : 'text-white/60'} />
                   <BreadcrumbItem>
                     <BreadcrumbLink
                       href={`/category/${parentCategory.id}`}
-                      className="text-white/80 hover:text-white font-poppins text-sm"
+                      className={`hover:opacity-100 font-poppins text-sm ${
+                        hasBanner ? 'text-[#6B2F1A]/80 hover:text-[#6B2F1A]' : 'text-white/80 hover:text-white'
+                      }`}
                     >
                       {parentCategory.catName}
                     </BreadcrumbLink>
                   </BreadcrumbItem>
                 </>
               )}
-              <BreadcrumbSeparator className="text-white/60" />
+              <BreadcrumbSeparator className={hasBanner ? 'text-[#6B2F1A]/60' : 'text-white/60'} />
               <BreadcrumbItem>
-                <BreadcrumbLink className="text-white font-medium font-poppins text-sm">
+                <BreadcrumbLink 
+                  className={`font-medium font-poppins text-sm ${
+                    hasBanner ? 'text-[#6B2F1A]' : 'text-white'
+                  }`}
+                >
                   {subcategory?.subcategory || "Subcategory"}
                 </BreadcrumbLink>
               </BreadcrumbItem>
@@ -232,23 +292,12 @@ const SubcategoryPage = () => {
 
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div>
-              <h1 className="playfair-italic text-4xl md:text-5xl font-bold mb-4">
+              <h1 className={`playfair-italic text-4xl md:text-5xl font-bold mb-4 ${
+                hasBanner ? 'text-[#6B2F1A]' : 'text-white'
+              }`}>
                 {subcategory?.subcategory || "Subcategory"}
               </h1>
             </div>
-
-            {/* <div className="flex flex-wrap gap-2">
-              {parentCategory && (
-                <Button
-                  onClick={() => router.push(`/category/${parentCategory.id}`)}
-                  variant="outline"
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20 font-poppins"
-                >
-                  <ArrowLeft className="mr-1 h-4 w-4" />
-                  Back to {parentCategory.catName}
-                </Button>
-              )}
-            </div> */}
           </div>
         </div>
       </div>
@@ -312,7 +361,7 @@ const SubcategoryPage = () => {
                       {sub.image ? (
                         <div className="relative w-6 h-6">
                           <Image
-                            src={`/assets/images/categories/${sub.image}`}
+                            src={`https://greenglow.in/kauthuk_test/${sub.image}`}
                             alt={sub.subcategory}
                             fill
                             className="object-contain"
