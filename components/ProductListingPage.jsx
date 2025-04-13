@@ -19,7 +19,7 @@ import {
   CheckCircle2,
   Loader2,
 } from "lucide-react";
-
+import { IndianRupee, DollarSign } from "lucide-react";
 // Import UI components
 import {
   Sheet,
@@ -72,8 +72,12 @@ const toBase64 = (str) =>
     : window.btoa(str);
 
 // Product card component
+// Product card component
 const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
   const [isHovered, setIsHovered] = useState(false);
+  
+  // Use cart context to access currency preferences
+  const { currency, formatPrice, toggleCurrency } = useCart();
   
   // Safely handle image URLs
   const imageUrl =
@@ -81,12 +85,26 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
       ? `https://greenglow.in/kauthuk_test/${product.ProductImages[0].image_path}`
       : "/assets/images/placeholder.png";
 
-  // Calculate discount if applicable
-  const hasDiscount = product?.base_price > product?.price_rupees;
+  // Get price based on currency
+  const getPrice = () => {
+    return currency === "INR" 
+      ? product?.price_rupees || 0 
+      : product?.price_dollars || 0;
+  };
+
+  // Calculate discount if applicable based on current currency
+  const getCurrentBasePrice = () => {
+    return currency === "INR"
+      ? product?.base_price || 0
+      : product?.base_price ? (product.base_price / 80) : 0; // Simple conversion for base price
+  };
+  
+  const finalPrice = getPrice();
+  const basePrice = getCurrentBasePrice();
+  const hasDiscount = basePrice > finalPrice;
+  
   const discountPercentage = hasDiscount
-    ? Math.round(
-        ((product.base_price - product.price_rupees) / product.base_price) * 100
-      )
+    ? Math.round(((basePrice - finalPrice) / basePrice) * 100)
     : 0;
 
   // Determine if product is in stock
@@ -100,6 +118,13 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
     } else if (!inStock) {
       toast("Product Out of Stock");
     }
+  };
+  
+  // Handle currency toggle
+  const handleCurrencyToggle = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleCurrency();
   };
 
   const truncateDescription = (text, maxLength = 80) => {
@@ -123,9 +148,9 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
         onMouseLeave={() => setIsHovered(false)}
       >
         <div className="relative aspect-square overflow-hidden">
-        <Link
+          <Link
             href={`/product/${product?.id}`}
-            className="block w-full h-full"
+            className="block w-full h-full cursor-pointer"
           >
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-[85%] h-[85%] relative">
@@ -165,6 +190,20 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
               {inStock ? "In Stock" : "Out of Stock"}
             </Badge>
           </div>
+          
+          {/* Currency toggle */}
+          <div className="absolute bottom-3 right-3 z-10">
+            <button 
+              onClick={handleCurrencyToggle}
+              className="w-8 h-8 rounded-full bg-white/80 hover:bg-white flex items-center justify-center transition-all shadow-sm"
+            >
+              {currency === "INR" ? (
+                <IndianRupee className="w-4 h-4 text-[#6B2F1A]" />
+              ) : (
+                <DollarSign className="w-4 h-4 text-[#6B2F1A]" />
+              )}
+            </button>
+          </div>
 
           {/* Action buttons overlay */}
           <div
@@ -187,11 +226,11 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
 
           <div className="flex items-baseline gap-2">
             <p className="text-xl font-bold text-[#6B2F1A]" style={{ fontFamily: "Playfair Display, serif" }}>
-              ₹{parseFloat(product?.price_rupees || 0).toLocaleString()}
+              {formatPrice(finalPrice)}
             </p>
             {hasDiscount && (
               <p className="text-sm text-gray-500 line-through" style={{ fontFamily: "Poppins, sans-serif" }}>
-                ₹{parseFloat(product?.base_price || 0).toLocaleString()}
+                {formatPrice(basePrice)}
               </p>
             )}
           </div>
@@ -238,9 +277,9 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
         onMouseLeave={() => setIsHovered(false)}
       >
         <div className="relative w-full md:w-1/4 aspect-square md:aspect-auto overflow-hidden rounded-lg">
-        <Link
+          <Link
             href={`/product/${product?.id}`}
-            className="block w-full h-full"
+            className="block w-full h-full cursor-pointer"
           >
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-[85%] h-[85%] relative">
@@ -266,6 +305,20 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
               </Badge>
             </div>
           )}
+          
+          {/* Currency toggle */}
+          <div className="absolute bottom-3 right-3 z-10">
+            <button 
+              onClick={handleCurrencyToggle}
+              className="w-8 h-8 rounded-full bg-white/80 hover:bg-white flex items-center justify-center transition-all shadow-sm"
+            >
+              {currency === "INR" ? (
+                <IndianRupee className="w-4 h-4 text-[#6B2F1A]" />
+              ) : (
+                <DollarSign className="w-4 h-4 text-[#6B2F1A]" />
+              )}
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 flex flex-col">
@@ -319,11 +372,11 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
           <div className="flex items-center justify-between mt-4">
             <div className="flex items-baseline gap-2">
               <p className="text-2xl font-bold text-[#6B2F1A]" style={{ fontFamily: "Playfair Display, serif" }}>
-                ₹{parseFloat(product?.price_rupees || 0).toLocaleString()}
+                {formatPrice(finalPrice)}
               </p>
               {hasDiscount && (
                 <p className="text-sm text-gray-500 line-through" style={{ fontFamily: "Poppins, sans-serif" }}>
-                  ₹{parseFloat(product?.base_price || 0).toLocaleString()}
+                  {formatPrice(basePrice)}
                 </p>
               )}
             </div>

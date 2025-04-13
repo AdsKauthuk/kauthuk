@@ -12,8 +12,11 @@ import {
   Copy,
   Check,
   ShoppingBag,
+  IndianRupee,
+  DollarSign
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useCart } from "@/providers/CartProvider";
 
 const shimmer = (w, h) => `
 <svg width="${w}" height="${h}" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -39,6 +42,7 @@ const ProductCard = ({
   id,
   title,
   price_rupees,
+  price_dollars,
   images,
   index,
   featured = false,
@@ -47,6 +51,9 @@ const ProductCard = ({
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [copied, setCopied] = useState(false);
   const shareMenuRef = useRef(null);
+  
+  // Use cart context to access currency preferences
+  const { currency, formatPrice, toggleCurrency } = useCart();
 
   // Choose the first image or use a fallback
   const imageUrl =
@@ -54,10 +61,11 @@ const ProductCard = ({
       ? `https://greenglow.in/kauthuk_test/${images[0].image_path}`
       : "/assets/images/placeholder.png";
 
-  // Format price to show with rupee symbol
-  const formatPrice = (price) => {
-    const formattedPrice = parseFloat(price || 0).toLocaleString("en-IN");
-    return `₹${formattedPrice}`;
+  // Get price based on currency
+  const getPrice = () => {
+    return currency === "INR" 
+      ? price_rupees || 0 
+      : price_dollars || 0;
   };
 
   // Close share menu when clicking outside
@@ -76,6 +84,13 @@ const ProductCard = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+  
+  // Handle currency toggle
+  const handleCurrencyToggle = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleCurrency();
+  };
 
   // Handle sharing to various platforms
   const handleShare = (e) => {
@@ -171,6 +186,20 @@ const ProductCard = ({
             </div>
           </div>
 
+          {/* Currency toggle */}
+          <div className="absolute bottom-3 right-3 z-10">
+            <button 
+              onClick={handleCurrencyToggle}
+              className="w-8 h-8 rounded-full bg-white/80 hover:bg-white flex items-center justify-center transition-all shadow-sm"
+            >
+              {currency === "INR" ? (
+                <IndianRupee className="w-4 h-4 text-[#6B2F1A]" />
+              ) : (
+                <DollarSign className="w-4 h-4 text-[#6B2F1A]" />
+              )}
+            </button>
+          </div>
+
           {/* Quick Shop Overlay - Appears on hover */}
           {/* <div
             className={`absolute inset-0 bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
@@ -197,7 +226,7 @@ const ProductCard = ({
           <div className="mt-auto">
             <div className="flex items-center justify-between">
               <p className="font-poppins text-lg font-semibold text-[#6B2F1A]">
-                {formatPrice(price_rupees)}
+                {formatPrice(getPrice())}
               </p>
 
               {/* Action Buttons */}

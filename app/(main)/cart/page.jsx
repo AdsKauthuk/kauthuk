@@ -59,7 +59,6 @@ import {
 // For first 500g: ₹50
 // For each additional 500g: ₹40
 const calculateShippingCost = (cart, currency) => {
-  console.log("cart",cart)
   // If currency is not INR, return free shipping
   if (currency !== 'INR') {
     return 0;
@@ -123,20 +122,17 @@ const ProductCart = () => {
     clearCart 
   } = useCart();
   
-  // Calculate subtotal
-  const subtotal = totals[currency];
+  // Calculate subtotal with tax included (10%)
+  const taxRate = 0.10;
+  const subtotalWithTax = totals[currency] * (1 + taxRate);
   
   // Calculate shipping cost based on weight for INR
   const shippingCost = useMemo(() => {
     return calculateShippingCost(cart, currency);
   }, [cart, currency]);
   
-  // Calculate tax (assumed 10%)
-  const taxRate = 0.10;
-  const tax = subtotal * taxRate;
-  
   // Calculate total including shipping
-  const total = subtotal + tax + shippingCost;
+  const total = subtotalWithTax + shippingCost;
 
   // Calculate total weight for display
   const totalWeight = useMemo(() => {
@@ -387,8 +383,18 @@ const ProductCart = () => {
                 {/* Price Breakdown */}
                 <div className="space-y-4">
                   <div className="flex justify-between text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>
-                    <span className="text-gray-600">Subtotal ({itemCount} {itemCount === 1 ? 'item' : 'items'})</span>
-                    <span>{formatPrice(subtotal)}</span>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger className="flex items-center text-gray-600">
+                          Subtotal ({itemCount} {itemCount === 1 ? 'item' : 'items'})
+                          <Info className="h-3.5 w-3.5 ml-1 text-gray-400" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Includes 10% tax</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <span>{formatPrice(subtotalWithTax)}</span>
                   </div>
                   
                   {/* Display shipping as cost based on weight or free */}
@@ -418,21 +424,6 @@ const ProductCart = () => {
                       <span>{totalWeight}g</span>
                     </div>
                   )}
-                  
-                  <div className="flex justify-between text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger className="flex items-center text-gray-600">
-                          Tax
-                          <Info className="h-3.5 w-3.5 ml-1 text-gray-400" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>10% tax applied to the subtotal</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <span>{formatPrice(tax)}</span>
-                  </div>
                   
                   <Separator className="my-4 bg-[#6B2F1A]/10" />
                   

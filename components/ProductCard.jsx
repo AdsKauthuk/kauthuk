@@ -16,9 +16,12 @@ import {
   Twitter,
   Linkedin,
   ShoppingBag,
+  DollarSign,
+  IndianRupee
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useCart } from "@/providers/CartProvider";
 
 // Shimmer effect for image loading
 const shimmer = (w, h) => `
@@ -46,6 +49,9 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [copied, setCopied] = useState(false);
   const shareMenuRef = useRef(null);
+  
+  // Use the cart context to access currency preferences
+  const { currency, formatPrice, toggleCurrency } = useCart();
 
   // Safely handle image URLs
   const imageUrl =
@@ -53,11 +59,26 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
       ? `https://greenglow.in/kauthuk_test/${product.ProductImages[0].image_path}`
       : "/assets/images/placeholder.png";
 
-  // Calculate discount if applicable
-  const hasDiscount = product?.base_price > product?.price_rupees;
+  // Get price based on currency
+  const getPrice = () => {
+    return currency === "INR" 
+      ? product?.price_rupees || 0 
+      : product?.price_dollars || 0;
+  };
+  
+  // Get the final price
+  const finalPrice = getPrice();
+  
+  // Calculate discount if applicable (based on current currency)
+  const baseComparisonPrice = currency === "INR" 
+    ? product?.base_price || 0 
+    : (product?.base_price / 80) || 0; // Simple conversion for base price
+    
+  const hasDiscount = baseComparisonPrice > finalPrice;
+  
   const discountPercentage = hasDiscount
     ? Math.round(
-        ((product.base_price - product.price_rupees) / product.base_price) * 100
+        ((baseComparisonPrice - finalPrice) / baseComparisonPrice) * 100
       )
     : 0;
 
@@ -96,6 +117,13 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
     e.preventDefault();
     e.stopPropagation();
     toast.success("Added to wishlist!");
+  };
+
+  // Handle currency toggle
+  const handleCurrencyToggle = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleCurrency();
   };
 
   // Handle sharing to various platforms
@@ -175,7 +203,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
             href={`/product/${product?.id}`}
             className="block w-full h-full"
           >
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center cursor-pointer">
               <div className="w-[85%] h-[85%] relative">
                 <Image
                   src={imageUrl}
@@ -209,17 +237,33 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
             </div>
           )}
 
-          {/* Quick View Overlay - Appears on hover */}
-          <div
-            className={`absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
-          >
-            <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 bg-white/90 px-4 py-2 rounded-full shadow-md">
-              <span className="font-poppins text-sm text-[#6B2F1A] font-medium flex items-center">
-                <Eye size={14} className="mr-1" />
-                Quick View
-              </span>
-            </div>
+          {/* Currency badge */}
+          <div className="absolute bottom-3 right-3 z-10">
+            <button 
+              onClick={handleCurrencyToggle}
+              className="w-8 h-8 rounded-full bg-white/80 hover:bg-white flex items-center justify-center transition-all shadow-sm"
+            >
+              {currency === "INR" ? (
+                <IndianRupee className="w-4 h-4 text-[#6B2F1A]" />
+              ) : (
+                <DollarSign className="w-4 h-4 text-[#6B2F1A]" />
+              )}
+            </button>
           </div>
+
+          {/* Quick View Overlay - Appears on hover */}
+          <Link href={`/product/${product?.id}`}>
+            <div
+              className={`absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer`}
+            >
+              <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 bg-white/90 px-4 py-2 rounded-full shadow-md">
+                <span className="font-poppins text-sm text-[#6B2F1A] font-medium flex items-center">
+                  <Eye size={14} className="mr-1" />
+                  Quick View
+                </span>
+              </div>
+            </div>
+          </Link>
         </div>
 
         {/* Content Container */}
@@ -233,22 +277,26 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
           </div>
 
           <div className="mt-auto">
-            <div className="flex items-baseline gap-2 mb-3">
+            <div className="flex items-baseline gap-2 mb-1">
               <p className="font-poppins text-lg font-semibold text-[#6B2F1A]">
-                ₹{parseFloat(product?.price_rupees || 0).toLocaleString()}
+                {formatPrice(finalPrice)}
               </p>
               {hasDiscount && (
                 <p className="font-poppins text-sm text-gray-500 line-through">
-                  ₹{parseFloat(product?.base_price || 0).toLocaleString()}
+                  {formatPrice(baseComparisonPrice)}
                 </p>
               )}
             </div>
+            
+            {/* Extra space for consistency */}
+            <div className="mb-3"></div>
 
             <div className="flex items-center justify-between">
               <div />
 
               {/* Action Buttons */}
               <div className="flex space-x-2">
+
                 {/* Wishlist button */}
                 <button
                   onClick={handleAddToWishlist}
@@ -355,7 +403,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
         <div className="relative w-full md:w-64 aspect-square md:aspect-auto overflow-hidden rounded-lg">
           <Link
             href={`/product/${product?.id}`}
-            className="block w-full h-full"
+            className="block w-full h-full cursor-pointer"
           >
             <Image
               src={imageUrl}
@@ -378,17 +426,33 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
             </div>
           )}
 
-          {/* Quick View Overlay - Appears on hover */}
-          <div
-            className={`absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
-          >
-            <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 bg-white/90 px-4 py-2 rounded-full shadow-md">
-              <span className="font-poppins text-sm text-[#6B2F1A] font-medium flex items-center">
-                <Eye size={14} className="mr-1" />
-                Quick View
-              </span>
-            </div>
+          {/* Currency selector */}
+          <div className="absolute bottom-3 right-3 z-10">
+            <button 
+              onClick={handleCurrencyToggle}
+              className="w-8 h-8 rounded-full bg-white/80 hover:bg-white flex items-center justify-center transition-all shadow-sm"
+            >
+              {currency === "INR" ? (
+                <IndianRupee className="w-4 h-4 text-[#6B2F1A]" />
+              ) : (
+                <DollarSign className="w-4 h-4 text-[#6B2F1A]" />
+              )}
+            </button>
           </div>
+
+          {/* Quick View Overlay - Appears on hover */}
+          <Link href={`/product/${product?.id}`}>
+            <div
+              className={`absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer`}
+            >
+              <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 bg-white/90 px-4 py-2 rounded-full shadow-md">
+                <span className="font-poppins text-sm text-[#6B2F1A] font-medium flex items-center">
+                  <Eye size={14} className="mr-1" />
+                  Quick View
+                </span>
+              </div>
+            </div>
+          </Link>
         </div>
 
         {/* Content Container */}
@@ -421,20 +485,34 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
           </div>
 
           <div className="flex items-center justify-between mt-4">
-            <div className="flex items-baseline gap-2">
-              <p className="font-poppins text-xl font-semibold text-[#6B2F1A]">
-                ₹{parseFloat(product?.price_rupees || 0).toLocaleString()}
-              </p>
-              {hasDiscount && (
-                <p className="font-poppins text-sm text-gray-500 line-through">
-                  ₹{parseFloat(product?.base_price || 0).toLocaleString()}
+            <div className="flex flex-col">
+              <div className="flex items-baseline gap-2">
+                <p className="font-poppins text-xl font-semibold text-[#6B2F1A]">
+                  {formatPrice(finalPrice)}
                 </p>
-              )}
+                {hasDiscount && (
+                  <p className="font-poppins text-sm text-gray-500 line-through">
+                    {formatPrice(baseComparisonPrice)}
+                  </p>
+                )}
+              </div>
+              
+              {/* No tax info shown */}
             </div>
 
             <div className="flex items-center gap-3">
               {/* Action Buttons */}
               <div className="flex space-x-2">
+                {/* Add to cart button */}
+                {inStock && (
+                  <button
+                    onClick={handleAddToCart}
+                    className="w-8 h-8 rounded-full bg-[#FFF5F1] flex items-center justify-center hover:bg-[#fee3d8] transition-colors"
+                  >
+                    <ShoppingCart className="w-4 h-4 text-[#6B2F1A]" />
+                  </button>
+                )}
+                
                 {/* Wishlist button */}
                 <button
                   onClick={handleAddToWishlist}
@@ -517,15 +595,16 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
                 </div>
               </div>
 
-              <Link href={`/product/${product?.id}`}>
+              {/* Add to Cart button */}
+              {inStock && (
                 <button
-                  type="button"
+                  onClick={handleAddToCart}
                   className="py-2 px-4 bg-[#6B2F1A] hover:bg-[#5A2814] text-white rounded-md transition-colors font-poppins text-sm flex items-center"
                 >
-                  <ShoppingBag size={16} className="mr-2" />
-                  View Details
+                  <ShoppingCart size={16} className="mr-2" />
+                  Add to Cart
                 </button>
-              </Link>
+              )}
             </div>
           </div>
         </div>

@@ -219,6 +219,7 @@ const FeaturedProductsSlider = ({
                     id={product.id}
                     title={product.title}
                     price_rupees={product.price_rupees}
+                    price_dollars={product.price_dollars}
                     images={product.ProductImages}
                     index={index}
                     featured={true} // Add a prop to indicate this is a featured product

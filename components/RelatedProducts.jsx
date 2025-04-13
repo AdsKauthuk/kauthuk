@@ -167,7 +167,7 @@ const RelatedProducts = ({ subcategoryId, productId, limit = 8 }) => {
 };
 
 const RelatedProductCard = ({ product }) => {
-  const { addToCart, formatPrice, currency } = useCart();
+  const { addToCart, formatPrice, currency, toggleCurrency } = useCart();
   const [isHovered, setIsHovered] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -178,11 +178,31 @@ const RelatedProductCard = ({ product }) => {
       ? `https://greenglow.in/kauthuk_test/${product.ProductImages[0].image_path}`
       : "/assets/images/placeholder.png";
 
+  // Get price based on currency
+  const getPrice = () => {
+    return currency === "INR" 
+      ? product?.price_rupees || 0 
+      : product?.price_dollars || 0;
+  };
+  
+  // Get base price based on currency
+  const getBasePrice = () => {
+    if (currency === "INR") {
+      return product?.base_price || 0;
+    } else {
+      // Simple conversion for USD if base_price is in INR
+      return product?.base_price ? (product.base_price / 80) : 0;
+    }
+  };
+  
+  const finalPrice = getPrice();
+  const basePrice = getBasePrice();
+  
   // Calculate discount if applicable
-  const hasDiscount = product?.base_price > product?.price_rupees;
+  const hasDiscount = basePrice > finalPrice;
   const discountPercentage = hasDiscount
     ? Math.round(
-        ((product.base_price - product.price_rupees) / product.base_price) * 100
+        ((basePrice - finalPrice) / basePrice) * 100
       )
     : 0;
 
@@ -213,6 +233,13 @@ const RelatedProductCard = ({ product }) => {
     } else {
       toast.error("Product Out of Stock");
     }
+  };
+  
+  // Handle currency toggle
+  const handleCurrencyToggle = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleCurrency();
   };
 
   // Handle sharing function
@@ -316,6 +343,18 @@ const RelatedProductCard = ({ product }) => {
 
           {/* Action buttons at bottom */}
           <div className="absolute bottom-2 right-2 z-10 flex items-center space-x-2">
+            {/* Currency toggle */}
+            <button 
+              onClick={handleCurrencyToggle}
+              className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center hover:bg-[#fee3d8] transition-colors"
+            >
+              {currency === "INR" ? (
+                <IndianRupee className="w-4 h-4 text-[#6B2F1A]" />
+              ) : (
+                <DollarSign className="w-4 h-4 text-[#6B2F1A]" />
+              )}
+            </button>
+            
             {/* Wishlist button */}
             <button className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center hover:bg-[#fee3d8] transition-colors">
               <Heart className="w-4 h-4 text-[#6B2F1A]" />
@@ -366,14 +405,14 @@ const RelatedProductCard = ({ product }) => {
               className="text-xl font-bold text-[#6B2F1A]"
               style={{ fontFamily: "Poppins, sans-serif" }}
             >
-              ₹{parseFloat(product?.price_rupees || 0).toLocaleString()}
+              {formatPrice(finalPrice)}
             </p>
             {hasDiscount && (
               <p 
                 className="text-sm text-gray-500 line-through"
                 style={{ fontFamily: "Poppins, sans-serif" }}
               >
-                ₹{parseFloat(product?.base_price || 0).toLocaleString()}
+                {formatPrice(basePrice)}
               </p>
             )}
           </div>
