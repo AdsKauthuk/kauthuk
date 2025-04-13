@@ -281,14 +281,14 @@ const ProductCart = () => {
                         
                         {/* SKU if available */}
                         {item.variant?.sku && (
-                          <p className="text-gray-500 text-xs mt-1" style={{ fontFamily: "Poppins, sans-serif" }}>
+                          <p className="text-gray-500 text-xs mt-1">
                             SKU: {item.variant.sku}
                           </p>
                         )}
 
                         {/* Weight if available */}
                         {currency === 'INR' && (item.weight || (item.variant && item.variant.weight)) && (
-                          <p className="text-gray-500 text-xs mt-1 flex items-center" style={{ fontFamily: "Poppins, sans-serif" }}>
+                          <p className="text-gray-500 text-xs mt-1 flex items-center">
                             <Scale className="h-3 w-3 mr-1"/>
                             Weight: {item.weight || item.variant?.weight || 0}g
                           </p>
@@ -339,7 +339,7 @@ const ProductCart = () => {
                     </div>
                     
                     <div className="text-right">
-                      <p className="text-2xl font-semibold text-[#6B2F1A]" style={{ fontFamily: "Playfair Display, serif" }}>
+                      <p className="text-2xl font-semibold text-[#6B2F1A]" style={{ fontFamily: "Poppins, sans-serif" }}>
                         {currency === 'INR' ? (
                           <>{formatPrice(item.price * item.quantity)}</>
                         ) : (
@@ -436,7 +436,7 @@ const ProductCart = () => {
                   
                   <Separator className="my-4 bg-[#6B2F1A]/10" />
                   
-                  <div className="flex justify-between text-lg font-semibold text-[#6B2F1A]" style={{ fontFamily: "Playfair Display, serif" }}>
+                  <div className="flex justify-between text-lg font-semibold text-[#6B2F1A]" style={{ fontFamily: "Poppins, sans-serif" }}>
                     <span>Total</span>
                     <span>{formatPrice(total)}</span>
                   </div>
