@@ -15,17 +15,17 @@ import "swiper/css/effect-fade";
 const TestimonialCard = ({ name, location, description, rating = 5, role = "Customer" }) => (
   <div className="relative bg-white rounded-xl shadow-md p-8 md:p-10 overflow-hidden transition-all duration-300 h-full flex flex-col">
     {/* Subtle top accent line */}
-    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#6B2F1A] to-[#F0B775]"></div>
+    <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-[#6B2F1A] to-[#F0B775]"></div>
     
-    <div className="testimonial-content flex-1 relative z-10">
-      <Quote className="w-10 h-10 text-[#6B2F1A]/10 absolute -top-1 -left-1" />
+    <div className="testimonial-content flex-1 relative z-10 flex flex-col items-center justify-center">
+      <Quote className="w-10 h-10 text-[#6B2F1A]/10 absolute -top-1 left-1/2 transform -translate-x-1/2" />
       
-      <p className="font-poppins text-lg leading-relaxed text-gray-700 mb-6 mt-6 relative z-10 text-center">
+      <p className="font-poppins text-lg leading-relaxed text-gray-700 mb-6 mt-6 relative z-10 text-center mx-auto max-w-2xl">
         "{description}"
       </p>
       
-      <div className="mt-auto pt-4 border-t border-gray-100">
-        <div className="flex items-center gap-1 mb-3">
+      <div className="mt-auto pt-4 border-t border-gray-100 w-full">
+        <div className="flex items-center gap-1 mb-3 justify-center">
           {[...Array(5)].map((_, i) => (
             <Star 
               key={i} 
@@ -34,19 +34,13 @@ const TestimonialCard = ({ name, location, description, rating = 5, role = "Cust
           ))}
         </div>
         
-        <div className="flex items-center">
-          {/* <div className="flex-shrink-0 mr-3">
-            <div className="w-10 h-10 rounded-full bg-[#F9F4F0] flex items-center justify-center">
-              <span className="font-playfair text-[#6B2F1A] text-base font-semibold">{name.charAt(0)}</span>
-            </div>
-          </div> */}
-          
+        <div className="flex items-center justify-center">
           <div>
-            <h4 className="font-playfair text-base font-semibold text-[#6B2F1A]">
+            <h4 className="font-playfair text-base font-semibold text-[#6B2F1A] text-center">
               {name}
             </h4>
             
-            <div className="flex items-center text-gray-500 mt-0.5">
+            <div className="flex items-center text-gray-500 mt-0.5 justify-center">
               <MapPin className="w-3 h-3 mr-1 text-[#6B2F1A]/60" />
               <span className="font-poppins text-xs">{location}</span>
               <span className="mx-1.5 text-gray-300">•</span>
@@ -105,7 +99,7 @@ const TestimonialSlider = () => {
             </p>
           </div>
           
-          <h2 className="font-playfair text-3xl md:text-4xl font-bold text-[#6B2F1A] mb-3">
+          <h2 className="font-playfair text-3xl md:text-4xl font-bold text-[#6B2F1A] mb-3 category-heading">
             What Our Customers Say
           </h2>
           
@@ -152,16 +146,19 @@ const TestimonialSlider = () => {
               }}
               onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
               className="testimonial-slider pb-16"
+              centeredSlides={true}
             >
               {testimonials.map((testimonial) => (
-                <SwiperSlide key={testimonial.id} className="py-6 px-2">
-                  <TestimonialCard 
-                    name={testimonial.name}
-                    location={testimonial.location}
-                    description={testimonial.description}
-                    rating={testimonial.rating || 5}
-                    role={testimonial.role || "Verified Customer"}
-                  />
+                <SwiperSlide key={testimonial.id} className="py-6 px-2 flex justify-center">
+                  <div className="w-full max-w-2xl mx-auto">
+                    <TestimonialCard 
+                      name={testimonial.name}
+                      location={testimonial.location}
+                      description={testimonial.description}
+                      rating={testimonial.rating || 5}
+                      role={testimonial.role || "Verified Customer"}
+                    />
+                  </div>
                 </SwiperSlide>
               ))}
             </Swiper>

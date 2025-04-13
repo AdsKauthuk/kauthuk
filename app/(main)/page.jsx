@@ -58,7 +58,7 @@ const MainPage = () => {
       
       {/* Featured Products Slider - Always show at the top if there are featured products */}
       <FeaturedProductsSlider 
-        title="Our Featured Collection"
+        title="Featured Collection"
         viewAllLink="/products?featured=yes"
         limit={8}
         showBadge={true}
@@ -73,7 +73,7 @@ const MainPage = () => {
           <ProductSlider 
             key={featuredCategories[0].id}
             category={featuredCategories[0].id} 
-            title={`${featuredCategories[0].catName} Collection`} 
+            title={`${featuredCategories[0].catName}`} 
             viewAllLink={`/category/${featuredCategories[0].id}`}
             limit={8}
           />
@@ -98,7 +98,7 @@ const MainPage = () => {
               <ProductSlider 
                 key={category.id}
                 category={category.id} 
-                title={`${category.catName} ${titleSuffixes[index] || "Collection"}`} 
+                title={`${category.catName} `} 
                 viewAllLink={`/category/${category.id}`}
                 // displayType={displayTypes[index] || "default"}
                 limit={8}

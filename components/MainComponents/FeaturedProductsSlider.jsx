@@ -89,7 +89,7 @@ const FeaturedProductsSlider = ({
   if (loading) {
     return (
       <section className="w-full py-12" style={{ backgroundColor: bgColor }}>
-        <div className="mx-auto px-4">
+        <div className="mx-auto px-12">
           <div className="flex items-center justify-between mb-8">
             <div className="h-8 w-48 bg-gray-200 rounded-md animate-pulse"></div>
             <div className="h-6 w-24 bg-gray-200 rounded-md animate-pulse"></div>
@@ -118,7 +118,7 @@ const FeaturedProductsSlider = ({
   if (error) {
     return (
       <section className="w-full py-12" style={{ backgroundColor: bgColor }}>
-        <div className="mx-auto px-4">
+        <div className="mx-auto px-12">
           <h2 className="text-2xl md:text-3xl font-playfair font-bold mb-6 text-gray-800 category-heading">
             {title}
           </h2>
@@ -137,7 +137,7 @@ const FeaturedProductsSlider = ({
 
   return (
     <section className="w-full py-12" style={{ backgroundColor: bgColor }}>
-      <div className="mx-auto px-4">
+      <div className="mx-auto px-12">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-2xl md:text-3xl font-playfair font-bold text-gray-800 category-heading">

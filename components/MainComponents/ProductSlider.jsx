@@ -370,7 +370,7 @@ const ProductSlider = ({
   if (loading) {
     return (
       <section className="w-full py-12">
-        <div className="mx-auto px-4">
+        <div className="mx-auto px-12">
           <div className="flex items-center justify-between mb-8">
             <div className="h-8 w-48 bg-gray-200 rounded-md animate-pulse"></div>
             <div className="h-6 w-24 bg-gray-200 rounded-md animate-pulse"></div>
@@ -399,7 +399,7 @@ const ProductSlider = ({
   if (error) {
     return (
       <section className="w-full py-12">
-        <div className="mx-auto px-4">
+        <div className="mx-auto px-12">
           <h2 className="text-2xl md:text-3xl font-playfair font-bold mb-6 text-gray-800 category-heading">
             {title}
           </h2>
@@ -415,7 +415,7 @@ const ProductSlider = ({
   if (products.length === 0) {
     return (
       <section className="w-full py-12">
-        <div className="mx-auto px-4">
+        <div className="mx-auto px-12">
           <h2 className="text-2xl md:text-3xl font-playfair font-bold mb-6 text-gray-800 category-heading">
             {title}
           </h2>
@@ -429,7 +429,7 @@ const ProductSlider = ({
 
   return (
     <section className="w-full py-12 bg-[#FFFBF9] overflow-x-hidden">
-      <div className="mx-auto px-4">
+      <div className="mx-auto px-12">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-2xl md:text-3xl font-playfair font-bold text-gray-800 category-heading">
