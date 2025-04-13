@@ -603,3 +603,23 @@ model UserSession {
 
   User User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+model Banner {
+  id          Int         @id @default(autoincrement())
+  title       String      @db.VarChar(255)
+  subtitle    String?     @db.VarChar(255)
+  buttonTitle String?     @db.VarChar(100)
+  buttonLink  String?     @db.VarChar(255)
+  image       String?     @db.VarChar(255) // Path to the image
+  displayPage DisplayPage // Where the banner should appear
+  status      Statuses    @default(active)
+  priority    Int         @default(0)      // For ordering when multiple banners exist for a page
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+enum DisplayPage {
+  home
+  detail
+  success
+}

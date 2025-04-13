@@ -79,13 +79,9 @@ const MainPage = () => {
           />
           
           {/* Promotional Banner - after first slider */}
-          <PromotionalBanner 
-            title="STARTING ₹99" 
-            subtitle="Kids collection"
-            imagePath="/assets/images/banner.jpg"
-            bgColor="#F9EBD7"
-            link="/category/kids"
-          />
+          <PromotionalBanner displayPage="home" />
+
+
           
           {/* Remaining product sliders */}
           {featuredCategories.slice(1, 3).map((category, index) => {
@@ -107,13 +103,8 @@ const MainPage = () => {
           })}
           
           {/* Second Promotional Banner - before testimonials */}
-          <PromotionalBanner 
-            title="HANDCRAFTED" 
-            subtitle="Aranmula Kannadi"
-            imagePath="/assets/images/banner.jpg"
-            bgColor="#E7DFD8"
-            link="/product/aranmula-mirror"
-          />
+          <PromotionalBanner displayPage="home" />
+
         </>
       ) : (
         // Fallback if no categories found
@@ -121,13 +112,8 @@ const MainPage = () => {
           <ProductSlider title="Featured Products" viewAllLink="/products" limit={8} />
           
           {/* Promotional Banner - even if no categories */}
-          <PromotionalBanner 
-            title="STARTING ₹99" 
-            subtitle="Kids collection"
-            imagePath="/assets/images/banner.jpg"
-            bgColor="#F9EBD7"
-            link="/category/kids"
-          />
+          <PromotionalBanner displayPage="home" />
+
           
           <ProductSlider title="New Arrivals" viewAllLink="/products?sort=latest" displayType="coverflow" limit={8} />
           <ProductSlider title="Popular Items" viewAllLink="/products?sort=popular" displayType="cards" limit={8} />

@@ -68,6 +68,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import PromotionalBanner from "@/components/MainComponents/PromotionalBanner";
 
 const ProductDetails = () => {
   const [product, setProduct] = useState(null);
@@ -1330,6 +1331,8 @@ const ProductDetails = () => {
                       </Swiper>
                     )}
                   </div>
+                  <PromotionalBanner displayPage="detail" />
+
                 </div>
               </div>
             )}
