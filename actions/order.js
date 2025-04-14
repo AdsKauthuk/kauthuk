@@ -9,17 +9,17 @@ import { baseEncode } from "@/lib/decode-product-data";
 
 // Email configuration
 const transporter = nodemailer.createTransport({
-  host: "kauthuk.com",           // From EMAIL_HOST
-  port: 587,                     // Standard SMTP port for TLS
-  secure: false,                 // false for TLS on port 587
+  host: 'smtp.mailer91.com',
+  port: 587,
+  secure: false, // for TLS
   auth: {
-    user: "admin@kauthuk.com",   // From EMAIL_USERNAME
-    pass: "anoop123456",         // From EMAIL_PASSWORD
+    user: 'emailer@mail.kauthuk.com',
+    pass: 'EbjRSOR9Nsy0ysWs'
   },
-  // Add timeout settings to improve connection reliability
-  connectionTimeout: 10000,      // 10 seconds
+  // Timeouts to improve connection reliability
+  connectionTimeout: 10000, // 10 seconds
   greetingTimeout: 10000,
-  socketTimeout: 15000,
+  socketTimeout: 15000
 });
 
 // Helper function to send order confirmation email
@@ -137,8 +137,8 @@ async function sendOrderConfirmationEmail(order, user, items) {
 
     // Send the email
     const mailOptions = {
-      from: '"Kauthuk Shop" <admin@kauthuk.com>',  // Match the EMAIL_USERNAME
-      to: user.email,
+      from: '"Kauthuk Shop" <info@kauthuk.com>',  // Match the EMAIL_USERNAME
+      to: "shabeermen@gmail.com",
       subject: `Order Confirmation #${order.id} - Kauthuk`,
       html: emailHtml,
     };
@@ -1319,8 +1319,8 @@ export async function sendOrderStatusEmail(orderId, newStatus) {
 
     // Send the email
     const mailOptions = {
-      from: '"Kauthuk Shop" <admin@kauthuk.com>',
-      to: order.User.email,
+      from: '"Kauthuk Shop" <info@kauthuk.com>',
+      to: "shabeermen@gmail.com",
       subject: `Order #${order.id} Status Update - ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}`,
       html: emailHtml,
     };
@@ -1851,8 +1851,8 @@ export async function sendOrderInvoice(orderId) {
 
     // Send the email
     const mailOptions = {
-      from: '"Kauthuk Shop" <admin@kauthuk.com>',
-      to: order.customer.email,
+      from: '"Kauthuk Shop" <info@kauthuk.com>',
+      to: "shabeermen@gmail.com",
       subject: `Invoice for Order #${order.orderId} - Kauthuk`,
       html: emailHtml,
     };

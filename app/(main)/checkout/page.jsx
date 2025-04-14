@@ -580,11 +580,14 @@ const CheckoutPage = () => {
         orderId: orderId,
       });
 
+console.log("verificationResult",verificationResult)
+
+
       if (verificationResult.success) {
         setPaymentSuccess(true);
         clearCart();
         toast.success("Payment successful!");
-        router.push(`/thank-you?orderId=${result.order.id}&total=${total}&currency=${currency}&items=${itemCount}`);
+        router.push(`/thank-you?orderId=${orderId}&total=${total}&currency=${currency}&items=${itemCount}`);
 
         // Optional: Redirect or show success page
         // router.push('/order-confirmation');
