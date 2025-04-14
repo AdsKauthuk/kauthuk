@@ -137,8 +137,8 @@ async function sendOrderConfirmationEmail(order, user, items) {
 
     // Send the email
     const mailOptions = {
-      from: '"Kauthuk Shop" <info@kauthuk.com>',  // Match the EMAIL_USERNAME
-      to: "shabeermen@gmail.com",
+      from: '<info@kauthuk.com>',  // Match the EMAIL_USERNAME
+      to: user.email,
       subject: `Order Confirmation #${order.id} - Kauthuk`,
       html: emailHtml,
     };
@@ -1319,8 +1319,8 @@ export async function sendOrderStatusEmail(orderId, newStatus) {
 
     // Send the email
     const mailOptions = {
-      from: '"Kauthuk Shop" <info@kauthuk.com>',
-      to: "shabeermen@gmail.com",
+      from: '<info@kauthuk.com>',
+      to: order.User.email,
       subject: `Order #${order.id} Status Update - ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}`,
       html: emailHtml,
     };
@@ -1851,8 +1851,8 @@ export async function sendOrderInvoice(orderId) {
 
     // Send the email
     const mailOptions = {
-      from: '"Kauthuk Shop" <info@kauthuk.com>',
-      to: "shabeermen@gmail.com",
+      from: '<info@kauthuk.com>',
+      to: order.customer.email,
       subject: `Invoice for Order #${order.orderId} - Kauthuk`,
       html: emailHtml,
     };
