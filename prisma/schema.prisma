@@ -89,6 +89,7 @@ model Product {
   ProductVariants   ProductVariant[]
   ProductImages     ProductImage[]
   ProductAttributes ProductAttribute[]
+  OrderProducts     OrderProduct[]
 }
 
 model ProductImage {
@@ -445,6 +446,7 @@ model Order {
   payment_method  PaymentMethod
   payment_status  PaymentStatus @default(pending)
   order_status    OrderStatus   @default(placed)
+  payment_details String? // Add this line - nullable string field
   order_date      DateTime      @default(now())
   currency        Currency      @default(INR)
   delivery_charge Decimal       @db.Decimal(10, 2)
@@ -472,7 +474,8 @@ model OrderProduct {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  Order Order @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  Order   Order   @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  Product Product @relation(fields: [product_id], references: [id]) // Add this relation
 }
 
 // Shipping Details model
@@ -613,7 +616,7 @@ model Banner {
   image       String?     @db.VarChar(255) // Path to the image
   displayPage DisplayPage // Where the banner should appear
   status      Statuses    @default(active)
-  priority    Int         @default(0)      // For ordering when multiple banners exist for a page
+  priority    Int         @default(0) // For ordering when multiple banners exist for a page
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 }

@@ -584,6 +584,7 @@ const CheckoutPage = () => {
         setPaymentSuccess(true);
         clearCart();
         toast.success("Payment successful!");
+        router.push(`/thank-you?orderId=${result.order.id}&total=${total}&currency=${currency}&items=${itemCount}`);
 
         // Optional: Redirect or show success page
         // router.push('/order-confirmation');
@@ -655,7 +656,10 @@ const CheckoutPage = () => {
           setPaymentSuccess(true);
           clearCart();
           setIsProcessing(false);
+          router.push(`/thank-you?orderId=${result.order.id}&total=${total}&currency=${currency}&items=${itemCount}`);
+
         }, 1500);
+        
       } else if (
         data.paymentMethod === "card" ||
         data.paymentMethod === "upi"

@@ -207,29 +207,7 @@ const ThankYouPage = () => {
                 </div>
               </div>
 
-              {/* Recommended products section (optional) */}
-              <div className="mt-12 border-t border-gray-200 pt-8">
-                <h2 className="text-xl font-semibold text-center mb-6">
-                  You Might Also Like
-                </h2>
-
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {/* Sample product recommendations - replace with real data */}
-                  {[1, 2, 3].map((item) => (
-                    <Link href="/products" key={item} className="group">
-                      <div className="bg-[#f9f7f4] rounded-lg p-2 h-40 flex items-center justify-center">
-                        <ShoppingBag className="h-10 w-10 text-[#6B2F1A] opacity-50" />
-                      </div>
-                      <div className="mt-2">
-                        <h3 className="text-sm font-medium group-hover:text-[#6B2F1A] transition-colors">
-                          Recommended Product
-                        </h3>
-                        <p className="text-xs text-gray-500">From ₹999</p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
+              
             </div>
           </motion.div>
         </div>
