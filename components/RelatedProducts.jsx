@@ -344,7 +344,7 @@ const RelatedProductCard = ({ product }) => {
           {/* Action buttons at bottom */}
           <div className="absolute bottom-2 right-2 z-10 flex items-center space-x-2">
             {/* Currency toggle */}
-            <button 
+            {/* <button 
               onClick={handleCurrencyToggle}
               className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center hover:bg-[#fee3d8] transition-colors"
             >
@@ -353,7 +353,7 @@ const RelatedProductCard = ({ product }) => {
               ) : (
                 <DollarSign className="w-4 h-4 text-[#6B2F1A]" />
               )}
-            </button>
+            </button> */}
             
             {/* Wishlist button */}
             <button className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center hover:bg-[#fee3d8] transition-colors">

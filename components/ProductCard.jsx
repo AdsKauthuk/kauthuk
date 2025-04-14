@@ -238,7 +238,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
           )}
 
           {/* Currency badge */}
-          <div className="absolute bottom-3 right-3 z-10">
+          {/* <div className="absolute bottom-3 right-3 z-10">
             <button 
               onClick={handleCurrencyToggle}
               className="w-8 h-8 rounded-full bg-white/80 hover:bg-white flex items-center justify-center transition-all shadow-sm"
@@ -249,7 +249,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
                 <DollarSign className="w-4 h-4 text-[#6B2F1A]" />
               )}
             </button>
-          </div>
+          </div> */}
 
           {/* Quick View Overlay - Appears on hover */}
           <Link href={`/product/${product?.id}`}>
