@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
+import { useSearchParams } from "next/navigation";
 
 // UI Components
 import {
@@ -64,15 +65,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  Badge
-} from "@/components/ui/badge";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Popover,
   PopoverContent,
@@ -119,41 +113,17 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 // Actions
-import { getOrders, getOrderById, updateOrderStatus, updateShippingDetails } from "@/actions/order";
-
-// Create a separate component for the search params functionality
-function OrderSearchParamsHandler({ onParamsChange }) {
-  const searchParams = useSearchParams();
-  
-  useEffect(() => {
-    const userIdParam = searchParams.get('user');
-    if (userIdParam) {
-      onParamsChange(`user:${userIdParam}`);
-    }
-  }, [searchParams, onParamsChange]);
-
-  return null;
-}
-
-// Import useSearchParams inside this component
-function SearchParamsWrapper({ onParamsChange }) {
-  const { useSearchParams } = require("next/navigation");
-  
-  const searchParams = useSearchParams();
-  
-  useEffect(() => {
-    const userIdParam = searchParams.get('user');
-    if (userIdParam) {
-      onParamsChange(`user:${userIdParam}`);
-    }
-  }, [searchParams, onParamsChange]);
-
-  return null;
-}
+import {
+  getOrders,
+  getOrderById,
+  updateOrderStatus,
+  updateShippingDetails,
+} from "@/actions/order";
 
 const ListOrdersPage = () => {
   const router = useRouter();
-  
+  const searchParams = useSearchParams();
+
   // State for filters and pagination
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -165,15 +135,15 @@ const ListOrdersPage = () => {
     from: undefined,
     to: undefined,
   });
-  
+
   // State for orders data
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
-  
+
   // State for order detail
   const [orderDetail, setOrderDetail] = useState(null);
   const [loadingOrderDetail, setLoadingOrderDetail] = useState(false);
-  
+
   // State for shipping update
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [updatingShipping, setUpdatingShipping] = useState(false);
@@ -181,15 +151,18 @@ const ListOrdersPage = () => {
     courier_name: "",
     tracking_id: "",
     tracking_url: "",
-    status: "processing"
+    status: "processing",
   });
 
   const itemsPerPage = 15;
 
-  // Handle params change from the Suspense wrapped component
-  const handleParamsChange = (query) => {
-    setSearchQuery(query);
-  };
+  // Handle URL params for user filtering
+  useEffect(() => {
+    const userIdParam = searchParams.get("user");
+    if (userIdParam) {
+      setSearchQuery(`user:${userIdParam}`);
+    }
+  }, [searchParams]);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -197,7 +170,7 @@ const ListOrdersPage = () => {
       // Extract user ID from search query if in format "user:123"
       let userId = null;
       let searchTerm = searchQuery;
-      
+
       if (searchQuery.startsWith("user:")) {
         const userIdMatch = searchQuery.match(/user:(\d+)/);
         if (userIdMatch && userIdMatch[1]) {
@@ -205,11 +178,13 @@ const ListOrdersPage = () => {
           searchTerm = ""; // Clear search term as we're using userId filter
         }
       }
-      
+
       // Get start and end dates if set
-      const startDate = selectedDates.from ? selectedDates.from.toISOString() : null;
+      const startDate = selectedDates.from
+        ? selectedDates.from.toISOString()
+        : null;
       const endDate = selectedDates.to ? selectedDates.to.toISOString() : null;
-      
+
       // Use the server action
       const result = await getOrders({
         search: searchTerm,
@@ -219,16 +194,16 @@ const ListOrdersPage = () => {
         status: statusFilter,
         userId: userId,
         startDate: startDate,
-        endDate: endDate
+        endDate: endDate,
       });
-      
+
       if (result.success === false) {
         toast.error(result.error || "Failed to load orders");
         setOrders([]);
         setTotalPages(0);
         return;
       }
-      
+
       if (result.orders) {
         setOrders(result.orders);
         setTotalPages(result.totalPages);
@@ -250,25 +225,32 @@ const ListOrdersPage = () => {
 
   useEffect(() => {
     fetchOrders();
-  }, [searchQuery, currentPage, sortBy, statusFilter, selectedDates.from, selectedDates.to]);
+  }, [
+    searchQuery,
+    currentPage,
+    sortBy,
+    statusFilter,
+    selectedDates.from,
+    selectedDates.to,
+  ]);
 
   const handleViewOrderDetails = async (orderId) => {
     setLoadingOrderDetail(true);
-    
+
     try {
       const result = await getOrderById(orderId);
-      
+
       if (result.success && result.order) {
         setOrderDetail(result.order);
       } else {
         toast.error(result.error || "Failed to load order details");
         // Find the order in our current list to display basic details
-        const order = orders.find(order => order.id === orderId);
+        const order = orders.find((order) => order.id === orderId);
         if (order) {
           setOrderDetail({
             ...order,
             OrderProducts: [],
-            ShippingDetail: null
+            ShippingDetail: null,
           });
         }
       }
@@ -282,25 +264,25 @@ const ListOrdersPage = () => {
 
   const handleStatusUpdate = async (orderId, newStatus) => {
     setUpdatingStatus(true);
-    
+
     try {
       const result = await updateOrderStatus(orderId, newStatus);
-      
+
       if (result.success) {
         toast.success(result.message || "Order status updated successfully");
-        
+
         // Update orders list
-        setOrders(prevOrders => 
-          prevOrders.map(order => 
+        setOrders((prevOrders) =>
+          prevOrders.map((order) =>
             order.id === orderId ? { ...order, orderStatus: newStatus } : order
           )
         );
-        
+
         // Update order detail if open
         if (orderDetail && orderDetail.id === orderId) {
-          setOrderDetail(prev => ({ ...prev, order_status: newStatus }));
+          setOrderDetail((prev) => ({ ...prev, order_status: newStatus }));
         }
-        
+
         // Refresh the order details
         if (orderDetail && orderDetail.id === orderId) {
           handleViewOrderDetails(orderId);
@@ -318,13 +300,15 @@ const ListOrdersPage = () => {
 
   const handleShippingUpdate = async (orderId) => {
     setUpdatingShipping(true);
-    
+
     try {
-      // const result = await updateShippingDetails(orderId, shippingForm);
-      
+      const result = await updateShippingDetails(orderId, shippingForm);
+
       if (result.success) {
-        toast.success(result.message || "Shipping details updated successfully");
-        
+        toast.success(
+          result.message || "Shipping details updated successfully"
+        );
+
         // Refresh the order details
         handleViewOrderDetails(orderId);
       } else {
@@ -352,11 +336,11 @@ const ListOrdersPage = () => {
     try {
       const numAmount = Number(amount);
       if (isNaN(numAmount)) return `${currency === "USD" ? "$" : "₹"}0.00`;
-      
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
+
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
         currency: currency,
-        minimumFractionDigits: 2
+        minimumFractionDigits: 2,
       }).format(numAmount);
     } catch (e) {
       return `${currency === "USD" ? "$" : "₹"}${amount}`;
@@ -378,19 +362,19 @@ const ListOrdersPage = () => {
   // Function to get status badge color
   const getStatusBadgeClass = (status) => {
     switch (status) {
-      case 'placed':
+      case "placed":
         return "bg-blue-100 text-blue-800";
-      case 'confirmed':
+      case "confirmed":
         return "bg-indigo-100 text-indigo-800";
-      case 'processing':
+      case "processing":
         return "bg-yellow-100 text-yellow-800";
-      case 'shipped':
+      case "shipped":
         return "bg-purple-100 text-purple-800";
-      case 'delivered':
+      case "delivered":
         return "bg-green-100 text-green-800";
-      case 'cancelled':
+      case "cancelled":
         return "bg-red-100 text-red-800";
-      case 'returned':
+      case "returned":
         return "bg-orange-100 text-orange-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -400,13 +384,13 @@ const ListOrdersPage = () => {
   // Function to get payment status badge color
   const getPaymentBadgeClass = (status) => {
     switch (status) {
-      case 'completed':
+      case "completed":
         return "bg-green-100 text-green-800";
-      case 'pending':
+      case "pending":
         return "bg-yellow-100 text-yellow-800";
-      case 'failed':
+      case "failed":
         return "bg-red-100 text-red-800";
-      case 'refunded':
+      case "refunded":
         return "bg-purple-100 text-purple-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -414,76 +398,87 @@ const ListOrdersPage = () => {
   };
 
   const renderSkeletons = () => {
-    return Array(5).fill(0).map((_, index) => (
-      <tr key={`skeleton-${index}`} className="animate-pulse">
-        <td className="p-4 border-b border-gray-100">
-          <div className="h-4 bg-gray-200 rounded w-16"></div>
-        </td>
-        <td className="p-4 border-b border-gray-100">
-          <div className="h-4 bg-gray-200 rounded w-28 mb-1"></div>
-          <div className="h-3 bg-gray-200 rounded w-40"></div>
-        </td>
-        <td className="p-4 border-b border-gray-100">
-          <div className="h-4 bg-gray-200 rounded w-20 mx-auto"></div>
-        </td>
-        <td className="p-4 border-b border-gray-100">
-          <div className="h-4 bg-gray-200 rounded w-24 mx-auto"></div>
-        </td>
-        <td className="p-4 border-b border-gray-100">
-          <div className="h-4 bg-gray-200 rounded w-20 mx-auto"></div>
-        </td>
-        <td className="p-4 border-b border-gray-100">
-          <div className="h-4 bg-gray-200 rounded w-28 mx-auto"></div>
-        </td>
-        <td className="p-4 border-b border-gray-100">
-          <div className="flex justify-center space-x-2">
-            <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
-            <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
-          </div>
-        </td>
-      </tr>
-    ));
+    return Array(5)
+      .fill(0)
+      .map((_, index) => (
+        <tr key={`skeleton-${index}`} className="animate-pulse">
+          <td className="p-4 border-b border-gray-100">
+            <div className="h-4 bg-gray-200 rounded w-16"></div>
+          </td>
+          <td className="p-4 border-b border-gray-100">
+            <div className="h-4 bg-gray-200 rounded w-28 mb-1"></div>
+            <div className="h-3 bg-gray-200 rounded w-40"></div>
+          </td>
+          <td className="p-4 border-b border-gray-100">
+            <div className="h-4 bg-gray-200 rounded w-20 mx-auto"></div>
+          </td>
+          <td className="p-4 border-b border-gray-100">
+            <div className="h-4 bg-gray-200 rounded w-24 mx-auto"></div>
+          </td>
+          <td className="p-4 border-b border-gray-100">
+            <div className="h-4 bg-gray-200 rounded w-20 mx-auto"></div>
+          </td>
+          <td className="p-4 border-b border-gray-100">
+            <div className="h-4 bg-gray-200 rounded w-28 mx-auto"></div>
+          </td>
+          <td className="p-4 border-b border-gray-100">
+            <div className="flex justify-center space-x-2">
+              <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+              <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+            </div>
+          </td>
+        </tr>
+      ));
   };
 
   // Function to generate sample orders for demonstration
   const generateSampleOrders = () => {
-    return Array(12).fill(0).map((_, index) => ({
-      id: 1000 + index,
-      userName: `User ${index + 1}`,
-      userEmail: `user${index + 1}@example.com`,
-      total: 100 + (index * 10),
-      currency: "INR",
-      orderStatus: ['placed', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'][index % 6],
-      paymentStatus: ['completed', 'pending', 'failed', 'refunded'][index % 4],
-      paymentMethod: ['card', 'upi', 'cod'][index % 3],
-      orderDate: new Date(2023, index % 12, (index % 28) + 1).toISOString()
-    }));
+    return Array(12)
+      .fill(0)
+      .map((_, index) => ({
+        id: 1000 + index,
+        userName: `User ${index + 1}`,
+        userEmail: `user${index + 1}@example.com`,
+        total: 100 + index * 10,
+        currency: "INR",
+        orderStatus: [
+          "placed",
+          "confirmed",
+          "processing",
+          "shipped",
+          "delivered",
+          "cancelled",
+        ][index % 6],
+        paymentStatus: ["completed", "pending", "failed", "refunded"][
+          index % 4
+        ],
+        paymentMethod: ["card", "upi", "cod"][index % 3],
+        orderDate: new Date(2023, index % 12, (index % 28) + 1).toISOString(),
+      }));
   };
-  
+
   return (
     <div className="w-full p-4 space-y-6 max-w-7xl mx-auto">
-      {/* Suspense boundary for the search params handling */}
-      <Suspense fallback={null}>
-        <SearchParamsWrapper onParamsChange={handleParamsChange} />
-      </Suspense>
-
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Order Management</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Order Management
+          </h1>
           <Breadcrumb className="text-sm text-gray-500 mt-1">
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href="/admin" className="flex items-center gap-1">
+                <BreadcrumbLink
+                  href="/admin"
+                  className="flex items-center gap-1"
+                >
                   <HomeIcon size={14} />
                   Dashboard
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink href="/admin/orders">
-                  Orders
-                </BreadcrumbLink>
+                <BreadcrumbLink href="/admin/orders">Orders</BreadcrumbLink>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -499,7 +494,7 @@ const ListOrdersPage = () => {
             <Filter size={16} />
             {showFilters ? "Hide Filters" : "Show Filters"}
           </Button>
-          
+
           <Button
             onClick={handleReset}
             variant="outline"
@@ -530,7 +525,7 @@ const ListOrdersPage = () => {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className="text-sm font-medium mb-1 block">Status</label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -549,9 +544,11 @@ const ListOrdersPage = () => {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div>
-                <label className="text-sm font-medium mb-1 block">Sort by</label>
+                <label className="text-sm font-medium mb-1 block">
+                  Sort by
+                </label>
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Sort by" />
@@ -564,9 +561,11 @@ const ListOrdersPage = () => {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div>
-                <label className="text-sm font-medium mb-1 block">Date Range</label>
+                <label className="text-sm font-medium mb-1 block">
+                  Date Range
+                </label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -612,12 +611,24 @@ const ListOrdersPage = () => {
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
                 <th className="text-left p-4 font-medium text-gray-600">ID</th>
-                <th className="text-left p-4 font-medium text-gray-600">Customer</th>
-                <th className="text-center p-4 font-medium text-gray-600">Total</th>
-                <th className="text-center p-4 font-medium text-gray-600">Status</th>
-                <th className="text-center p-4 font-medium text-gray-600">Payment</th>
-                <th className="text-center p-4 font-medium text-gray-600">Date</th>
-                <th className="text-center p-4 font-medium text-gray-600">Actions</th>
+                <th className="text-left p-4 font-medium text-gray-600">
+                  Customer
+                </th>
+                <th className="text-center p-4 font-medium text-gray-600">
+                  Total
+                </th>
+                <th className="text-center p-4 font-medium text-gray-600">
+                  Status
+                </th>
+                <th className="text-center p-4 font-medium text-gray-600">
+                  Payment
+                </th>
+                <th className="text-center p-4 font-medium text-gray-600">
+                  Date
+                </th>
+                <th className="text-center p-4 font-medium text-gray-600">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -625,11 +636,14 @@ const ListOrdersPage = () => {
                 renderSkeletons()
               ) : orders.length > 0 ? (
                 orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                  <tr
+                    key={order.id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
                     <td className="p-4 border-b border-gray-100">
                       <div className="font-medium">#{order.id}</div>
                     </td>
-                    
+
                     <td className="p-4 border-b border-gray-100">
                       <div className="flex flex-col">
                         <div className="font-medium flex items-center gap-1.5">
@@ -642,14 +656,14 @@ const ListOrdersPage = () => {
                         </div>
                       </div>
                     </td>
-                    
+
                     <td className="p-4 border-b border-gray-100 text-center whitespace-nowrap">
                       <div className="flex items-center justify-center gap-1.5">
                         <Banknote size={14} className="text-gray-500" />
                         {formatCurrency(order.total, order.currency)}
                       </div>
                     </td>
-                    
+
                     <td className="p-4 border-b border-gray-100 text-center">
                       <Badge
                         className={cn(
@@ -660,7 +674,7 @@ const ListOrdersPage = () => {
                         {order.orderStatus}
                       </Badge>
                     </td>
-                    
+
                     <td className="p-4 border-b border-gray-100 text-center">
                       <div className="flex flex-col items-center gap-1">
                         <Badge
@@ -671,17 +685,19 @@ const ListOrdersPage = () => {
                         >
                           {order.paymentStatus}
                         </Badge>
-                        <span className="text-xs text-gray-500 capitalize">{order.paymentMethod}</span>
+                        <span className="text-xs text-gray-500 capitalize">
+                          {order.paymentMethod}
+                        </span>
                       </div>
                     </td>
-                    
+
                     <td className="p-4 border-b border-gray-100 text-center whitespace-nowrap">
                       <div className="flex items-center justify-center gap-2">
                         <Calendar size={14} className="text-gray-500" />
                         {formatDate(order.orderDate)}
                       </div>
                     </td>
-                    
+
                     <td className="p-4 border-b border-gray-100">
                       <div className="flex justify-center items-center space-x-2">
                         <TooltipProvider>
@@ -699,12 +715,14 @@ const ListOrdersPage = () => {
                             <TooltipContent>View Details</TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
-                        
+
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
-                                onClick={() => router.push(`/admin/orders/edit/${order.id}`)}
+                                onClick={() =>
+                                  router.push(`/admin/orders/edit/${order.id}`)
+                                }
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 rounded-full text-amber-600 hover:text-amber-900 hover:bg-amber-50"
@@ -744,11 +762,17 @@ const ListOrdersPage = () => {
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
-                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  className={
+                    currentPage === 1
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
                 />
               </PaginationItem>
-              
+
               {Array.from({ length: totalPages }).map((_, i) => (
                 <PaginationItem key={i + 1}>
                   <PaginationLink
@@ -759,11 +783,17 @@ const ListOrdersPage = () => {
                   </PaginationLink>
                 </PaginationItem>
               ))}
-              
+
               <PaginationItem>
                 <PaginationNext
-                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
+                  className={
+                    currentPage === totalPages
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
                 />
               </PaginationItem>
             </PaginationContent>
@@ -771,75 +801,29 @@ const ListOrdersPage = () => {
         </div>
       )}
 
-      {/* Order Detail Dialog */}
-      <Dialog open={!!orderDetail} onOpenChange={(open) => !open && setOrderDetail(null)}>
+      <Dialog
+        open={!!orderDetail}
+        onOpenChange={(open) => !open && setOrderDetail(null)}
+      >
         <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl">Order #{orderDetail?.id}</DialogTitle>
+            <DialogTitle className="text-2xl">
+              Order #{orderDetail?.id}
+            </DialogTitle>
             <DialogDescription>
               Placed on {orderDetail && formatDate(orderDetail.order_date)}
             </DialogDescription>
           </DialogHeader>
-          
+
           {orderDetail && (
             <div className="space-y-6">
               {/* Order Summary */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-500">Customer</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-1">
-                      <div className="font-medium">{orderDetail.User?.name || "Unknown"}</div>
-                      <div className="text-sm text-gray-600">{orderDetail.User?.email || "No email"}</div>
-                      <div className="text-sm text-gray-600">{orderDetail.User?.mobile || "No phone"}</div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-500">Order Status</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div>
-                        <Badge
-                          className={cn(
-                            "capitalize",
-                            getStatusBadgeClass(orderDetail.order_status)
-                          )}
-                        >
-                          {orderDetail.order_status}
-                        </Badge>
-                      </div>
-                      
-                      <Select 
-                        disabled={updatingStatus} 
-                        value={orderDetail.order_status}
-                        onValueChange={(value) => handleStatusUpdate(orderDetail.id, value)}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Update status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="placed">Placed</SelectItem>
-                          <SelectItem value="confirmed">Confirmed</SelectItem>
-                          <SelectItem value="processing">Processing</SelectItem>
-                          <SelectItem value="shipped">Shipped</SelectItem>
-                          <SelectItem value="delivered">Delivered</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
-                          <SelectItem value="returned">Returned</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-500">Payment</CardTitle>
+                    <CardTitle className="text-sm font-medium text-gray-500">
+                      Customer
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-1">
@@ -854,16 +838,20 @@ const ListOrdersPage = () => {
                         </Badge>
                       </div>
                       <div className="text-sm text-gray-600 capitalize">
-                        <span className="font-medium">Method:</span> {orderDetail.payment_method}
+                        <span className="font-medium">Method:</span>{" "}
+                        {orderDetail.payment_method}
                       </div>
                       <div className="text-sm font-medium">
-                        {formatCurrency(orderDetail.total, orderDetail.currency)}
+                        {formatCurrency(
+                          orderDetail.total,
+                          orderDetail.currency
+                        )}
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               </div>
-              
+
               {/* Order Details Tabs */}
               <Tabs defaultValue="items">
                 <TabsList className="grid w-full grid-cols-3">
@@ -871,37 +859,47 @@ const ListOrdersPage = () => {
                   <TabsTrigger value="shipping">Shipping</TabsTrigger>
                   <TabsTrigger value="summary">Summary</TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="items" className="mt-4">
                   <Card>
                     <CardContent className="p-4">
                       {loadingOrderDetail ? (
                         <div className="space-y-4">
-                          {Array(3).fill(0).map((_, i) => (
-                            <div key={i} className="flex gap-4 animate-pulse">
-                              <div className="w-16 h-16 bg-gray-200 rounded"></div>
-                              <div className="flex-1 space-y-2">
-                                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                          {Array(3)
+                            .fill(0)
+                            .map((_, i) => (
+                              <div key={i} className="flex gap-4 animate-pulse">
+                                <div className="w-16 h-16 bg-gray-200 rounded"></div>
+                                <div className="flex-1 space-y-2">
+                                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            ))}
                         </div>
                       ) : orderDetail.OrderProducts?.length > 0 ? (
                         <div className="space-y-4">
                           {orderDetail.OrderProducts.map((product) => (
-                            <div key={product.id} className="flex gap-4 border-b border-gray-100 pb-4">
+                            <div
+                              key={product.id}
+                              className="flex gap-4 border-b border-gray-100 pb-4"
+                            >
                               <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center">
                                 <Package size={24} className="text-gray-400" />
                               </div>
                               <div className="flex-1">
-                                <div className="font-medium">Product #{product.id}</div>
+                                <div className="font-medium">
+                                  Product ID: {product.product_id}
+                                </div>
                                 <div className="text-sm text-gray-600">
                                   Quantity: {product.quantity || 1}
                                 </div>
                                 <div className="text-sm font-medium">
-                                  {formatCurrency(product.price, orderDetail.currency)}
+                                  {formatCurrency(
+                                    product.price,
+                                    orderDetail.currency
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -909,14 +907,19 @@ const ListOrdersPage = () => {
                         </div>
                       ) : (
                         <div className="text-center py-6">
-                          <Package size={32} className="mx-auto text-gray-300 mb-2" />
-                          <p className="text-gray-500">No items in this order</p>
+                          <Package
+                            size={32}
+                            className="mx-auto text-gray-300 mb-2"
+                          />
+                          <p className="text-gray-500">
+                            No items in this order
+                          </p>
                         </div>
                       )}
                     </CardContent>
                   </Card>
                 </TabsContent>
-                
+
                 <TabsContent value="shipping" className="mt-4">
                   <Card>
                     <CardContent className="p-4">
@@ -933,32 +936,54 @@ const ListOrdersPage = () => {
                             <div className="space-y-4">
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Courier</h3>
-                                  <p className="mt-1">{orderDetail.ShippingDetail.courier_name}</p>
-                                </div>
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Tracking ID</h3>
-                                  <p className="mt-1">{orderDetail.ShippingDetail.tracking_id}</p>
-                                </div>
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Status</h3>
-                                  <p className="mt-1 capitalize">{orderDetail.ShippingDetail.status}</p>
-                                </div>
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-500">Shipped Date</h3>
+                                  <h3 className="text-sm font-medium text-gray-500">
+                                    Courier
+                                  </h3>
                                   <p className="mt-1">
-                                    {orderDetail.ShippingDetail.shipping_date 
-                                      ? formatDate(orderDetail.ShippingDetail.shipping_date)
+                                    {orderDetail.ShippingDetail.courier_name}
+                                  </p>
+                                </div>
+                                <div>
+                                  <h3 className="text-sm font-medium text-gray-500">
+                                    Tracking ID
+                                  </h3>
+                                  <p className="mt-1">
+                                    {orderDetail.ShippingDetail.tracking_id}
+                                  </p>
+                                </div>
+                                <div>
+                                  <h3 className="text-sm font-medium text-gray-500">
+                                    Status
+                                  </h3>
+                                  <p className="mt-1 capitalize">
+                                    {orderDetail.ShippingDetail.status}
+                                  </p>
+                                </div>
+                                <div>
+                                  <h3 className="text-sm font-medium text-gray-500">
+                                    Shipped Date
+                                  </h3>
+                                  <p className="mt-1">
+                                    {orderDetail.ShippingDetail.shipping_date
+                                      ? formatDate(
+                                          orderDetail.ShippingDetail
+                                            .shipping_date
+                                        )
                                       : "Not shipped yet"}
                                   </p>
                                 </div>
                               </div>
-                              
+
                               {orderDetail.ShippingDetail.tracking_url && (
                                 <div className="mt-2">
                                   <Button
                                     variant="outline"
-                                    onClick={() => window.open(orderDetail.ShippingDetail.tracking_url, '_blank')}
+                                    onClick={() =>
+                                      window.open(
+                                        orderDetail.ShippingDetail.tracking_url,
+                                        "_blank"
+                                      )
+                                    }
                                     className="text-blue-600"
                                   >
                                     <TruckIcon size={16} className="mr-2" />
@@ -970,67 +995,120 @@ const ListOrdersPage = () => {
                           ) : (
                             <div>
                               <div className="text-center py-4 mb-4">
-                                <TruckIcon size={32} className="mx-auto text-gray-300 mb-2" />
-                                <p className="text-gray-500">No shipping information available</p>
+                                <TruckIcon
+                                  size={32}
+                                  className="mx-auto text-gray-300 mb-2"
+                                />
+                                <p className="text-gray-500">
+                                  No shipping information available
+                                </p>
                               </div>
                             </div>
                           )}
-                          
+
                           {/* Update Shipping Details Form */}
                           <div className="mt-6 border-t pt-4">
-                            <h3 className="font-medium mb-4">Update Shipping Details</h3>
+                            <h3 className="font-medium mb-4">
+                              Update Shipping Details
+                            </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
-                                <label className="text-sm font-medium">Courier Name</label>
+                                <label className="text-sm font-medium">
+                                  Courier Name
+                                </label>
                                 <Input
                                   value={shippingForm.courier_name}
-                                  onChange={(e) => setShippingForm({...shippingForm, courier_name: e.target.value})}
+                                  onChange={(e) =>
+                                    setShippingForm({
+                                      ...shippingForm,
+                                      courier_name: e.target.value,
+                                    })
+                                  }
                                   placeholder="e.g. FedEx, DHL, etc."
                                   className="mt-1"
                                 />
                               </div>
                               <div>
-                                <label className="text-sm font-medium">Tracking ID</label>
+                                <label className="text-sm font-medium">
+                                  Tracking ID
+                                </label>
                                 <Input
                                   value={shippingForm.tracking_id}
-                                  onChange={(e) => setShippingForm({...shippingForm, tracking_id: e.target.value})}
+                                  onChange={(e) =>
+                                    setShippingForm({
+                                      ...shippingForm,
+                                      tracking_id: e.target.value,
+                                    })
+                                  }
                                   placeholder="Enter tracking number"
                                   className="mt-1"
                                 />
                               </div>
                               <div>
-                                <label className="text-sm font-medium">Tracking URL (Optional)</label>
+                                <label className="text-sm font-medium">
+                                  Tracking URL (Optional)
+                                </label>
                                 <Input
                                   value={shippingForm.tracking_url}
-                                  onChange={(e) => setShippingForm({...shippingForm, tracking_url: e.target.value})}
+                                  onChange={(e) =>
+                                    setShippingForm({
+                                      ...shippingForm,
+                                      tracking_url: e.target.value,
+                                    })
+                                  }
                                   placeholder="https://example.com/track"
                                   className="mt-1"
                                 />
                               </div>
                               <div>
-                                <label className="text-sm font-medium">Status</label>
+                                <label className="text-sm font-medium">
+                                  Status
+                                </label>
                                 <Select
                                   value={shippingForm.status}
-                                  onValueChange={(value) => setShippingForm({...shippingForm, status: value})}
+                                  onValueChange={(value) =>
+                                    setShippingForm({
+                                      ...shippingForm,
+                                      status: value,
+                                    })
+                                  }
                                 >
                                   <SelectTrigger className="mt-1">
                                     <SelectValue placeholder="Select status" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="processing">Processing</SelectItem>
-                                    <SelectItem value="shipped">Shipped</SelectItem>
-                                    <SelectItem value="in_transit">In Transit</SelectItem>
-                                    <SelectItem value="delivered">Delivered</SelectItem>
-                                    <SelectItem value="returned">Returned</SelectItem>
-                                    <SelectItem value="failed">Failed</SelectItem>
+                                    <SelectItem value="processing">
+                                      Processing
+                                    </SelectItem>
+                                    <SelectItem value="shipped">
+                                      Shipped
+                                    </SelectItem>
+                                    <SelectItem value="in_transit">
+                                      In Transit
+                                    </SelectItem>
+                                    <SelectItem value="delivered">
+                                      Delivered
+                                    </SelectItem>
+                                    <SelectItem value="returned">
+                                      Returned
+                                    </SelectItem>
+                                    <SelectItem value="failed">
+                                      Failed
+                                    </SelectItem>
                                   </SelectContent>
                                 </Select>
                               </div>
                             </div>
                             <div className="mt-4">
                               <Button
-                                onClick={() => handleShippingUpdate(orderDetail.id)}
-                                disabled={updatingShipping || !shippingForm.courier_name || !shippingForm.tracking_id}
+                                onClick={() =>
+                                  handleShippingUpdate(orderDetail.id)
+                                }
+                                disabled={
+                                  updatingShipping ||
+                                  !shippingForm.courier_name ||
+                                  !shippingForm.tracking_id
+                                }
                                 className="bg-blue-600 hover:bg-blue-700 text-white"
                               >
                                 {updatingShipping ? (
@@ -1052,18 +1130,20 @@ const ListOrdersPage = () => {
                     </CardContent>
                   </Card>
                 </TabsContent>
-                
+
                 <TabsContent value="summary" className="mt-4">
                   <Card>
                     <CardContent className="p-4">
                       {loadingOrderDetail ? (
                         <div className="animate-pulse space-y-4">
-                          {Array(5).fill(0).map((_, i) => (
-                            <div key={i} className="grid grid-cols-2 gap-4">
-                              <div className="h-4 bg-gray-200 rounded"></div>
-                              <div className="h-4 bg-gray-200 rounded"></div>
-                            </div>
-                          ))}
+                          {Array(5)
+                            .fill(0)
+                            .map((_, i) => (
+                              <div key={i} className="grid grid-cols-2 gap-4">
+                                <div className="h-4 bg-gray-200 rounded"></div>
+                                <div className="h-4 bg-gray-200 rounded"></div>
+                              </div>
+                            ))}
                         </div>
                       ) : (
                         <div className="space-y-6">
@@ -1072,52 +1152,80 @@ const ListOrdersPage = () => {
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between py-1 border-b">
                                 <span>Subtotal</span>
-                                <span>{formatCurrency(
-                                  Number(orderDetail.total) - 
-                                  Number(orderDetail.delivery_charge || 0) - 
-                                  Number(orderDetail.tax_amount || 0), 
-                                  orderDetail.currency
-                                )}</span>
+                                <span>
+                                  {formatCurrency(
+                                    Number(orderDetail.total) -
+                                      Number(orderDetail.delivery_charge || 0) -
+                                      Number(orderDetail.tax_amount || 0),
+                                    orderDetail.currency
+                                  )}
+                                </span>
                               </div>
                               <div className="flex justify-between py-1 border-b">
                                 <span>Shipping</span>
-                                <span>{formatCurrency(orderDetail.delivery_charge, orderDetail.currency)}</span>
+                                <span>
+                                  {formatCurrency(
+                                    orderDetail.delivery_charge,
+                                    orderDetail.currency
+                                  )}
+                                </span>
                               </div>
                               {orderDetail.tax_amount && (
                                 <div className="flex justify-between py-1 border-b">
                                   <span>Tax</span>
-                                  <span>{formatCurrency(orderDetail.tax_amount, orderDetail.currency)}</span>
+                                  <span>
+                                    {formatCurrency(
+                                      orderDetail.tax_amount,
+                                      orderDetail.currency
+                                    )}
+                                  </span>
                                 </div>
                               )}
                               {orderDetail.discount_amount && (
                                 <div className="flex justify-between py-1 border-b">
                                   <span>Discount</span>
-                                  <span>-{formatCurrency(orderDetail.discount_amount, orderDetail.currency)}</span>
+                                  <span>
+                                    -
+                                    {formatCurrency(
+                                      orderDetail.discount_amount,
+                                      orderDetail.currency
+                                    )}
+                                  </span>
                                 </div>
                               )}
                               <div className="flex justify-between py-1 font-medium text-base">
                                 <span>Total</span>
-                                <span>{formatCurrency(orderDetail.total, orderDetail.currency)}</span>
+                                <span>
+                                  {formatCurrency(
+                                    orderDetail.total,
+                                    orderDetail.currency
+                                  )}
+                                </span>
                               </div>
                             </div>
                           </div>
-                          
+
                           {orderDetail.coupon_code && (
                             <div>
-                              <h3 className="font-medium mb-2">Coupon Applied</h3>
+                              <h3 className="font-medium mb-2">
+                                Coupon Applied
+                              </h3>
                               <div className="inline-flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full">
                                 <Tags size={14} />
                                 {orderDetail.coupon_code}
                               </div>
                             </div>
                           )}
-                          
+
                           {orderDetail.order_notes && (
                             <div>
                               <h3 className="font-medium mb-2">Order Notes</h3>
                               <div className="p-3 bg-gray-50 rounded-md text-sm">
                                 <div className="flex gap-2">
-                                  <Info size={16} className="text-gray-400 flex-shrink-0 mt-0.5" />
+                                  <Info
+                                    size={16}
+                                    className="text-gray-400 flex-shrink-0 mt-0.5"
+                                  />
                                   <p>{orderDetail.order_notes}</p>
                                 </div>
                               </div>
@@ -1131,20 +1239,19 @@ const ListOrdersPage = () => {
               </Tabs>
             </div>
           )}
-          
+
           <DialogFooter className="mt-4">
             <Button
-              onClick={() => router.push(`/admin/orders/edit/${orderDetail?.id}`)}
+              onClick={() =>
+                router.push(`/admin/orders/edit/${orderDetail?.id}`)
+              }
               variant="outline"
               className="text-amber-600 border-amber-200 hover:bg-amber-50"
             >
               <Pencil size={16} className="mr-1" />
               Edit Order
             </Button>
-            <Button 
-              onClick={() => setOrderDetail(null)}
-              variant="outline"
-            >
+            <Button onClick={() => setOrderDetail(null)} variant="outline">
               Close
             </Button>
           </DialogFooter>

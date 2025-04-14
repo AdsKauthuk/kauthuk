@@ -166,6 +166,7 @@ export async function getOrderById(orderId) {
       };
     }
 
+    // First, get the order without trying to join to Product
     const order = await db.order.findUnique({
       where: { id: parseInt(orderId) },
       include: {
@@ -177,18 +178,7 @@ export async function getOrderById(orderId) {
             mobile: true,
           },
         },
-        OrderProducts: {
-          include: {
-            Product: {
-              select: {
-                id: true,
-                title: true,
-                description: true,
-                image: true,
-              },
-            },
-          },
-        },
+        OrderProducts: true, // Just include the OrderProducts without trying to join to Product
         ShippingDetail: true,
       },
     });
@@ -236,15 +226,7 @@ export async function getOrderById(orderId) {
       coupon_code: order.coupon_code,
       order_notes: order.order_notes,
       User: order.User,
-      OrderProducts: order.OrderProducts.map(item => ({
-        id: item.id,
-        product_id: item.product_id,
-        order_id: item.order_id,
-        price: Number(item.price),
-        quantity: item.quantity,
-        Product: item.Product,
-        variation: item.variation ? JSON.parse(item.variation) : null,
-      })),
+      OrderProducts: order.OrderProducts,
       ShippingDetail: order.ShippingDetail,
       BillingAddress: billingAddress,
       DeliveryAddress: deliveryAddress,
