@@ -223,7 +223,7 @@ const Header = () => {
 
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <div className="relative h-12 w-28 md:w-32 mr-[10px]">
+            <div className="relative h-12 w-28 md:w-32 mr-[24px] mt-[10px]">
               <Image
                 src="/assets/images/logo.png"
                 fill
