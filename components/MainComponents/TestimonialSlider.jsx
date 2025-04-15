@@ -26,7 +26,7 @@ const TestimonialCard = ({
     <div className="testimonial-content flex-1 relative z-10 flex flex-col items-center justify-center">
       <Quote className="w-10 h-10 text-[#6B2F1A]/10 absolute -top-1 left-1/2 transform -translate-x-1/2" />
 
-      <p className="font-poppins text-lg leading-relaxed text-gray-700 mb-6 mt-6 relative z-10 text-center mx-auto max-w-2xl">
+      <p className="font-poppins text-lg leading-relaxed text-gray-700 mb-6 mt-6 relative z-10 text-center mx-auto ">
         "{description}"
       </p>
 
@@ -99,8 +99,8 @@ const TestimonialSlider = () => {
 
   return (
     <section className="py-16 px-4 bg-gradient-to-b from-white to-[#F9F4F0] overflow-hidden">
-      <div className="max-w-6xl mx-auto relative">
-        <div className="text-center mb-12">
+      <div className=" relative">
+        <div className="text-center mb-2">
           <h2 className="font-playfair text-3xl md:text-4xl font-bold text-[#6B2F1A] mb-3 category-heading">
             What Our Customers Say
           </h2>
@@ -156,7 +156,7 @@ const TestimonialSlider = () => {
                   key={testimonial.id}
                   className="py-6 px-2 flex justify-center"
                 >
-                  <div className="w-full max-w-2xl mx-auto">
+                  <div className="w-full max-w-3xl mx-auto">
                     <TestimonialCard
                       name={testimonial.name}
                       location={testimonial.location}
