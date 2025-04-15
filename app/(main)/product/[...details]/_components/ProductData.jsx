@@ -527,7 +527,7 @@ const ProductDetails = () => {
           </div>
 
           {/* Product details section */}
-          <div className="space-y-5" id="product-options">
+          <div className="space-y-3" id="product-options">
             {/* Title and badges */}
             <div>
               <div className="flex justify-between items-start">
@@ -536,8 +536,8 @@ const ProductDetails = () => {
                 </h1>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 mt-2">
-                {product.hasVariants && (
+              {product.hasVariants && (
+                <div className="flex flex-wrap items-center gap-2 mt-2">
                   <Badge
                     variant="outline"
                     className="flex items-center gap-1 border-[#6B2F1A]/30 text-[#6B2F1A] font-poppins"
@@ -545,8 +545,8 @@ const ProductDetails = () => {
                     <Layers className="h-3 w-3" />
                     <span>Multiple Variants</span>
                   </Badge>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             {/* Social sharing buttons - UPDATED */}
