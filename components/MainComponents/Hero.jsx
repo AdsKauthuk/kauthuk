@@ -64,7 +64,7 @@ const getJustifyClass = (alignment) => {
 };
 
 const Skeleton = () => (
-  <div className="relative w-full h-[500px] sm:h-[600px] md:h-[600px] bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse flex flex-col items-center justify-center">
+  <div className="relative w-full h-[600px] sm:h-[600px] md:h-[600px] bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse flex flex-col items-center justify-center">
     <div className="relative w-40 h-40 mb-6">
       <Image
         src="/assets/images/logo2.png"
@@ -142,7 +142,7 @@ const Hero = () => {
 
   // Fallback content if there are no sliders
   const noSlidersContent = (
-    <div className="relative w-full h-[500px] sm:h-[600px] md:h-[600px] bg-[#6B2F1A] flex items-center justify-center">
+    <div className="relative w-full h-[600px] sm:h-[600px] md:h-[600px] bg-[#6B2F1A] flex items-center justify-center">
       <div className="max-w-screen-xl mx-auto w-full px-6 md:px-16 text-center">
         <h1
           className="text-3xl md:text-5xl font-bold text-white mb-4"
@@ -187,7 +187,7 @@ const Hero = () => {
   const enhancedSliders = sliders.length > 0 ? sliders : [sampleSlide];
 
   return (
-    <section className="relative w-full h-[500px] sm:h-[600px] md:h-[600px] overflow-hidden">
+    <section className="relative w-full h-[600px] sm:h-[600px] md:h-[600px] overflow-hidden">
       <Swiper
         onSwiper={(swiper) => {
           swiperRef.current = swiper;
@@ -248,7 +248,7 @@ const Hero = () => {
                   <div
                     className={cn(
                       "w-full  space-y-5 md:space-y-6 transform transition-all duration-700",
-                      slide.alignment === "center" ? "text-center mx-auto md:mt-72 mt-52 " :"md:w-1/2 lg:w-5/12"
+                      slide.alignment === "center" ? "text-center mx-auto md:mt-72 mt-60 " :"md:w-1/2 lg:w-5/12"
                     )}
                   >
                     {/* Title with text color from slide data */}
