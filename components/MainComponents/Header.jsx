@@ -149,23 +149,6 @@ const Header = () => {
     }
   };
 
-  // Get the icon for each category
-  const getCategoryIcon = (categoryName) => {
-    if (categoryName === "Paintings") {
-      return `/assets/images/paintings.png`;
-    }
-    if (categoryName === "Apparels & Accessories") {
-      return `/assets/images/souvenirs.png`;
-    }
-    if (categoryName === "Gifts & Souvenirs") {
-      return `/assets/images/gifts.png`;
-    }
-    if (categoryName === "Decor & Crafts") {
-      return `/assets/images/decor.png`;
-    }
-    return `/assets/images/paintings.png`;
-  };
-
   // We'll generate navigation items from fetched categories
   const getNavCategories = () => {
     // Filter only active categories
@@ -204,10 +187,7 @@ const Header = () => {
       </div>
 
       {/* Main Header Section */}
-      <div
-        className={cn(
-          "w-full bg-[#6B2F1A] transition-all duration-300"        )}
-      >
+      <div className={cn("w-full bg-[#6B2F1A] transition-all duration-300")}>
         <div className="mx-auto px-4 flex items-center justify-between">
           {/* Mobile Menu Trigger */}
           <div className="lg:hidden">
@@ -222,7 +202,10 @@ const Header = () => {
           </div>
 
           {/* Logo */}
-          <Link href="/" className="flex items-center">
+          <Link
+            href="/"
+            className={cn("flex items-center", categoriesLoading ? "py-2" : "")}
+          >
             <div className="relative h-12 w-28 md:w-32 mr-[24px] mt-[10px]">
               <Image
                 src="/assets/images/logo.png"
@@ -540,7 +523,7 @@ const Header = () => {
                       >
                         My Account
                       </Link>
-                     
+
                       <button
                         onClick={handleLogout}
                         className="block w-full text-left py-2 border-b border-gray-100 text-red-600 font-poppins"

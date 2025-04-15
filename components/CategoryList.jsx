@@ -26,9 +26,7 @@ const CategoryList = () => {
     fetchCategories();
   }, []);
 
-  // We're now using global CSS instead of injected styles
   useEffect(() => {
-    // Add class to body when component is mounted to help with specificity if needed
     document.body.classList.add("has-mega-menu");
 
     return () => {
@@ -36,41 +34,20 @@ const CategoryList = () => {
     };
   }, []);
 
-  // Function to get the image path for the category (now from database)
-  const getCategoryImagePath = (category) => {
-    // If the category has an image in the database, use it
-    if (category.image) {
-      return `https://greenglow.in/kauthuk_test/${category.image}`;
-    }
+  
 
-    // Fallback to default icons based on category name
-    if (category.catName === "Paintings") {
-      return `/assets/images/paintings.png`;
-    }
-    if (category.catName === "Apparels & Accessories") {
-      return `/assets/images/souvenirs.png`;
-    }
-    if (category.catName === "Gifts & Souvenirs") {
-      return `/assets/images/gifts.png`;
-    }
-    if (category.catName === "Decor & Crafts") {
-      return `/assets/images/decor.png`;
-    }
-    return `/assets/images/decor.png`;
-  };
-
-  // if (loading) {
-  //   return (
-  //     <div className="flex items-center justify-between py-3 px-4 overflow-x-auto">
-  //       {[...Array(6)].map((_, index) => (
-  //         <div
-  //           key={index}
-  //           className="h-5 bg-gray-200 rounded animate-pulse w-24 mx-2"
-  //         ></div>
-  //       ))}
-  //     </div>
-  //   );
-  // }
+  if (loading) {
+    return (
+      <div className="flex items-center justify-between py-5 px-4 overflow-x-auto pb-8">
+        {[...Array(6)].map((_, index) => (
+          <div
+            key={index}
+            className="h-5  w-24 mx-2"
+          ></div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <nav className="">

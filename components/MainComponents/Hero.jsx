@@ -43,11 +43,19 @@ const formatText = (text, type) => {
 };
 
 const Skeleton = () => (
-  <div className="relative w-full h-[500px] sm:h-[550px] md:h-[600px] bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse flex items-center justify-center">
-    <div className="text-gray-400 font-medium">Loading slider content...</div>
+  <div className="relative w-full h-[500px] sm:h-[550px] md:h-[600px] bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse flex flex-col items-center justify-center">
+    <div className="relative w-40 h-40 mb-6">
+      <Image 
+        src="/assets/images/logo2.png"
+        alt="Kauthuk Logo"
+        fill
+        priority
+        className="object-contain"
+      />
+    </div>
+    <div className="text-gray-500 font-medium">Loading slider content...</div>
   </div>
 );
-
 const CustomNavButton = ({ direction, onClick }) => (
   <button
     onClick={onClick}
