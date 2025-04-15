@@ -224,12 +224,21 @@ export async function updateSlider(id, data) {
       throw new Error("Slider not found");
     }
 
-    // Prepare the update data
+    // Prepare the update data with all slider fields
     const updateData = {
       title: data.title || existingSlider.title,
+      subtitle:
+        data.subtitle !== undefined ? data.subtitle : existingSlider.subtitle,
+      href: data.href !== undefined ? data.href : existingSlider.href,
+      link: data.link !== undefined ? data.link : existingSlider.link,
+      linkTitle:
+        data.linkTitle !== undefined
+          ? data.linkTitle
+          : existingSlider.linkTitle,
     };
-    // console.log("data",typeof(data.image))
-    if (data.image && data.image.length > 0 && typeof data.image != "string") {
+
+    // Handle image upload if a new image is provided
+    if (data.image && data.image.length > 0 && typeof data.image !== "string") {
       const image = data.image[0];
 
       // Add current timestamp to the new image filename
@@ -269,7 +278,7 @@ export async function updateSlider(id, data) {
       // Remove local temporary file
       await fs.unlink(tempImagePath);
 
-      // Optionally: delete the old image from the FTP server if desired
+      // Delete the old image from the FTP server if it exists
       if (existingSlider.image) {
         const oldRemoteFilePath = `/kauthuk_test/${existingSlider.image}`;
         try {
@@ -279,7 +288,29 @@ export async function updateSlider(id, data) {
           console.warn("Failed to remove old image from FTP server:", err);
         }
       }
+    } else if (data.image === null) {
+      // If image is explicitly set to null, remove the image
+      updateData.image = null;
+
+      // Delete the old image from the FTP server if it exists
+      if (existingSlider.image) {
+        try {
+          await ftpClient.access({
+            host: "ftp.greenglow.in",
+            port: 21,
+            user: "u737108297.kauthuktest",
+            password: "Test_kauthuk#123",
+          });
+
+          const oldRemoteFilePath = `/kauthuk_test/${existingSlider.image}`;
+          await ftpClient.remove(oldRemoteFilePath);
+          console.log("Image removed from FTP server:", oldRemoteFilePath);
+        } catch (err) {
+          console.warn("Failed to remove image from FTP server:", err);
+        }
+      }
     }
+    // If data.image is a string and matches existing image, no change needed
 
     // Update slider entry in the database
     const updatedSlider = await db.slider.update({
@@ -292,7 +323,7 @@ export async function updateSlider(id, data) {
     return updatedSlider;
   } catch (error) {
     if (error.code === "P2002") {
-      return { success: false, error: "This title is already exist." };
+      return { success: false, error: "This title already exists." };
     }
     console.error("Error updating slider:", error);
     throw new Error("Failed to update the slider. Please try again.");
