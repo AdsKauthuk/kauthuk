@@ -1251,11 +1251,6 @@ const ProductDetails = () => {
           <div className="container mx-auto px-4">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <div className="inline-block bg-[#6B2F1A]/5 rounded-full px-3 py-1 mb-2">
-                  <p className="font-poppins text-xs uppercase tracking-wider font-medium text-[#6B2F1A]">
-                    Recommended For You
-                  </p>
-                </div>
                 <h2 className="font-playfair text-2xl md:text-3xl font-bold text-[#6B2F1A]">
                   You May Also Like
                 </h2>

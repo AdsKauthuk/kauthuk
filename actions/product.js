@@ -357,16 +357,77 @@ export async function deleteProductById(id) {
       }
     }
 
-    // Delete the product from the database
-    // This should cascade and delete all related data due to the schema relationships
-    const deletedProduct = await db.product.delete({
-      where: { id: productId },
-    });
+    // Begin a transaction to ensure data consistency
+    return await db.$transaction(async (tx) => {
+      // First, delete records from OrderProduct table that reference this product
+      await tx.orderProduct.deleteMany({
+        where: { product_id: productId },
+      });
 
-    return {
-      success: true,
-      deletedProduct,
-    };
+      // Delete ProductAttributeValues through their parent ProductAttributes
+      const productAttributes = await tx.productAttribute.findMany({
+        where: { product_id: productId },
+        select: { id: true },
+      });
+      
+      const productAttributeIds = productAttributes.map(attr => attr.id);
+      
+      if (productAttributeIds.length > 0) {
+        await tx.productAttributeValue.deleteMany({
+          where: { 
+            product_attribute_id: { in: productAttributeIds } 
+          },
+        });
+      }
+
+      // Delete ProductAttributes
+      await tx.productAttribute.deleteMany({
+        where: { product_id: productId },
+      });
+      
+      // Delete VariantAttributeValues through their parent ProductVariants
+      const productVariants = await tx.productVariant.findMany({
+        where: { product_id: productId },
+        select: { id: true },
+      });
+      
+      const variantIds = productVariants.map(variant => variant.id);
+      
+      if (variantIds.length > 0) {
+        await tx.variantAttributeValue.deleteMany({
+          where: { 
+            variant_id: { in: variantIds } 
+          },
+        });
+        
+        // Delete images linked to variants
+        await tx.productImage.deleteMany({
+          where: { 
+            product_variant_id: { in: variantIds } 
+          },
+        });
+      }
+
+      // Delete product variants
+      await tx.productVariant.deleteMany({
+        where: { product_id: productId },
+      });
+
+      // Delete remaining product images
+      await tx.productImage.deleteMany({
+        where: { product_id: productId },
+      });
+
+      // Finally delete the product
+      const deletedProduct = await tx.product.delete({
+        where: { id: productId },
+      });
+
+      return {
+        success: true,
+        deletedProduct,
+      };
+    });
   } catch (error) {
     console.error("Error deleting product:", error);
     throw new Error(`Failed to delete the product: ${error.message}`);
@@ -374,7 +435,6 @@ export async function deleteProductById(id) {
     ftpClient.close();
   }
 }
-
 // Get products with pagination, filtering, and sorting
 export async function getProducts({
   page = 1,
