@@ -52,7 +52,7 @@ const CategoryList = () => {
   return (
     <nav className="">
       {/* Main Categories */}
-      <div className="flex items-center gap-10 py-[0.6rem] px-4 max-w-7xl">
+      <div className="flex items-center gap-10 pt-6 px-4 max-w-7xl">
         {categories
           .filter((category) => category.showHome === "active")
           .map((category, index) => (
@@ -89,7 +89,7 @@ const CategoryList = () => {
               {/* Dropdown menu - visibility now controlled by group hover */}
               {category.SubCategory?.length > 0 && (
                 <div
-                  className="absolute left-0 top-[58px] bg-[#fee3d8] shadow-md rounded-b-md z-50 w-[250px] py-3 mega-menu-dropdown text-[#6B2F1A] hidden group-hover:block"
+                  className="absolute left-0 top-12 bg-[#fee3d8] shadow-md rounded-b-md z-50 w-[250px] py-3 mega-menu-dropdown text-[#6B2F1A] hidden group-hover:block"
                   style={{
                     borderTop: "2px solid #6B2F1A",
                     marginTop: "1px", // Add a tiny margin to ensure there's no gap
