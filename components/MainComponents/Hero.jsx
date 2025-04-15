@@ -15,6 +15,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 import { getSliders } from "@/actions/slider";
+import { cn } from "@/lib/utils";
 
 // Helper function for proper text casing
 const formatText = (text, type) => {
@@ -48,6 +49,20 @@ const formatText = (text, type) => {
   }
 };
 
+// Helper function to convert alignment to justify class
+const getJustifyClass = (alignment) => {
+  switch (alignment) {
+    case "left":
+      return "justify-start";
+    case "center":
+      return "justify-center";
+    case "right":
+      return "justify-end";
+    default:
+      return "justify-end"; // Default to right alignment
+  }
+};
+
 const Skeleton = () => (
   <div className="relative w-full h-[500px] sm:h-[550px] md:h-[600px] bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse flex flex-col items-center justify-center">
     <div className="relative w-40 h-40 mb-6">
@@ -62,6 +77,7 @@ const Skeleton = () => (
     <div className="text-gray-500 font-medium">Loading slider content...</div>
   </div>
 );
+
 const CustomNavButton = ({ direction, onClick }) => (
   <button
     onClick={onClick}
@@ -205,7 +221,6 @@ const Hero = () => {
           <SwiperSlide key={index} className="relative w-full h-full">
             {/* Dark gradient overlay for better text visibility - stronger on the right */}
             {/* <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-black/70 z-10" /> */}
-
             {slide.image ? (
               <Image
                 src={`https://greenglow.in/kauthuk_test/${slide.image}`}
@@ -223,12 +238,20 @@ const Hero = () => {
               // Fallback background - use a darker color to match your design
               <div className="absolute inset-0 bg-[#1a1a1a]"></div>
             )}
-
             <div className="absolute inset-0 z-20 flex flex-col justify-center">
               <div className="container mx-auto px-6 md:px-16 lg:px-24">
-                <div className="flex justify-end">
-                  <div className="w-full md:w-1/2 lg:w-5/12 space-y-5 md:space-y-6 transform transition-all duration-700">
-                    {/* Title with all caps to match design */}
+                <div
+                  className={`flex ${getJustifyClass(
+                    slide.alignment || "right"
+                  )}`}
+                >
+                  <div
+                    className={cn(
+                      "w-full  space-y-5 md:space-y-6 transform transition-all duration-700",
+                      slide.alignment === "center" ? "text-center mx-auto mt-72" :"md:w-1/2 lg:w-5/12"
+                    )}
+                  >
+                    {/* Title with text color from slide data */}
                     <h1
                       className="text-2xl md:text-3xl lg:text-4xl font-bold leading-tight"
                       style={{
@@ -239,7 +262,7 @@ const Hero = () => {
                       {slide.title || sampleSlide.title}
                     </h1>
 
-                    {/* Description with more spacing */}
+                    {/* Description with text color from slide data */}
                     <p
                       className="text-sm md:text-base leading-relaxed"
                       style={{
@@ -251,11 +274,16 @@ const Hero = () => {
                     </p>
 
                     {/* Button styled to match the golden button in your design */}
-                    <div className="pt-4">
+                    <div
+                      className={cn(
+                        "pt-4",
+                        slide.alignment === "center" && "flex justify-center"
+                      )}
+                    >
                       <Link href={slide.link || sampleSlide.link || "#"}>
                         <button
                           className="px-8 py-3 bg-[#a99052] text-[#6B2F1A] font-bold rounded-none
-                                   hover:bg-[#a99052]/90 transition-all duration-300 group"
+                       hover:bg-[#a99052]/90 transition-all duration-300 group"
                           style={{ fontFamily: "Poppins, sans-serif" }}
                         >
                           {slide.linkTitle || sampleSlide.linkTitle}

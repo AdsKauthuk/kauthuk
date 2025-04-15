@@ -8,6 +8,8 @@ import * as ftp from "basic-ftp"; // Use FTP client instead of SFTP client
 
 const localTempDir = os.tmpdir();
 
+
+// Updated createSlider function with alignment support
 export async function createSlider(data) {
   const ftpClient = new ftp.Client();
   ftpClient.ftp.verbose = true;
@@ -23,7 +25,8 @@ export async function createSlider(data) {
         href: data.href,
         link: data.link,
         linkTitle: data.linkTitle,
-        textColor: data.textColor, // Added textColor field
+        textColor: data.textColor,
+        alignment: data.alignment, // Add alignment
       },
     });
 
@@ -47,10 +50,10 @@ export async function createSlider(data) {
 
       // Connect to FTP server
       await ftpClient.access({
-        host: "ftp.greenglow.in", // FTP IP address
-        port: 21, // FTP port (default is 21)
-        user: "u737108297.kauthuktest", // FTP username
-        password: "Test_kauthuk#123", // Replace with actual password
+        host: "ftp.greenglow.in",
+        port: 21,
+        user: "u737108297.kauthuktest",
+        password: "Test_kauthuk#123",
       });
 
       console.log("Connected to FTP server");
@@ -76,7 +79,7 @@ export async function createSlider(data) {
     return slider;
   } catch (error) {
     if (error.code === "P2002") {
-      return { success: false, error: "This title already exists." }; // Fixed grammar
+      return { success: false, error: "This title already exists." };
     }
     console.error("Error creating slider:", error);
     throw new Error("Failed to create the slider. Please try again.");
@@ -209,6 +212,7 @@ export async function getSliders({
   }
 }
 
+// Updated updateSlider function with alignment support
 export async function updateSlider(id, data) {
   const ftpClient = new ftp.Client();
   ftpClient.ftp.verbose = true;
@@ -228,15 +232,12 @@ export async function updateSlider(id, data) {
     // Prepare the update data with all slider fields
     const updateData = {
       title: data.title || existingSlider.title,
-      subtitle:
-        data.subtitle !== undefined ? data.subtitle : existingSlider.subtitle,
+      subtitle: data.subtitle !== undefined ? data.subtitle : existingSlider.subtitle,
       href: data.href !== undefined ? data.href : existingSlider.href,
-      href: data.href !== undefined ? data.href : existingSlider.href,
+      link: data.link !== undefined ? data.link : existingSlider.link,
+      linkTitle: data.linkTitle !== undefined ? data.linkTitle : existingSlider.linkTitle,
       textColor: data.textColor !== undefined ? data.textColor : existingSlider.textColor,
-      linkTitle:
-        data.linkTitle !== undefined
-          ? data.linkTitle
-          : existingSlider.linkTitle,
+      alignment: data.alignment !== undefined ? data.alignment : existingSlider.alignment, // Add alignment
     };
 
     // Handle image upload if a new image is provided
@@ -293,7 +294,7 @@ export async function updateSlider(id, data) {
     } else if (data.image === null) {
       // If image is explicitly set to null, remove the image
       updateData.image = null;
-
+      
       // Delete the old image from the FTP server if it exists
       if (existingSlider.image) {
         try {
@@ -303,7 +304,7 @@ export async function updateSlider(id, data) {
             user: "u737108297.kauthuktest",
             password: "Test_kauthuk#123",
           });
-
+          
           const oldRemoteFilePath = `/kauthuk_test/${existingSlider.image}`;
           await ftpClient.remove(oldRemoteFilePath);
           console.log("Image removed from FTP server:", oldRemoteFilePath);

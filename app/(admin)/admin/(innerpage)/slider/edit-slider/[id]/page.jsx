@@ -24,6 +24,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SliderSchema } from "@/lib/validators";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
   ArrowLeft,
   HomeIcon,
   Image as ImageIcon,
@@ -32,7 +35,8 @@ import {
   Pencil,
   SaveIcon,
   Type,
-  Upload
+  Upload,
+  FlipHorizontal
 } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
@@ -61,7 +65,8 @@ const EditSliderPage = () => {
     resolver: zodResolver(SliderSchema),
     mode: "onChange",
     defaultValues: {
-      textColor: "#FFFFFF" // Default white text color
+      textColor: "#FFFFFF", // Default white text color
+      alignment: "right" // Default right alignment
     }
   });
 
@@ -81,7 +86,6 @@ const EditSliderPage = () => {
           );
         }
 
-        
         // Set text color if it exists
         if (response.textColor) {
           setTextColorPreview(response.textColor);
@@ -123,6 +127,9 @@ const EditSliderPage = () => {
       setTextColorPreview(watchTextColor);
     }
   }, [watchTextColor]);
+
+  // Watch alignment for preview
+  const watchAlignment = watch("alignment");
 
   const predefinedColors = [
     { label: "White", value: "#FFFFFF" },
@@ -331,13 +338,19 @@ const EditSliderPage = () => {
                           alt="Preview"
                           className="w-full h-full object-cover"
                         />
-                        {/* Text color preview overlay */}
+                        {/* Text color preview overlay with alignment */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <div 
-                            className="px-4 py-2 text-center font-semibold text-lg shadow-md rounded" 
-                            style={{ color: textColorPreview }}
-                          >
-                            Sample Text
+                          <div className={`w-full px-4 flex ${
+                            watchAlignment === "left" ? "justify-start" : 
+                            watchAlignment === "center" ? "justify-center" : 
+                            "justify-end"
+                          }`}>
+                            <div 
+                              className="px-4 py-2 text-center font-semibold text-lg shadow-md rounded" 
+                              style={{ color: textColorPreview }}
+                            >
+                              Sample Text
+                            </div>
                           </div>
                         </div>
                       </>
@@ -349,13 +362,19 @@ const EditSliderPage = () => {
                           fill
                           className="object-cover"
                         />
-                        {/* Text color preview overlay for current image */}
+                        {/* Text color preview overlay for current image with alignment */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <div 
-                            className="px-4 py-2 text-center font-semibold text-lg shadow-md rounded" 
-                            style={{ color: textColorPreview }}
-                          >
-                            Sample Text
+                          <div className={`w-full px-4 flex ${
+                            watchAlignment === "left" ? "justify-start" : 
+                            watchAlignment === "center" ? "justify-center" : 
+                            "justify-end"
+                          }`}>
+                            <div 
+                              className="px-4 py-2 text-center font-semibold text-lg shadow-md rounded" 
+                              style={{ color: textColorPreview }}
+                            >
+                              Sample Text
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -375,13 +394,14 @@ const EditSliderPage = () => {
               </div>
             </div>
 
-            {/* Text Color */}
+            {/* Text Appearance Section */}
             <div className="space-y-4">
               <h3 className="text-md font-medium text-slate-800 dark:text-slate-200 flex items-center gap-2">
                 <PaintBucket size={16} />
                 Text Appearance
               </h3>
               
+              {/* Text Color */}
               <div className="space-y-2">
                 <Label htmlFor="textColor" className="text-slate-700 dark:text-slate-300">
                   Text Color
@@ -430,6 +450,40 @@ const EditSliderPage = () => {
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   Choose a color for your slider text. Select a preset or use the color picker for a custom color.
+                </p>
+              </div>
+
+              {/* Text Alignment */}
+              <div className="space-y-2 mt-4">
+                <Label htmlFor="alignment" className="text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                  <FlipHorizontal size={14} />
+                  Text Alignment
+                </Label>
+                <div className="flex gap-2">
+                  {[
+                    { value: "left", label: "Left", icon: <AlignLeft size={16} /> },
+                    { value: "center", label: "Center", icon: <AlignCenter size={16} /> },
+                    { value: "right", label: "Right", icon: <AlignRight size={16} /> }
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => {
+                        setValue("alignment", option.value);
+                      }}
+                      className={`flex items-center gap-2 px-4 py-2 border ${
+                        watch("alignment") === option.value 
+                          ? "bg-blue-100 border-blue-400 text-blue-700 dark:bg-blue-900/30 dark:border-blue-700 dark:text-blue-400" 
+                          : "border-gray-300 dark:border-gray-700"
+                      } rounded-md transition-colors`}
+                    >
+                      {option.icon}
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Choose how to align the text on your slider.
                 </p>
               </div>
             </div>
