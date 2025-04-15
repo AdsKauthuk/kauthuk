@@ -218,15 +218,16 @@ enum YesNo {
 }
 
 model Slider {
-  id        Int      @id @default(autoincrement())
-  title     String   @unique @db.VarChar(255)
-  subtitle  String?  @db.VarChar(255)
-  image     String?  @db.VarChar(255)
-  href      String?  @db.VarChar(255)
-  link      String?  @db.VarChar(255)
-  linkTitle String?  @db.VarChar(255)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          Int      @id @default(autoincrement())
+  title       String   @unique @db.VarChar(255)
+  subtitle    String?  @db.VarChar(255)
+  image       String?  @db.VarChar(255)
+  href        String?  @db.VarChar(255)
+  link        String?  @db.VarChar(255)
+  linkTitle   String?  @db.VarChar(255)
+  textColor   String?  @db.VarChar(50)   // Added text color field
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 // Menu model to represent each menu item in the sidebar

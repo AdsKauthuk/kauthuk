@@ -23,6 +23,7 @@ export async function createSlider(data) {
         href: data.href,
         link: data.link,
         linkTitle: data.linkTitle,
+        textColor: data.textColor, // Added textColor field
       },
     });
 
@@ -75,7 +76,7 @@ export async function createSlider(data) {
     return slider;
   } catch (error) {
     if (error.code === "P2002") {
-      return { success: false, error: "This title is already exist." };
+      return { success: false, error: "This title already exists." }; // Fixed grammar
     }
     console.error("Error creating slider:", error);
     throw new Error("Failed to create the slider. Please try again.");
@@ -230,7 +231,8 @@ export async function updateSlider(id, data) {
       subtitle:
         data.subtitle !== undefined ? data.subtitle : existingSlider.subtitle,
       href: data.href !== undefined ? data.href : existingSlider.href,
-      link: data.link !== undefined ? data.link : existingSlider.link,
+      href: data.href !== undefined ? data.href : existingSlider.href,
+      textColor: data.textColor !== undefined ? data.textColor : existingSlider.textColor,
       linkTitle:
         data.linkTitle !== undefined
           ? data.linkTitle

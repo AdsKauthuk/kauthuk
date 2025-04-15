@@ -28,6 +28,7 @@ import {
   HomeIcon,
   Image as ImageIcon,
   Link as LinkIcon,
+  PaintBucket,
   Pencil,
   SaveIcon,
   Type,
@@ -46,6 +47,7 @@ const EditSliderPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [currentImage, setCurrentImage] = useState(null);
+  const [textColorPreview, setTextColorPreview] = useState("#FFFFFF"); // Default white text
   const router = useRouter();
 
   const {
@@ -58,6 +60,9 @@ const EditSliderPage = () => {
   } = useForm({
     resolver: zodResolver(SliderSchema),
     mode: "onChange",
+    defaultValues: {
+      textColor: "#FFFFFF" // Default white text color
+    }
   });
 
   // Fetch slider data when the component mounts
@@ -74,6 +79,12 @@ const EditSliderPage = () => {
           setCurrentImage(
             `https://greenglow.in/kauthuk_test/${response.image}`
           );
+        }
+
+        
+        // Set text color if it exists
+        if (response.textColor) {
+          setTextColorPreview(response.textColor);
         }
 
         // Reset form with existing data, but exclude the image field
@@ -104,6 +115,25 @@ const EditSliderPage = () => {
       reader.readAsDataURL(file);
     }
   }, [watchImage]);
+
+  // Text color preview
+  const watchTextColor = watch("textColor");
+  useEffect(() => {
+    if (watchTextColor) {
+      setTextColorPreview(watchTextColor);
+    }
+  }, [watchTextColor]);
+
+  const predefinedColors = [
+    { label: "White", value: "#FFFFFF" },
+    { label: "Black", value: "#000000" },
+    { label: "Red", value: "#FF0000" },
+    { label: "Blue", value: "#0000FF" },
+    { label: "Green", value: "#00FF00" },
+    { label: "Yellow", value: "#FFFF00" },
+    { label: "Pink", value: "#FF00FF" },
+    { label: "Cyan", value: "#00FFFF" },
+  ];
 
   const onSubmit = async (data) => {
     setIsLoading(true);
@@ -292,14 +322,25 @@ const EditSliderPage = () => {
                 </div>
 
                 {/* Image preview */}
-                <div className="w-full md:w-1/3">
+                <div className="w-full md:w-1/3 relative">
                   <div className="border border-blue-200 dark:border-blue-900/50 rounded-lg aspect-video overflow-hidden flex items-center justify-center bg-slate-100 dark:bg-slate-800">
                     {imagePreview ? (
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                      />
+                      <>
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                        />
+                        {/* Text color preview overlay */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <div 
+                            className="px-4 py-2 text-center font-semibold text-lg shadow-md rounded" 
+                            style={{ color: textColorPreview }}
+                          >
+                            Sample Text
+                          </div>
+                        </div>
+                      </>
                     ) : currentImage ? (
                       <div className="relative w-full h-full">
                         <Image
@@ -308,6 +349,15 @@ const EditSliderPage = () => {
                           fill
                           className="object-cover"
                         />
+                        {/* Text color preview overlay for current image */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <div 
+                            className="px-4 py-2 text-center font-semibold text-lg shadow-md rounded" 
+                            style={{ color: textColorPreview }}
+                          >
+                            Sample Text
+                          </div>
+                        </div>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center text-slate-400 dark:text-slate-600">
@@ -322,6 +372,65 @@ const EditSliderPage = () => {
                     </p>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* Text Color */}
+            <div className="space-y-4">
+              <h3 className="text-md font-medium text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                <PaintBucket size={16} />
+                Text Appearance
+              </h3>
+              
+              <div className="space-y-2">
+                <Label htmlFor="textColor" className="text-slate-700 dark:text-slate-300">
+                  Text Color
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="textColor"
+                    type="color"
+                    {...register("textColor")}
+                    className="h-10 w-16 p-1 cursor-pointer"
+                  />
+                  <Input
+                    type="text"
+                    value={watchTextColor}
+                    onChange={(e) => {
+                      // Update form value when hex input changes
+                      const form = document.getElementById("textColor");
+                      form.value = e.target.value;
+                      form.dispatchEvent(new Event('input', { bubbles: true }));
+                    }}
+                    placeholder="#FFFFFF"
+                    className="w-28"
+                  />
+                  
+                  <div className="flex gap-1 flex-wrap">
+                    {predefinedColors.map((color) => (
+                      <button
+                        key={color.value}
+                        type="button"
+                        className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center"
+                        style={{ backgroundColor: color.value }}
+                        title={color.label}
+                        onClick={() => {
+                          // Update form value when preset color is clicked
+                          const form = document.getElementById("textColor");
+                          form.value = color.value;
+                          form.dispatchEvent(new Event('input', { bubbles: true }));
+                        }}
+                      >
+                        {watchTextColor === color.value && (
+                          <div className="w-2 h-2 rounded-full bg-black border border-white"></div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Choose a color for your slider text. Select a preset or use the color picker for a custom color.
+                </p>
               </div>
             </div>
 

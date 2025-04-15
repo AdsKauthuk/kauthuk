@@ -19,13 +19,16 @@ import { getSliders } from "@/actions/slider";
 // Helper function for proper text casing
 const formatText = (text, type) => {
   if (!text) return "";
-  
+
   switch (type) {
     case "title":
       // Title case - capitalize first letter of each word
-      return text.split(' ')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join(' ');
+      return text
+        .split(" ")
+        .map(
+          (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        )
+        .join(" ");
     case "subtitle":
       // Uppercase for subtitles
       return text.toUpperCase();
@@ -34,9 +37,12 @@ const formatText = (text, type) => {
       return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
     case "button":
       // Title case for buttons
-      return text.split(' ')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join(' ');
+      return text
+        .split(" ")
+        .map(
+          (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        )
+        .join(" ");
     default:
       return text;
   }
@@ -45,7 +51,7 @@ const formatText = (text, type) => {
 const Skeleton = () => (
   <div className="relative w-full h-[500px] sm:h-[550px] md:h-[600px] bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse flex flex-col items-center justify-center">
     <div className="relative w-40 h-40 mb-6">
-      <Image 
+      <Image
         src="/assets/images/logo2.png"
         alt="Kauthuk Logo"
         fill
@@ -63,8 +69,8 @@ const CustomNavButton = ({ direction, onClick }) => (
              bg-black/20 backdrop-blur-sm rounded-full text-white border border-white/30
              hover:bg-black/30 transition-all duration-300 group
              opacity-0 sm:opacity-80 hover:opacity-100"
-    style={{ 
-      [direction === "prev" ? "left" : "right"]: "clamp(0.5rem, 3vw, 1.5rem)"
+    style={{
+      [direction === "prev" ? "left" : "right"]: "clamp(0.5rem, 3vw, 1.5rem)",
     }}
     aria-label={direction === "prev" ? "Previous slide" : "Next slide"}
   >
@@ -99,7 +105,7 @@ const Hero = () => {
       const response = await getSliders({
         page: 1,
       });
-      
+
       if (response && Array.isArray(response.sliders)) {
         setSliders(response.sliders);
       } else {
@@ -122,10 +128,16 @@ const Hero = () => {
   const noSlidersContent = (
     <div className="relative w-full h-[500px] sm:h-[550px] md:h-[600px] bg-[#6B2F1A] flex items-center justify-center">
       <div className="max-w-screen-xl mx-auto w-full px-6 md:px-16 text-center">
-        <h1 className="text-3xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'Playfair Display, serif' }}>
+        <h1
+          className="text-3xl md:text-5xl font-bold text-white mb-4"
+          style={{ fontFamily: "Playfair Display, serif" }}
+        >
           Welcome to Kauthuk
         </h1>
-        <p className="text-white/80 text-lg mb-8" style={{ fontFamily: 'Poppins, sans-serif' }}>
+        <p
+          className="text-white/80 text-lg mb-8"
+          style={{ fontFamily: "Poppins, sans-serif" }}
+        >
           Discover our collection of beautiful handcrafted products
         </p>
         <Link href="/products">
@@ -149,9 +161,10 @@ const Hero = () => {
   // Sample data for demonstration, matching your image
   const sampleSlide = {
     title: "THE HANDCRAFTED METAL MIRROR OF ARANMULA, KERALA",
-    description: "A unique metal craft, the Aranmula Kannadi (Mirror) is the product of the ancient secret art of creating a mirror out of an alloy of copper and tin which dates back to the 18th century.",
+    description:
+      "A unique metal craft, the Aranmula Kannadi (Mirror) is the product of the ancient secret art of creating a mirror out of an alloy of copper and tin which dates back to the 18th century.",
     linkTitle: "SHOP NOW",
-    link: "/category/metal-crafts"
+    link: "/category/metal-crafts",
   };
 
   // Add the sample slide if needed
@@ -191,7 +204,7 @@ const Hero = () => {
         {enhancedSliders.map((slide, index) => (
           <SwiperSlide key={index} className="relative w-full h-full">
             {/* Dark gradient overlay for better text visibility - stronger on the right */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-black/70 z-10" />
+            {/* <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-black/70 z-10" /> */}
 
             {slide.image ? (
               <Image
@@ -216,17 +229,23 @@ const Hero = () => {
                 <div className="flex justify-end">
                   <div className="w-full md:w-1/2 lg:w-5/12 space-y-5 md:space-y-6 transform transition-all duration-700">
                     {/* Title with all caps to match design */}
-                    <h1 
-                      className="text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight"
-                      style={{ fontFamily: 'Playfair Display, serif' }}
+                    <h1
+                      className="text-2xl md:text-3xl lg:text-4xl font-bold leading-tight"
+                      style={{
+                        fontFamily: "Playfair Display, serif",
+                        color: slide.textColor || "#FFFFFF", // Use textColor from slide data or default to white
+                      }}
                     >
                       {slide.title || sampleSlide.title}
                     </h1>
 
                     {/* Description with more spacing */}
-                    <p 
-                      className="text-white/90 text-sm md:text-base leading-relaxed"
-                      style={{ fontFamily: 'Poppins, sans-serif' }}
+                    <p
+                      className="text-sm md:text-base leading-relaxed"
+                      style={{
+                        fontFamily: "Poppins, sans-serif",
+                        color: slide.textColor || "#FFFFFF", // Use same textColor or default to white
+                      }}
                     >
                       {slide.subtitle || sampleSlide.description}
                     </p>
@@ -237,7 +256,7 @@ const Hero = () => {
                         <button
                           className="px-8 py-3 bg-[#a99052] text-[#6B2F1A] font-bold rounded-none
                                    hover:bg-[#a99052]/90 transition-all duration-300 group"
-                          style={{ fontFamily: 'Poppins, sans-serif' }}
+                          style={{ fontFamily: "Poppins, sans-serif" }}
                         >
                           {slide.linkTitle || sampleSlide.linkTitle}
                         </button>
