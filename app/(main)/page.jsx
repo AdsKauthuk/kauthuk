@@ -54,7 +54,9 @@ const MainPage = () => {
 
   return (
     <div className=''>
+      <div className='max-md:hidden'>
       <Hero />
+      </div>
       
       {/* Featured Products Slider - Always show at the top if there are featured products */}
       <FeaturedProductsSlider 
