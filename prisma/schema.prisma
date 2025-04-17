@@ -575,24 +575,28 @@ model SiteContent {
 }
 
 model FooterCategory {
-  id          Int          @id @default(autoincrement())
-  title       String       @db.VarChar(100)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  FooterLinks FooterLink[]
+  id           Int          @id @default(autoincrement())
+  title        String       @db.VarChar(100)
+  displayOrder Int          @default(0)      // To control the order of categories
+  status       Statuses     @default(active) // To enable/disable categories
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  FooterLinks  FooterLink[]
 }
 
 model FooterLink {
-  id               Int      @id @default(autoincrement())
-  footerCategoryId Int?
-  title            String   @db.VarChar(100)
-  link             String   @db.VarChar(255)
-  description      String?  @db.LongText
-  showInFooter     Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id               Int       @id @default(autoincrement())
+  footerCategoryId Int       // Make this required
+  title            String    @db.VarChar(100)
+  link             String    @db.VarChar(255)
+  description      String?   @db.LongText
+  displayOrder     Int       @default(0)      // To control the order of links
+  status           Statuses  @default(active) // To enable/disable links
+  isExternal       Boolean   @default(false)  // Whether link opens in new tab
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  FooterCategory FooterCategory? @relation(fields: [footerCategoryId], references: [id], onDelete: SetNull)
+  FooterCategory FooterCategory @relation(fields: [footerCategoryId], references: [id], onDelete: Cascade)
 }
 
 model Enquiry {
@@ -635,3 +639,4 @@ enum DisplayPage {
   detail
   success
 }
+

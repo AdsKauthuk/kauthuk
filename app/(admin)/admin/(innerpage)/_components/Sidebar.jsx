@@ -20,6 +20,7 @@ import {
   Palette,
   Activity,
   Images,
+  PanelTopOpen,
   Box,
   Star,
   Phone,
@@ -91,6 +92,7 @@ const iconMap = {
   Menu: <MenuIcon size={18} />,
   Activity: <Activity size={18} />,
   Images: <Images size={18} />,
+  PanelTopOpen: <PanelTopOpen size={18} />,
 };
 
 // Component to render the appropriate icon

@@ -11,9 +11,11 @@ import {
   Phone,
   MapPin,
   ChevronDown,
+  ExternalLink
 } from "lucide-react";
 import { FaPinterest } from "react-icons/fa";
 import { getCompanyContact } from "@/actions/contact";
+import { getFooterData } from "@/actions/footer"; // Import the new action
 
 const FooterLinkGroup = ({ title, children }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -48,29 +50,39 @@ const FooterLinkGroup = ({ title, children }) => {
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   const [companyContact, setCompanyContact] = useState(null);
+  const [footerData, setFooterData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch company contact info
+  // Fetch company contact info and footer data
   useEffect(() => {
-    const fetchContactInfo = async () => {
+    const fetchData = async () => {
       try {
-        const response = await getCompanyContact();
-        if (response.success && response.contact) {
-          setCompanyContact(response.contact);
+        // Fetch both in parallel
+        const [contactResponse, footerResponse] = await Promise.all([
+          getCompanyContact(),
+          getFooterData()
+        ]);
+        
+        if (contactResponse.success && contactResponse.contact) {
+          setCompanyContact(contactResponse.contact);
+        }
+        
+        if (footerResponse.success && footerResponse.categories) {
+          setFooterData(footerResponse.categories);
         }
       } catch (error) {
-        console.error("Failed to load company contact information", error);
+        console.error("Failed to load footer data", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchContactInfo();
+    fetchData();
   }, []);
 
   return (
     <footer className="w-full bg-gradient-to-b from-[#7B3B24] to-[#5A2714] text-white">
-      <div className=" px-4 sm:px-6 py-8">
+      <div className="px-4 sm:px-6 py-8">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
           {/* Logo and Description - 5 columns on md+ */}
           <div className="md:col-span-5">
@@ -160,152 +172,175 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Quick Links, Customer Service, Contact - 7 columns split into 3 sections */}
+          {/* Dynamic Footer Categories - 7 columns dynamically divided */}
           <div className="md:col-span-7">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              {/* Quick Links */}
-              <div>
-                <FooterLinkGroup title="Quick Links">
-                  <ul className="space-y-1">
-                    <li>
-                      <Link
-                        href="/pages/about"
-                        className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1 group"
-                      >
-                        <span className="w-1 h-1 bg-white/30 rounded-full group-hover:bg-white transition-colors"></span>
-                        About Us
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/products"
-                        className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1 group"
-                      >
-                        <span className="w-1 h-1 bg-white/30 rounded-full group-hover:bg-white transition-colors"></span>
-                        Shop
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/contact"
-                        className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1 group"
-                      >
-                        <span className="w-1 h-1 bg-white/30 rounded-full group-hover:bg-white transition-colors"></span>
-                        Contact
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/blog"
-                        className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1 group"
-                      >
-                        <span className="w-1 h-1 bg-white/30 rounded-full group-hover:bg-white transition-colors"></span>
-                        Blog
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/faq"
-                        className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1 group"
-                      >
-                        <span className="w-1 h-1 bg-white/30 rounded-full group-hover:bg-white transition-colors"></span>
-                        FAQ
-                      </Link>
-                    </li>
-                  </ul>
-                </FooterLinkGroup>
-              </div>
-
-              {/* Customer Service */}
-              <div>
-                <FooterLinkGroup title="Customer Service">
-                  <ul className="space-y-1">
-                    <li>
-                      <Link
-                        href="/pages/shipping"
-                        className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1 group"
-                      >
-                        <span className="w-1 h-1 bg-white/30 rounded-full group-hover:bg-white transition-colors"></span>
-                        Shipping Policy
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/pages/returns"
-                        className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1 group"
-                      >
-                        <span className="w-1 h-1 bg-white/30 rounded-full group-hover:bg-white transition-colors"></span>
-                        Returns & Refunds
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/track-order"
-                        className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1 group"
-                      >
-                        <span className="w-1 h-1 bg-white/30 rounded-full group-hover:bg-white transition-colors"></span>
-                        Track Your Order
-                      </Link>
-                    </li>
-                  </ul>
-                </FooterLinkGroup>
-              </div>
-
-              {/* Contact */}
-              <div>
-                <FooterLinkGroup title="Contact Us">
-                  {loading ? (
-                    <div className="space-y-2 animate-pulse">
+            {loading ? (
+              // Loading state for footer links
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                {[1, 2, 3].map((index) => (
+                  <div key={index} className="animate-pulse">
+                    <div className="h-4 bg-white/20 rounded w-24 mb-3"></div>
+                    <div className="space-y-2">
                       <div className="h-3 bg-white/20 rounded w-3/4"></div>
                       <div className="h-3 bg-white/20 rounded w-2/3"></div>
+                      <div className="h-3 bg-white/20 rounded w-5/6"></div>
                     </div>
-                  ) : companyContact ? (
-                    <div className="space-y-2">
-                      <div className="flex items-start group">
-                        <MapPin size={12} className="mt-0.5 mr-1.5 flex-shrink-0 text-white/70 group-hover:text-white transition-colors" />
-                        <p className="text-xs text-white/70 group-hover:text-white transition-colors">
-                          {companyContact.address_line1}
-                          {companyContact.address_line2 && (
-                            <>
-                              <br />
-                              {companyContact.address_line2}
-                            </>
-                          )}
-                          <br />
-                          {companyContact.city}, {companyContact.state}{" "}
-                          {companyContact.postal_code}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              // Dynamic footer categories
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {footerData.length > 0 ? (
+                  footerData.map((category) => (
+                    <div key={category.id}>
+                      <FooterLinkGroup title={category.title}>
+                        <ul className="space-y-1">
+                          {category.FooterLinks.map((link) => (
+                            <li key={link.id}>
+                              {link.isExternal ? (
+                                <a
+                                  href={link.link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1 group"
+                                >
+                                  <span className="w-1 h-1 bg-white/30 rounded-full group-hover:bg-white transition-colors"></span>
+                                  {link.title}
+                                  <ExternalLink size={10} className="ml-1" />
+                                </a>
+                              ) : (
+                                <Link
+                                  href={link.link}
+                                  className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1 group"
+                                >
+                                  <span className="w-1 h-1 bg-white/30 rounded-full group-hover:bg-white transition-colors"></span>
+                                  {link.title}
+                                </Link>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </FooterLinkGroup>
+                    </div>
+                  ))
+                ) : (
+                  // Fallback for when no categories are found
+                  <>
+                    {/* Quick Links Fallback */}
+                    <div>
+                      <FooterLinkGroup title="Quick Links">
+                        <ul className="space-y-1">
+                          <li>
+                            <Link
+                              href="/pages/about"
+                              className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1 group"
+                            >
+                              <span className="w-1 h-1 bg-white/30 rounded-full group-hover:bg-white transition-colors"></span>
+                              About Us
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
+                              href="/products"
+                              className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1 group"
+                            >
+                              <span className="w-1 h-1 bg-white/30 rounded-full group-hover:bg-white transition-colors"></span>
+                              Shop
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
+                              href="/contact"
+                              className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1 group"
+                            >
+                              <span className="w-1 h-1 bg-white/30 rounded-full group-hover:bg-white transition-colors"></span>
+                              Contact
+                            </Link>
+                          </li>
+                        </ul>
+                      </FooterLinkGroup>
+                    </div>
+
+                    {/* Customer Service Fallback */}
+                    <div>
+                      <FooterLinkGroup title="Customer Service">
+                        <ul className="space-y-1">
+                          <li>
+                            <Link
+                              href="/pages/shipping"
+                              className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1 group"
+                            >
+                              <span className="w-1 h-1 bg-white/30 rounded-full group-hover:bg-white transition-colors"></span>
+                              Shipping Policy
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
+                              href="/pages/returns"
+                              className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1 group"
+                            >
+                              <span className="w-1 h-1 bg-white/30 rounded-full group-hover:bg-white transition-colors"></span>
+                              Returns & Refunds
+                            </Link>
+                          </li>
+                        </ul>
+                      </FooterLinkGroup>
+                    </div>
+                  </>
+                )}
+
+                {/* Contact Section - Always present */}
+                <div>
+                  <FooterLinkGroup title="Contact Us">
+                    {companyContact ? (
+                      <div className="space-y-2">
+                        <div className="flex items-start group">
+                          <MapPin size={12} className="mt-0.5 mr-1.5 flex-shrink-0 text-white/70 group-hover:text-white transition-colors" />
+                          <p className="text-xs text-white/70 group-hover:text-white transition-colors">
+                            {companyContact.address_line1}
+                            {companyContact.address_line2 && (
+                              <>
+                                <br />
+                                {companyContact.address_line2}
+                              </>
+                            )}
+                            <br />
+                            {companyContact.city}, {companyContact.state}{" "}
+                            {companyContact.postal_code}
+                          </p>
+                        </div>
+                        <div className="flex items-center group">
+                          <Phone size={12} className="mr-1.5 flex-shrink-0 text-white/70 group-hover:text-white transition-colors" />
+                          <a
+                            href={`tel:${companyContact.phone}`}
+                            className="text-xs text-white/70 group-hover:text-white transition-colors"
+                          >
+                            {companyContact.phone}
+                          </a>
+                        </div>
+                        <div className="flex items-center group">
+                          <Mail size={12} className="mr-1.5 flex-shrink-0 text-white/70 group-hover:text-white transition-colors" />
+                          <a
+                            href={`mailto:${companyContact.email}`}
+                            className="text-xs text-white/70 group-hover:text-white transition-colors"
+                          >
+                            {companyContact.email}
+                          </a>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-start">
+                        <MapPin size={12} className="mt-0.5 mr-1.5 flex-shrink-0 text-white/70" />
+                        <p className="text-xs text-white/70">
+                          Contact information unavailable
                         </p>
                       </div>
-                      <div className="flex items-center group">
-                        <Phone size={12} className="mr-1.5 flex-shrink-0 text-white/70 group-hover:text-white transition-colors" />
-                        <a
-                          href={`tel:${companyContact.phone}`}
-                          className="text-xs text-white/70 group-hover:text-white transition-colors"
-                        >
-                          {companyContact.phone}
-                        </a>
-                      </div>
-                      <div className="flex items-center group">
-                        <Mail size={12} className="mr-1.5 flex-shrink-0 text-white/70 group-hover:text-white transition-colors" />
-                        <a
-                          href={`mailto:${companyContact.email}`}
-                          className="text-xs text-white/70 group-hover:text-white transition-colors"
-                        >
-                          {companyContact.email}
-                        </a>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-start">
-                      <MapPin size={12} className="mt-0.5 mr-1.5 flex-shrink-0 text-white/70" />
-                      <p className="text-xs text-white/70">
-                        Contact information unavailable
-                      </p>
-                    </div>
-                  )}
-                </FooterLinkGroup>
+                    )}
+                  </FooterLinkGroup>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
         

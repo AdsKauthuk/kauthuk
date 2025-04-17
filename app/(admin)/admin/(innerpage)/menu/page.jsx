@@ -121,7 +121,8 @@ import {
   Phone,
   Activity,
   Building,
-  Images
+  Images,
+  PanelTopOpen
 } from "lucide-react";
 
 // Hooks and Utilities
@@ -198,7 +199,8 @@ const MenuPage = () => {
     "Menu",
     "Activity",
     "Building",
-    "Images"
+    "Images",
+    "PanelTopOpen"
   ]);
   const [parentMenus, setParentMenus] = useState([]);
 
@@ -540,6 +542,8 @@ const MenuPage = () => {
         return <Building size={18} />;
       case "Images":
         return <Images size={18} />;
+      case "PanelTopOpen":
+        return <PanelTopOpen size={18} />;
       default:
         return <MenuIcon size={18} />;
     }

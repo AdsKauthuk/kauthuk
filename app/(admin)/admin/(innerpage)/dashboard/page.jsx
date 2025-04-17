@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { repairProductSubcategories } from "@/actions/product";
+import { getDashboardData, repairProductSubcategories } from "@/actions/dashboard";
+import { toast } from "sonner";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -12,8 +13,8 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  ArrowDownRight,
   ArrowUpRight,
+  ArrowDownRight,
   BarChart3,
   DollarSign,
   ShoppingCart,
@@ -22,38 +23,72 @@ import {
   ShoppingBag,
   Tag,
   FileText,
-  StarIcon,
   ChevronRight,
   LayoutDashboard,
   Calendar,
   Activity,
+  AlertTriangle,
+  Mail,
+  LucideMailWarning,
+  Loader2,
+  Star,
+  BoxesIcon,
+  TagsIcon,
 } from "lucide-react";
-import { useTheme } from "@/providers/ThemeProvider";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { format, parseISO } from "date-fns";
 
 const Dashboard = () => {
-  const { theme } = useTheme();
-  const [loading, setLoading] = useState(false);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [dateRange, setDateRange] = useState("last30days");
 
-  const miGrate = async () => {
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const response = await repairProductSubcategories();
-      console.log(response.blogs);
+      const response = await getDashboardData();
+      if (response.success) {
+        setDashboardData(response.data);
+      } else {
+        toast.error(response.error || "Failed to load dashboard data");
+      }
     } catch (error) {
-      console.error("Failed to fetch blogs:", error);
+      console.error("Error fetching dashboard data:", error);
+      toast.error("Something went wrong while loading dashboard data");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRepair = async () => {
+    try {
+      setRefreshing(true);
+      const response = await repairProductSubcategories();
+      
+      if (response.success) {
+        toast.success(response.message || "Operation completed successfully");
+        // Refresh dashboard data after repair
+        fetchDashboardData();
+      } else {
+        toast.error(response.error || "Operation failed");
+      }
+    } catch (error) {
+      console.error("Error during repair operation:", error);
+      toast.error("Something went wrong");
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -84,14 +119,16 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="flex items-center mt-4">
-            <div className={`flex items-center ${isPositive ? 'text-emerald-500' : 'text-rose-500'} text-sm font-medium`}>
-              {isPositive ? (
-                <ArrowUpRight className="w-4 h-4 mr-1" />
-              ) : (
-                <ArrowDownRight className="w-4 h-4 mr-1" />
-              )}
-              {Math.abs(trend)}%
-            </div>
+            {trend !== undefined && (
+              <div className={`flex items-center ${isPositive ? 'text-emerald-500' : 'text-rose-500'} text-sm font-medium`}>
+                {isPositive ? (
+                  <ArrowUpRight className="w-4 h-4 mr-1" />
+                ) : (
+                  <ArrowDownRight className="w-4 h-4 mr-1" />
+                )}
+                {Math.abs(trend)}%
+              </div>
+            )}
             <span className="text-xs text-slate-500 dark:text-slate-400 ml-2">
               {description}
             </span>
@@ -101,74 +138,58 @@ const Dashboard = () => {
     );
   };
 
-  // Enhanced statistics with the same data
-  const stats = [
-    {
-      title: "Total Revenue",
-      value: "$45,231.89",
-      description: "from last month",
-      icon: DollarSign,
-      trend: 20.1,
-      color: "bg-blue-600 dark:bg-blue-700",
-    },
-    {
-      title: "Active Users",
-      value: "2,350",
-      description: "from last week",
-      icon: Users,
-      trend: -8.1,
-      color: "bg-indigo-600 dark:bg-indigo-700",
-    },
-    {
-      title: "Sales",
-      value: "12,234",
-      description: "from last quarter",
-      icon: ShoppingCart,
-      trend: 12.2,
-      color: "bg-emerald-600 dark:bg-emerald-700",
-    },
-    {
-      title: "Conversions",
-      value: "3.42%",
-      description: "from yesterday",
-      icon: BarChart3,
-      trend: 4.1,
-      color: "bg-amber-600 dark:bg-amber-700",
-    },
-  ];
-
-  // Catalog statistics
-  const catalogStats = [
-    { title: "Products", value: 842, icon: Package, color: "text-blue-600 dark:text-blue-400" },
-    { title: "Categories", value: 26, icon: Tag, color: "text-purple-600 dark:text-purple-400" },
-    { title: "Orders", value: 384, icon: ShoppingBag, color: "text-emerald-600 dark:text-emerald-400" },
-    { title: "Blog Posts", value: 47, icon: FileText, color: "text-amber-600 dark:text-amber-400" },
-  ];
-
-  // Recent orders
-  const recentOrders = [
-    { id: "ORD-7352", customer: "Sarah Johnson", date: "Today, 2:30 PM", status: "completed", amount: "$122.40" },
-    { id: "ORD-7351", customer: "Michael Chen", date: "Today, 11:24 AM", status: "processing", amount: "$89.90" },
-    { id: "ORD-7350", customer: "Alex Thompson", date: "Yesterday", status: "pending", amount: "$54.25" },
-    { id: "ORD-7349", customer: "Emily Rodriguez", date: "Yesterday", status: "completed", amount: "$211.75" },
-    { id: "ORD-7348", customer: "David Kim", date: "May 10, 2023", status: "shipped", amount: "$149.99" },
-  ];
-
   const getStatusBadge = (status) => {
     const statusColors = {
-      completed: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
+      placed: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+      confirmed: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400", 
       processing: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-      pending: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
       shipped: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400",
+      delivered: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
       cancelled: "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400",
+      returned: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
+      // For contact submissions
+      new: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+      read: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+      responded: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
+      archived: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400",
     };
 
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[status]}`}>
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[status] || "bg-gray-100 text-gray-800"}`}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
     );
   };
+
+  const formatDate = (dateString) => {
+    try {
+      const date = typeof dateString === 'string' ? parseISO(dateString) : new Date(dateString);
+      return format(date, 'PPP');
+    } catch (error) {
+      return 'Invalid date';
+    }
+  };
+
+  const formatCurrency = (amount, currency = "INR") => {
+    const symbols = {
+      INR: "₹",
+      USD: "$"
+    };
+    
+    const symbol = symbols[currency] || currency;
+    return `${symbol}${parseFloat(amount).toFixed(2)}`;
+  };
+
+  if (loading) {
+    return (
+      <div className="w-full h-96 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <p className="text-slate-600 dark:text-slate-400">Loading dashboard data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full space-y-6">
@@ -194,24 +215,30 @@ const Dashboard = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30">
                 <Calendar className="mr-2 h-4 w-4" />
-                Last 30 Days
+                {dateRange === "last7days" ? "Last 7 Days" : 
+                 dateRange === "last30days" ? "Last 30 Days" :
+                 dateRange === "lastQuarter" ? "Last Quarter" : "All Time"}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem>Last 7 Days</DropdownMenuItem>
-              <DropdownMenuItem>Last 30 Days</DropdownMenuItem>
-              <DropdownMenuItem>Last Quarter</DropdownMenuItem>
-              <DropdownMenuItem>This Year</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setDateRange("last7days")}>Last 7 Days</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setDateRange("last30days")}>Last 30 Days</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setDateRange("lastQuarter")}>Last Quarter</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setDateRange("allTime")}>All Time</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
           <Button 
-            onClick={miGrate} 
-            disabled={loading}
+            onClick={fetchDashboardData} 
+            disabled={loading || refreshing}
             variant="outline" 
             className="border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30"
           >
-            <Activity className="mr-2 h-4 w-4" />
+            {refreshing ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Activity className="mr-2 h-4 w-4" />
+            )}
             Refresh
           </Button>
         </div>
@@ -227,20 +254,44 @@ const Dashboard = () => {
                 Here's what's happening with your store today.
               </p>
             </div>
-            <div className="flex gap-2 self-start">
-              <Button className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600">
-                View Reports
-              </Button>
-            </div>
+            
           </div>
         </CardContent>
       </Card>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {stats.map((stat) => (
-          <StatCard key={stat.title} {...stat} />
-        ))}
+        <StatCard 
+          title="Revenue" 
+          value={formatCurrency(dashboardData?.revenue?.total || 0, "INR")}
+          description="total revenue" 
+          icon={DollarSign}
+          color="bg-blue-600 dark:bg-blue-700"
+        />
+        
+        <StatCard 
+          title="Users" 
+          value={dashboardData?.counts?.users || 0}
+          description="registered accounts" 
+          icon={Users}
+          color="bg-indigo-600 dark:bg-indigo-700"
+        />
+        
+        <StatCard 
+          title="Orders" 
+          value={dashboardData?.counts?.orders || 0}
+          description="total orders" 
+          icon={ShoppingCart}
+          color="bg-emerald-600 dark:bg-emerald-700"
+        />
+        
+        <StatCard 
+          title="Inquiries" 
+          value={dashboardData?.counts?.contactSubmissions || 0}
+          description="customer inquiries" 
+          icon={Mail}
+          color="bg-amber-600 dark:bg-amber-700"
+        />
       </div>
 
       {/* Content Sections */}
@@ -256,30 +307,39 @@ const Dashboard = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left text-xs border-b border-slate-200 dark:border-slate-700">
-                    <th className="pb-2 font-medium text-slate-500 dark:text-slate-400">Order</th>
-                    <th className="pb-2 font-medium text-slate-500 dark:text-slate-400">Customer</th>
-                    <th className="pb-2 font-medium text-slate-500 dark:text-slate-400">Status</th>
-                    <th className="pb-2 font-medium text-slate-500 dark:text-slate-400">Date</th>
-                    <th className="pb-2 font-medium text-right text-slate-500 dark:text-slate-400">Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentOrders.map((order) => (
-                    <tr key={order.id} className="border-b border-slate-100 dark:border-slate-800 text-sm">
-                      <td className="py-3 text-blue-600 dark:text-blue-400 font-medium">{order.id}</td>
-                      <td className="py-3">{order.customer}</td>
-                      <td className="py-3">{getStatusBadge(order.status)}</td>
-                      <td className="py-3 text-slate-500 dark:text-slate-400">{order.date}</td>
-                      <td className="py-3 text-right font-medium">{order.amount}</td>
+            {dashboardData?.recentOrders?.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left text-xs border-b border-slate-200 dark:border-slate-700">
+                      <th className="pb-2 font-medium text-slate-500 dark:text-slate-400">Order</th>
+                      <th className="pb-2 font-medium text-slate-500 dark:text-slate-400">Customer</th>
+                      <th className="pb-2 font-medium text-slate-500 dark:text-slate-400">Status</th>
+                      <th className="pb-2 font-medium text-slate-500 dark:text-slate-400">Date</th>
+                      <th className="pb-2 font-medium text-right text-slate-500 dark:text-slate-400">Amount</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {dashboardData.recentOrders.map((order) => (
+                      <tr key={order.id} className="border-b border-slate-100 dark:border-slate-800 text-sm">
+                        <td className="py-3 text-blue-600 dark:text-blue-400 font-medium">{order.orderId}</td>
+                        <td className="py-3">{order.customer}</td>
+                        <td className="py-3">{getStatusBadge(order.status)}</td>
+                        <td className="py-3 text-slate-500 dark:text-slate-400">{formatDate(order.date)}</td>
+                        <td className="py-3 text-right font-medium">
+                          {formatCurrency(order.amount, order.currency)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+                <ShoppingBag className="mx-auto h-12 w-12 text-slate-300 dark:text-slate-600 mb-3" />
+                <p>No orders found</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -291,47 +351,94 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-5">
-                {catalogStats.map((item) => (
-                  <div key={item.title} className="flex items-center">
-                    <div className={`w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center ${item.color}`}>
-                      <item.icon className="h-5 w-5" />
-                    </div>
-                    <div className="ml-4 flex-1">
-                      <p className="text-sm font-medium">{item.title}</p>
-                      <p className="text-2xl font-bold">{item.value}</p>
-                    </div>
+                <div className="flex items-center">
+                  <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                    <Package className="h-5 w-5" />
                   </div>
-                ))}
+                  <div className="ml-4 flex-1">
+                    <p className="text-sm font-medium">Products</p>
+                    <p className="text-2xl font-bold">{dashboardData?.counts?.products || 0}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center">
+                  <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                    <TagsIcon className="h-5 w-5" />
+                  </div>
+                  <div className="ml-4 flex-1">
+                    <p className="text-sm font-medium">Categories</p>
+                    <p className="text-2xl font-bold">{dashboardData?.counts?.categories || 0}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center">
+                  <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                    <Star className="h-5 w-5" />
+                  </div>
+                  <div className="ml-4 flex-1">
+                    <p className="text-sm font-medium">Featured Products</p>
+                    <p className="text-2xl font-bold">{dashboardData?.counts?.featuredProducts || 0}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center">
+                  <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                    <FileText className="h-5 w-5" />
+                  </div>
+                  <div className="ml-4 flex-1">
+                    <p className="text-sm font-medium">Blog Posts</p>
+                    <p className="text-2xl font-bold">{dashboardData?.counts?.blogs || 0}</p>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-slate-200 dark:border-slate-800">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-semibold">Target Completion</CardTitle>
+              <CardTitle className="text-lg font-semibold">Inventory Status</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
                 <div className="flex justify-between mb-1 text-sm">
-                  <span>Monthly Sales</span>
-                  <span className="font-medium">78%</span>
+                  <span>Low Stock Products</span>
+                  <span className="font-medium text-amber-600">
+                    {dashboardData?.counts?.lowStockProducts || 0} items
+                  </span>
                 </div>
-                <Progress value={78} className="h-2 bg-slate-200 dark:bg-slate-700" indicatorClassName="bg-blue-500" />
+                <Progress 
+                  value={dashboardData?.counts?.lowStockProducts ? 
+                    (dashboardData.counts.lowStockProducts / dashboardData.counts.products) * 100 : 0
+                  } 
+                  className="h-2 bg-slate-200 dark:bg-slate-700" 
+                  indicatorClassName="bg-amber-500" 
+                />
               </div>
-              <div>
-                <div className="flex justify-between mb-1 text-sm">
-                  <span>New Customers</span>
-                  <span className="font-medium">62%</span>
+
+              {dashboardData?.recentContactSubmissions?.length > 0 && (
+                <div className="mt-6">
+                  <h3 className="text-sm font-medium mb-2">Recent Inquiries</h3>
+                  <div className="space-y-3">
+                    {dashboardData.recentContactSubmissions.map(submission => (
+                      <div key={submission.id} className="flex items-start">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                          <Mail className="h-4 w-4" />
+                        </div>
+                        <div className="ml-3 flex-1">
+                          <div className="flex justify-between">
+                            <p className="text-sm font-medium truncate max-w-[140px]">{submission.name}</p>
+                            <p className="text-xs text-slate-500">{formatDate(submission.date)}</p>
+                          </div>
+                          <p className="text-xs text-slate-500 truncate max-w-[200px]">{submission.subject || submission.email}</p>
+                          <div className="mt-1">
+                            {getStatusBadge(submission.status)}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <Progress value={62} className="h-2 bg-slate-200 dark:bg-slate-700" indicatorClassName="bg-emerald-500" />
-              </div>
-              <div>
-                <div className="flex justify-between mb-1 text-sm">
-                  <span>Inventory</span>
-                  <span className="font-medium">45%</span>
-                </div>
-                <Progress value={45} className="h-2 bg-slate-200 dark:bg-slate-700" indicatorClassName="bg-amber-500" />
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>
