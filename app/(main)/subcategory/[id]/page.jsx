@@ -239,12 +239,12 @@ const SubcategoryPage = () => {
         )}
 
         <div className="container mx-auto px-4 py-16 relative z-10">
-          <Breadcrumb className="mb-8">
+          <Breadcrumb className="mb-8 text-xs">
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink
                   href="/"
-                  className={`hover:opacity-100 font-poppins text-sm ${
+                  className={`hover:opacity-100 font-poppins text-xs ${
                     hasBanner ? 'text-[#6B2F1A]/80 hover:text-[#6B2F1A]' : 'text-white/80 hover:text-white'
                   }`}
                 >
@@ -255,7 +255,7 @@ const SubcategoryPage = () => {
               <BreadcrumbItem>
                 <BreadcrumbLink
                   href="/products"
-                  className={`hover:opacity-100 font-poppins text-sm ${
+                  className={`hover:opacity-100 font-poppins text-xs ${
                     hasBanner ? 'text-[#6B2F1A]/80 hover:text-[#6B2F1A]' : 'text-white/80 hover:text-white'
                   }`}
                 >
@@ -268,7 +268,7 @@ const SubcategoryPage = () => {
                   <BreadcrumbItem>
                     <BreadcrumbLink
                       href={`/category/${parentCategory.id}`}
-                      className={`hover:opacity-100 font-poppins text-sm ${
+                      className={`hover:opacity-100 font-poppins text-xs ${
                         hasBanner ? 'text-[#6B2F1A]/80 hover:text-[#6B2F1A]' : 'text-white/80 hover:text-white'
                       }`}
                     >
@@ -280,7 +280,7 @@ const SubcategoryPage = () => {
               <BreadcrumbSeparator className={hasBanner ? 'text-[#6B2F1A]/60' : 'text-white/60'} />
               <BreadcrumbItem>
                 <BreadcrumbLink 
-                  className={`font-medium font-poppins text-sm ${
+                  className={`font-medium font-poppins text-xs ${
                     hasBanner ? 'text-[#6B2F1A]' : 'text-white'
                   }`}
                 >
