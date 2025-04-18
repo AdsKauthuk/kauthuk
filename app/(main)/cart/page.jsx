@@ -176,7 +176,7 @@ const ProductCart = () => {
 
   return (
     <div className="min-h-screen bg-[#F9F4F0]">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 px-10">
         {/* Header Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2 text-[#6B2F1A]" style={{ fontFamily: "Playfair Display, serif" }}>Shopping Cart</h1>

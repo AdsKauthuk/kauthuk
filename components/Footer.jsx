@@ -11,7 +11,7 @@ import {
   Phone,
   MapPin,
   ChevronDown,
-  ExternalLink
+  ExternalLink,
 } from "lucide-react";
 import { FaPinterest } from "react-icons/fa";
 import { getCompanyContact } from "@/actions/contact";
@@ -60,13 +60,13 @@ const Footer = () => {
         // Fetch both in parallel
         const [contactResponse, footerResponse] = await Promise.all([
           getCompanyContact(),
-          getFooterData()
+          getFooterData(),
         ]);
-        
+
         if (contactResponse.success && contactResponse.contact) {
           setCompanyContact(contactResponse.contact);
         }
-        
+
         if (footerResponse.success && footerResponse.categories) {
           setFooterData(footerResponse.categories);
         }
@@ -107,7 +107,7 @@ const Footer = () => {
               </Link>
 
               {/* Condensed Description */}
-              <p className="text-white/80 text-sm">
+              <p className="text-white/80 text-sm poppins">
                 {loading ? (
                   <span className="inline-block w-full animate-pulse">
                     <span className="h-3 bg-white/20 rounded w-full block mb-1"></span>
@@ -191,11 +191,11 @@ const Footer = () => {
             ) : (
               // Dynamic footer categories
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {footerData.length > 0 ? (
+                {footerData.length > 0 &&
                   footerData.map((category) => (
-                    <div key={category.id}>
+                    <div key={category.id} className="playfair">
                       <FooterLinkGroup title={category.title}>
-                        <ul className="space-y-1">
+                        <ul className="space-y-1 poppins">
                           {category.FooterLinks.map((link) => (
                             <li key={link.id}>
                               {link.isExternal ? (
@@ -203,18 +203,16 @@ const Footer = () => {
                                   href={link.link}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1 group"
+                                  className="text-xs text-white/70 hover:text-white transition-colors flex items-center group"
                                 >
-                                  <span className="w-1 h-1 bg-white/30 rounded-full group-hover:bg-white transition-colors"></span>
                                   {link.title}
                                   <ExternalLink size={10} className="ml-1" />
                                 </a>
                               ) : (
                                 <Link
                                   href={link.link}
-                                  className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1 group"
+                                  className="text-xs text-white/70 hover:text-white transition-colors group"
                                 >
-                                  <span className="w-1 h-1 bg-white/30 rounded-full group-hover:bg-white transition-colors"></span>
                                   {link.title}
                                 </Link>
                               )}
@@ -223,81 +221,19 @@ const Footer = () => {
                         </ul>
                       </FooterLinkGroup>
                     </div>
-                  ))
-                ) : (
-                  // Fallback for when no categories are found
-                  <>
-                    {/* Quick Links Fallback */}
-                    <div>
-                      <FooterLinkGroup title="Quick Links">
-                        <ul className="space-y-1">
-                          <li>
-                            <Link
-                              href="/pages/about"
-                              className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1 group"
-                            >
-                              <span className="w-1 h-1 bg-white/30 rounded-full group-hover:bg-white transition-colors"></span>
-                              About Us
-                            </Link>
-                          </li>
-                          <li>
-                            <Link
-                              href="/products"
-                              className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1 group"
-                            >
-                              <span className="w-1 h-1 bg-white/30 rounded-full group-hover:bg-white transition-colors"></span>
-                              Shop
-                            </Link>
-                          </li>
-                          <li>
-                            <Link
-                              href="/contact"
-                              className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1 group"
-                            >
-                              <span className="w-1 h-1 bg-white/30 rounded-full group-hover:bg-white transition-colors"></span>
-                              Contact
-                            </Link>
-                          </li>
-                        </ul>
-                      </FooterLinkGroup>
-                    </div>
-
-                    {/* Customer Service Fallback */}
-                    <div>
-                      <FooterLinkGroup title="Customer Service">
-                        <ul className="space-y-1">
-                          <li>
-                            <Link
-                              href="/pages/shipping"
-                              className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1 group"
-                            >
-                              <span className="w-1 h-1 bg-white/30 rounded-full group-hover:bg-white transition-colors"></span>
-                              Shipping Policy
-                            </Link>
-                          </li>
-                          <li>
-                            <Link
-                              href="/pages/returns"
-                              className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1 group"
-                            >
-                              <span className="w-1 h-1 bg-white/30 rounded-full group-hover:bg-white transition-colors"></span>
-                              Returns & Refunds
-                            </Link>
-                          </li>
-                        </ul>
-                      </FooterLinkGroup>
-                    </div>
-                  </>
-                )}
+                  ))}
 
                 {/* Contact Section - Always present */}
-                <div>
+                <div className=" playfair">
                   <FooterLinkGroup title="Contact Us">
                     {companyContact ? (
                       <div className="space-y-2">
                         <div className="flex items-start group">
-                          <MapPin size={12} className="mt-0.5 mr-1.5 flex-shrink-0 text-white/70 group-hover:text-white transition-colors" />
-                          <p className="text-xs text-white/70 group-hover:text-white transition-colors">
+                          <MapPin
+                            size={12}
+                            className="mt-0.5 mr-1.5 flex-shrink-0 text-white/70 group-hover:text-white transition-colors"
+                          />
+                          <p className="text-xs text-white/70 group-hover:text-white transition-colors poppins">
                             {companyContact.address_line1}
                             {companyContact.address_line2 && (
                               <>
@@ -311,7 +247,10 @@ const Footer = () => {
                           </p>
                         </div>
                         <div className="flex items-center group">
-                          <Phone size={12} className="mr-1.5 flex-shrink-0 text-white/70 group-hover:text-white transition-colors" />
+                          <Phone
+                            size={12}
+                            className="mr-1.5 flex-shrink-0 text-white/70 group-hover:text-white transition-colors"
+                          />
                           <a
                             href={`tel:${companyContact.phone}`}
                             className="text-xs text-white/70 group-hover:text-white transition-colors"
@@ -320,7 +259,10 @@ const Footer = () => {
                           </a>
                         </div>
                         <div className="flex items-center group">
-                          <Mail size={12} className="mr-1.5 flex-shrink-0 text-white/70 group-hover:text-white transition-colors" />
+                          <Mail
+                            size={12}
+                            className="mr-1.5 flex-shrink-0 text-white/70 group-hover:text-white transition-colors"
+                          />
                           <a
                             href={`mailto:${companyContact.email}`}
                             className="text-xs text-white/70 group-hover:text-white transition-colors"
@@ -331,7 +273,10 @@ const Footer = () => {
                       </div>
                     ) : (
                       <div className="flex items-start">
-                        <MapPin size={12} className="mt-0.5 mr-1.5 flex-shrink-0 text-white/70" />
+                        <MapPin
+                          size={12}
+                          className="mt-0.5 mr-1.5 flex-shrink-0 text-white/70"
+                        />
                         <p className="text-xs text-white/70">
                           Contact information unavailable
                         </p>
@@ -343,7 +288,7 @@ const Footer = () => {
             )}
           </div>
         </div>
-        
+
         {/* Bottom Footer - Copyright and Links */}
         <div className="mt-8 pt-4 border-t border-white/10">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-2">

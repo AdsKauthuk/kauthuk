@@ -866,7 +866,7 @@ console.log("verificationResult",verificationResult)
       </Head>
 
       <div className="min-h-screen bg-[#FAFAFA] py-8">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-10">
           <div className="mb-8">
             <Link
               href="/cart"

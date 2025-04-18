@@ -67,7 +67,7 @@ const CategoryList = () => {
 
               <Link
                 href={`/category/${category.id}`}
-                className="whitespace-nowrap py-2 text-lg font-bold uppercase text-[#fee3d8] transition-colors relative hover:text-[#8D4425] flex items-center poppins-black"
+                className="whitespace-nowrap py-2 text-lg font-bold uppercase text-[#fee3d8] transition-colors relative hover:text-[#b38d4a] flex items-center poppins-black"
               >
                 <span className="relative  flex-shrink-0">
                   <div className="relative w-[35px] h-[35px] ">

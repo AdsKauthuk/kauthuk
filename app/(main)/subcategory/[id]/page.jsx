@@ -56,7 +56,7 @@ const shimmer = (w, h) => `
 
 const toBase64 = (str) =>
   typeof window === "undefined"
-    ? Buffer.from(str).toString('base64')
+    ? Buffer.from(str).toString("base64")
     : window.btoa(str);
 
 const SubcategoryPage = () => {
@@ -206,10 +206,12 @@ const SubcategoryPage = () => {
   return (
     <div className="bg-[#FFFBF9] min-h-screen">
       {/* Subcategory Hero Section - Modified for banner image */}
-      <div 
-        className={`relative overflow-hidden ${hasBanner ? 'text-[#6B2F1A]' : 'bg-[#b38d4a] text-white'}`}
+      <div
+        className={`relative overflow-hidden ${
+          hasBanner ? "text-[#6B2F1A]" : "bg-[#b38d4a] text-white"
+        }`}
         style={{
-          minHeight: '200px'
+          minHeight: "200px",
         }}
       >
         {/* Banner image if it exists */}
@@ -223,13 +225,15 @@ const SubcategoryPage = () => {
               className="object-cover"
               sizes="100vw"
               placeholder="blur"
-              blurDataURL={`data:image/svg+xml;base64,${toBase64(shimmer(700, 475))}`}
+              blurDataURL={`data:image/svg+xml;base64,${toBase64(
+                shimmer(700, 475)
+              )}`}
             />
             {/* Semi-transparent overlay for better text visibility */}
             <div className="absolute inset-0 bg-black/20"></div>
           </div>
         )}
-        
+
         {/* Decorative Elements - only show if no banner image */}
         {!hasBanner && (
           <>
@@ -238,25 +242,31 @@ const SubcategoryPage = () => {
           </>
         )}
 
-        <div className="container mx-auto px-4 py-16 relative z-10">
+        <div className="container  px-10 py-5 relative z-10">
           <Breadcrumb className="mb-8 text-xs">
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink
                   href="/"
                   className={`hover:opacity-100 font-poppins text-xs ${
-                    hasBanner ? 'text-[#6B2F1A]/80 hover:text-[#6B2F1A]' : 'text-white/80 hover:text-white'
+                    hasBanner
+                      ? "text-[#6B2F1A]/80 hover:text-[#6B2F1A]"
+                      : "text-white/80 hover:text-white"
                   }`}
                 >
                   Home
                 </BreadcrumbLink>
               </BreadcrumbItem>
-              <BreadcrumbSeparator className={hasBanner ? 'text-[#6B2F1A]/60' : 'text-white/60'} />
+              <BreadcrumbSeparator
+                className={hasBanner ? "text-[#6B2F1A]/60" : "text-white/60"}
+              />
               <BreadcrumbItem>
                 <BreadcrumbLink
                   href="/products"
                   className={`hover:opacity-100 font-poppins text-xs ${
-                    hasBanner ? 'text-[#6B2F1A]/80 hover:text-[#6B2F1A]' : 'text-white/80 hover:text-white'
+                    hasBanner
+                      ? "text-[#6B2F1A]/80 hover:text-[#6B2F1A]"
+                      : "text-white/80 hover:text-white"
                   }`}
                 >
                   Products
@@ -264,12 +274,18 @@ const SubcategoryPage = () => {
               </BreadcrumbItem>
               {parentCategory && (
                 <>
-                  <BreadcrumbSeparator className={hasBanner ? 'text-[#6B2F1A]/60' : 'text-white/60'} />
+                  <BreadcrumbSeparator
+                    className={
+                      hasBanner ? "text-[#6B2F1A]/60" : "text-white/60"
+                    }
+                  />
                   <BreadcrumbItem>
                     <BreadcrumbLink
                       href={`/category/${parentCategory.id}`}
                       className={`hover:opacity-100 font-poppins text-xs ${
-                        hasBanner ? 'text-[#6B2F1A]/80 hover:text-[#6B2F1A]' : 'text-white/80 hover:text-white'
+                        hasBanner
+                          ? "text-[#6B2F1A]/80 hover:text-[#6B2F1A]"
+                          : "text-white/80 hover:text-white"
                       }`}
                     >
                       {parentCategory.catName}
@@ -277,11 +293,13 @@ const SubcategoryPage = () => {
                   </BreadcrumbItem>
                 </>
               )}
-              <BreadcrumbSeparator className={hasBanner ? 'text-[#6B2F1A]/60' : 'text-white/60'} />
+              <BreadcrumbSeparator
+                className={hasBanner ? "text-[#6B2F1A]/60" : "text-white/60"}
+              />
               <BreadcrumbItem>
-                <BreadcrumbLink 
+                <BreadcrumbLink
                   className={`font-medium font-poppins text-xs ${
-                    hasBanner ? 'text-[#6B2F1A]' : 'text-white'
+                    hasBanner ? "text-[#6B2F1A]" : "text-white"
                   }`}
                 >
                   {subcategory?.subcategory || "Subcategory"}
@@ -292,9 +310,11 @@ const SubcategoryPage = () => {
 
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div>
-              <h1 className={`playfair-italic text-4xl md:text-5xl font-bold mb-4 ${
-                hasBanner ? 'text-[#6B2F1A]' : 'text-white'
-              }`}>
+              <h1
+                className={`playfair-italic text-4xl md:text-5xl font-bold mb-4 ${
+                  hasBanner ? "text-[#6B2F1A]" : "text-white"
+                }`}
+              >
                 {subcategory?.subcategory || "Subcategory"}
               </h1>
             </div>
@@ -302,40 +322,9 @@ const SubcategoryPage = () => {
         </div>
       </div>
 
-      {/* Featured Products Section */}
-      {featuredProducts.length > 0 && (
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between mb-8">
-           
-              <Link
-                href={`/products?subcategory=${subcategoryId}&sort=popular`}
-                className="group font-poppins text-[#6B2F1A] hover:text-[#5A2814] flex items-center text-sm"
-              >
-                View more
-                <ArrowRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featuredProducts.map((product, index) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                >
-                  <ProductCard product={product} layout="grid" />
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* Related Subcategories Section */}
       {relatedSubcategories.length > 0 && (
-        <section className="py-16 bg-[#FFFBF9]">
+        <section className="py-10 bg-[#FFFBF9] px-10">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between mb-8">
               <div>
@@ -353,9 +342,9 @@ const SubcategoryPage = () => {
                   onClick={() => router.push(`/subcategory/${sub.id}`)}
                 >
                   <CardContent className="p-6 flex flex-col items-center justify-center text-center">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center mb-3 bg-[#fee3d8] text-[#6B2F1A]">
+                    <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4 bg-[#fee3d8] text-[#6B2F1A]">
                       {sub.image ? (
-                        <div className="relative w-6 h-6">
+                        <div className="relative w-12 h-12">
                           <Image
                             src={`https://greenglow.in/kauthuk_test/${sub.image}`}
                             alt={sub.subcategory}
@@ -364,13 +353,13 @@ const SubcategoryPage = () => {
                           />
                         </div>
                       ) : (
-                        <Box className="h-6 w-6" />
+                        <Box className="h-12 w-12" />
                       )}
                     </div>
-                    <h3 className="font-playfair font-medium text-[#6B2F1A] line-clamp-1">
+                    <h3 className="font-playfair font-medium text-[#6B2F1A] line-clamp-1 text-lg">
                       {sub.subcategory}
                     </h3>
-                    <p className="font-poppins text-xs text-gray-500 mt-1">
+                    <p className="font-poppins text-sm text-gray-500 mt-1">
                       {sub._count?.Product || 0} items
                     </p>
                   </CardContent>
@@ -382,7 +371,7 @@ const SubcategoryPage = () => {
       )}
 
       {/* Products Grid Section */}
-      <section className="py-16 bg-white">
+      <section className="py-10 bg-white px-10">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
