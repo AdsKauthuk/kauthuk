@@ -322,54 +322,6 @@ const SubcategoryPage = () => {
         </div>
       </div>
 
-      {/* Related Subcategories Section */}
-      {relatedSubcategories.length > 0 && (
-        <section className="py-10 bg-[#FFFBF9] px-10">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="playfair-italic text-2xl md:text-3xl font-bold text-[#6B2F1A] mb-2">
-                  Related Subcategories
-                </h2>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-              {relatedSubcategories.map((sub) => (
-                <Card
-                  key={sub.id}
-                  className="cursor-pointer transition-all hover:shadow-md border border-gray-200 hover:border-[#6B2F1A]/30"
-                  onClick={() => router.push(`/subcategory/${sub.id}`)}
-                >
-                  <CardContent className="p-6 flex flex-col items-center justify-center text-center">
-                    <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4 bg-[#fee3d8] text-[#6B2F1A]">
-                      {sub.image ? (
-                        <div className="relative w-12 h-12">
-                          <Image
-                            src={`https://greenglow.in/kauthuk_test/${sub.image}`}
-                            alt={sub.subcategory}
-                            fill
-                            className="object-contain"
-                          />
-                        </div>
-                      ) : (
-                        <Box className="h-12 w-12" />
-                      )}
-                    </div>
-                    <h3 className="font-playfair font-medium text-[#6B2F1A] line-clamp-1 text-lg">
-                      {sub.subcategory}
-                    </h3>
-                    <p className="font-poppins text-sm text-gray-500 mt-1">
-                      {sub._count?.Product || 0} items
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* Products Grid Section */}
       <section className="py-10 bg-white px-10">
         <div className="container mx-auto px-4">
@@ -503,6 +455,53 @@ const SubcategoryPage = () => {
           )}
         </div>
       </section>
+      {/* Related Subcategories Section */}
+      {relatedSubcategories.length > 0 && (
+        <section className="py-10 bg-[#FFFBF9] px-10">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="playfair-italic text-2xl md:text-3xl font-bold text-[#6B2F1A] mb-2">
+                  Related Subcategories
+                </h2>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              {relatedSubcategories.map((sub) => (
+                <Card
+                  key={sub.id}
+                  className="cursor-pointer transition-all hover:shadow-md border border-gray-200 hover:border-[#6B2F1A]/30"
+                  onClick={() => router.push(`/subcategory/${sub.id}`)}
+                >
+                  <CardContent className="p-6 flex flex-col items-center justify-center text-center">
+                    <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4 bg-[#fee3d8] text-[#6B2F1A]">
+                      {sub.image ? (
+                        <div className="relative w-12 h-12">
+                          <Image
+                            src={`https://greenglow.in/kauthuk_test/${sub.image}`}
+                            alt={sub.subcategory}
+                            fill
+                            className="object-contain"
+                          />
+                        </div>
+                      ) : (
+                        <Box className="h-12 w-12" />
+                      )}
+                    </div>
+                    <h3 className="font-playfair font-medium text-[#6B2F1A] line-clamp-1 text-lg">
+                      {sub.subcategory}
+                    </h3>
+                    <p className="font-poppins text-sm text-gray-500 mt-1">
+                      {sub._count?.Product || 0} items
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 };
