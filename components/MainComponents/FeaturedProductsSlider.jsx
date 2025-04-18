@@ -119,7 +119,7 @@ const FeaturedProductsSlider = ({
     return (
       <section className="w-full py-12" style={{ backgroundColor: bgColor }}>
         <div className="mx-auto px-12">
-          <h2 className="text-2xl md:text-3xl font-playfair font-bold mb-6 text-gray-800 category-heading">
+          <h2 className="text-2xl md:text-3xl font-playfair font-bold mb-6 text-[#b38d4a] category-heading">
             {title}
           </h2>
           <div className="bg-red-50 text-red-600 p-4 rounded-lg text-center font-poppins">
@@ -140,7 +140,7 @@ const FeaturedProductsSlider = ({
       <div className="mx-auto px-12">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl md:text-3xl font-playfair font-bold text-gray-800 category-heading">
+            <h2 className="text-2xl md:text-3xl font-playfair font-bold category-heading text-[#b38d4a]">
               {title}
             </h2>
           </div>
