@@ -351,102 +351,163 @@ const CategoryPage = () => {
       </div>
 
       {/* Subcategories Section */}
-      <section className="py-10 bg-[#FFFBF9] px-10">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="playfair-italic text-2xl md:text-3xl font-bold text-[#6B2F1A] mb-2">
-                Browse by Subcategory
-              </h2>
-            </div>
-          </div>
+      {/* 
+  Dynamic centered cards solution
+  This uses a JavaScript approach to calculate positioning and insert appropriate spacers
+*/}
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            {/* All Products Tab */}
-            <Card
-              className={`cursor-pointer transition-all hover:shadow-md ${
-                currentSubcategory === "all"
-                  ? "border-[#6B2F1A] ring-2 ring-[#6B2F1A] ring-opacity-20 shadow-md"
-                  : "hover:border-[#6B2F1A]/30 border border-gray-200"
-              }`}
-              onClick={() => handleSubcategoryChange("all")}
-            >
-              <CardContent className="p-6 flex flex-col items-center justify-center text-center">
-                <div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${
+<section className="py-10 bg-[#FFFBF9] px-10">
+  <div className="container mx-auto px-4">
+    <div className="flex items-center justify-between mb-8">
+      <div>
+        <h2 className="playfair-italic text-2xl md:text-3xl font-bold text-[#6B2F1A] mb-2">
+          Browse by Subcategory
+        </h2>
+      </div>
+    </div>
+
+    {/* Dynamic card rendering with JavaScript for perfect centering */}
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      {(() => {
+        // Combine "All" card with subcategories for processing
+        const allItems = [
+          { 
+            id: 'all', 
+            type: 'all',
+            subcategory: 'All',
+            _count: { Product: productCount }
+          },
+          ...subcategories
+        ];
+        
+        // Calculate items per row based on screen size (simplified approach)
+        const itemsPerRow = 6; // For desktop view (lg)
+        
+        // Calculate total rows needed
+        const totalRows = Math.ceil(allItems.length / itemsPerRow);
+        
+        // Process each row
+        const rows = [];
+        for (let i = 0; i < totalRows; i++) {
+          const startIdx = i * itemsPerRow;
+          const endIdx = Math.min(startIdx + itemsPerRow, allItems.length);
+          const rowItems = allItems.slice(startIdx, endIdx);
+          
+          // Calculate how many empty slots needed on each side for centering
+          const emptySlots = itemsPerRow - rowItems.length;
+          const leftPadding = Math.floor(emptySlots / 2);
+          
+          // Add left padding spacers if needed
+          for (let j = 0; j < leftPadding; j++) {
+            rows.push(
+              <div key={`spacer-${i}-left-${j}`} className="hidden lg:block"></div>
+            );
+          }
+          
+          // Add the actual items
+          rowItems.forEach((item) => {
+            if (item.type === 'all') {
+              // Render the "All" card
+              rows.push(
+                <Card
+                  key="all"
+                  className={`cursor-pointer transition-all hover:shadow-md ${
                     currentSubcategory === "all"
-                      ? "bg-[#fee3d8] text-[#6B2F1A]"
-                      : "bg-gray-100 text-gray-600"
+                      ? "border-[#6B2F1A] ring-2 ring-[#6B2F1A] ring-opacity-20 shadow-md"
+                      : "hover:border-[#6B2F1A]/30 border border-gray-200"
                   }`}
+                  onClick={() => handleSubcategoryChange("all")}
                 >
-                  <LayoutGrid className="h-6 w-6" />
-                </div>
-                <h3 className="font-playfair font-medium text-[#6B2F1A]">
-                  All
-                </h3>
-                <p className="font-poppins text-xs text-gray-500 mt-1">
-                  {productCount} items
-                </p>
-                {currentSubcategory === "all" && (
-                  <Badge className="mt-2 bg-[#fee3d8] text-[#6B2F1A] border-none font-poppins">
-                    <Check className="mr-1 h-3 w-3" />
-                    Selected
-                  </Badge>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Subcategory Tabs */}
-            {subcategories.map((subcategory) => (
-              <Card
-                key={subcategory.id}
-                className={`cursor-pointer transition-all hover:shadow-md ${
-                  currentSubcategory === subcategory.id
-                    ? "border-[#6B2F1A] ring-2 ring-[#6B2F1A] ring-opacity-20 shadow-md"
-                    : "hover:border-[#6B2F1A]/30 border border-gray-200"
-                }`}
-                onClick={() => handleSubcategoryChange(subcategory.id)}
-              >
-                <CardContent className="p-6 flex flex-col items-center justify-center text-center">
-                  <div
-                    className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${
-                      currentSubcategory === subcategory.id
-                        ? "bg-[#fee3d8] text-[#6B2F1A]"
-                        : "bg-gray-100 text-gray-600"
-                    }`}
-                  >
-                    {/* {subcategory.image} */}
-                    {subcategory.image ? (
-                      <div className="relative w-12 h-12">
-                        <Image
-                          src={`https://greenglow.in/kauthuk_test/${subcategory.image}`}
-                          alt={subcategory.subcategory}
-                          fill
-                          className="object-contain"
-                        />
-                      </div>
-                    ) : (
-                      <Box className="h-12 w-12" />
+                  <CardContent className="p-6 flex flex-col items-center justify-center text-center">
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${
+                        currentSubcategory === "all"
+                          ? "bg-[#fee3d8] text-[#6B2F1A]"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      <LayoutGrid className="h-6 w-6" />
+                    </div>
+                    <h3 className="font-playfair font-medium text-[#6B2F1A] text-center w-full">
+                      All
+                    </h3>
+                    <p className="font-poppins text-xs text-gray-500 mt-1 text-center w-full">
+                      {productCount} items
+                    </p>
+                    {currentSubcategory === "all" && (
+                      <Badge className="mt-2 bg-[#fee3d8] text-[#6B2F1A] border-none font-poppins">
+                        <Check className="mr-1 h-3 w-3" />
+                        Selected
+                      </Badge>
                     )}
-                  </div>
-                  <h3 className="font-playfair font-medium text-[#6B2F1A] line-clamp-1 text-lg">
-                    {subcategory.subcategory}
-                  </h3>
-                  <p className="font-poppins text-sm text-gray-500 mt-1">
-                    {subcategory._count?.Product || 0} items
-                  </p>
-                  {currentSubcategory === subcategory.id && (
-                    <Badge className="mt-2 bg-[#fee3d8] text-[#6B2F1A] border-none font-poppins">
-                      <Check className="mr-1 h-3 w-3" />
-                      Selected
-                    </Badge>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+                  </CardContent>
+                </Card>
+              );
+            } else {
+              // Render subcategory cards
+              rows.push(
+                <Card
+                  key={item.id}
+                  className={`cursor-pointer transition-all hover:shadow-md ${
+                    currentSubcategory === item.id
+                      ? "border-[#6B2F1A] ring-2 ring-[#6B2F1A] ring-opacity-20 shadow-md"
+                      : "hover:border-[#6B2F1A]/30 border border-gray-200"
+                  }`}
+                  onClick={() => handleSubcategoryChange(item.id)}
+                >
+                  <CardContent className="p-6 flex flex-col items-center justify-center">
+                    <div
+                      className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${
+                        currentSubcategory === item.id
+                          ? "bg-[#fee3d8] text-[#6B2F1A]"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {item.image ? (
+                        <div className="relative w-12 h-12">
+                          <Image
+                            src={`https://greenglow.in/kauthuk_test/${item.image}`}
+                            alt={item.subcategory}
+                            fill
+                            className="object-contain"
+                          />
+                        </div>
+                      ) : (
+                        <Box className="h-12 w-12" />
+                      )}
+                    </div>
+                    <h3 className="font-playfair font-medium text-[#6B2F1A] text-center w-full mx-auto">
+                      {item.subcategory}
+                    </h3>
+                    <p className="font-poppins text-sm text-gray-500 mt-1 text-center w-full mx-auto">
+                      {item._count?.Product || 0} items
+                    </p>
+                    {currentSubcategory === item.id && (
+                      <Badge className="mt-2 bg-[#fee3d8] text-[#6B2F1A] border-none font-poppins">
+                        <Check className="mr-1 h-3 w-3" />
+                        Selected
+                      </Badge>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            }
+          });
+          
+          // Add right padding spacers if needed
+          const rightPadding = emptySlots - leftPadding;
+          for (let j = 0; j < rightPadding; j++) {
+            rows.push(
+              <div key={`spacer-${i}-right-${j}`} className="hidden lg:block"></div>
+            );
+          }
+        }
+        
+        return rows;
+      })()}
+    </div>
+  </div>
+</section>
 
       {/* Products Grid Section */}
       <section className="py-10 bg-white px-10">

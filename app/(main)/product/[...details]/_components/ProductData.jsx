@@ -435,7 +435,7 @@ const ProductDetails = () => {
                 </>
               )}
               <BreadcrumbItem>
-                <BreadcrumbLink className="text-[#6B2F1A] font-medium">
+                <BreadcrumbLink className="text-[#6B2F1A] font-medium playfair">
                   {product.title}
                 </BreadcrumbLink>
               </BreadcrumbItem>
@@ -531,7 +531,7 @@ const ProductDetails = () => {
             {/* Title and badges */}
             <div>
               <div className="flex justify-between items-start">
-                <h1 className="text-2xl md:text-3xl font-bold text-[#6B2F1A]">
+                <h1 className="text-2xl md:text-3xl font-bold text-[#6B2F1A] playfair">
                   {product.title}
                 </h1>
               </div>
@@ -1251,7 +1251,7 @@ const ProductDetails = () => {
           <div className="container mx-auto px-4">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h2 className="font-playfair text-2xl md:text-3xl font-bold text-[#6B2F1A]">
+                <h2 className="playfair text-2xl md:text-3xl font-bold text-[#6B2F1A]">
                   You May Also Like
                 </h2>
               </div>
