@@ -892,7 +892,7 @@ const ProductDetails = () => {
 
             {/* Shipping and benefits cards - modernized */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-4">
-              <div className="bg-[#FFF5F1]/70 p-3 rounded-lg flex items-center border border-[#6B2F1A]/5 shadow-sm">
+              {/* <div className="bg-[#FFF5F1]/70 p-3 rounded-lg flex items-center border border-[#6B2F1A]/5 shadow-sm">
                 <div className="w-8 h-8 rounded-full bg-[#6B2F1A]/10 flex items-center justify-center mr-3 flex-shrink-0">
                   <Truck className="h-4 w-4 text-[#6B2F1A]" />
                 </div>
@@ -904,7 +904,7 @@ const ProductDetails = () => {
                     On orders over ₹999
                   </p>
                 </div>
-              </div>
+              </div> */}
 
               <div className="bg-[#FFF5F1]/70 p-3 rounded-lg flex items-center border border-[#6B2F1A]/5 shadow-sm">
                 <div className="w-8 h-8 rounded-full bg-[#6B2F1A]/10 flex items-center justify-center mr-3 flex-shrink-0">
