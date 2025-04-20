@@ -435,7 +435,7 @@ const ProductDetails = () => {
                 </>
               )}
               <BreadcrumbItem>
-                <BreadcrumbLink className="text-[#6B2F1A] font-medium playfair">
+                <BreadcrumbLink className="text-[#6B2F1A] font-medium">
                   {product.title}
                 </BreadcrumbLink>
               </BreadcrumbItem>
