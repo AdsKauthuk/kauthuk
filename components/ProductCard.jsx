@@ -252,7 +252,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
           </div> */}
 
           {/* Quick View Overlay - Appears on hover */}
-          <Link href={`/product/${product?.slug}`}>
+          {/* <Link href={`/product/${product?.slug}`}>
             <div
               className={`absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer`}
             >
@@ -263,7 +263,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
                 </span>
               </div>
             </div>
-          </Link>
+          </Link> */}
         </div>
 
         {/* Content Container */}
@@ -441,7 +441,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
           </div>
 
           {/* Quick View Overlay - Appears on hover */}
-          <Link href={`/product/${product?.slug}`}>
+          {/* <Link href={`/product/${product?.slug}`}>
             <div
               className={`absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer`}
             >
@@ -452,7 +452,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
                 </span>
               </div>
             </div>
-          </Link>
+          </Link> */}
         </div>
 
         {/* Content Container */}

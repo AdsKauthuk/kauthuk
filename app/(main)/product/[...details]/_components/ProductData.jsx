@@ -102,7 +102,6 @@ const ProductDetails = () => {
           setLoading(false);
           return;
         }
-console.log("params.details[0]",params.details[0])
         const productData = await getOneProduct2(params.details[0]);
 
         if (!productData) {
@@ -635,14 +634,14 @@ console.log("params.details[0]",params.details[0])
 
             {/* Price section */}
             <div className="flex flex-col">
-              {/* <div className="flex items-end gap-2">
+              <div className="flex items-end gap-2">
                 <div className="flex items-center">
                   <IndianRupee className="h-5 w-5 text-[#6B2F1A]" />
                   <span className="text-2xl md:text-3xl font-bold text-[#6B2F1A]">
                     {formatPrice(currentPrice)}
                   </span>
                 </div>
-              </div> */}
+              </div>
 
               {/* Stock status */}
               <div className="mt-2 flex items-center font-poppins">
