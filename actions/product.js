@@ -23,13 +23,12 @@ function generateSlug(title) {
     .toString()
     .toLowerCase()
     .trim()
-    .replace(/\s+/g, '-')     // Replace spaces with hyphens
-    .replace(/[^\w\-]+/g, '') // Remove non-word chars
-    .replace(/\-\-+/g, '-')   // Replace multiple hyphens with single hyphen
-    .replace(/^-+/, '')       // Trim hyphens from start
-    .replace(/-+$/, '');      // Trim hyphens from end
+    .replace(/\s+/g, "-") // Replace spaces with hyphens
+    .replace(/[^\w\-]+/g, "") // Remove non-word chars
+    .replace(/\-\-+/g, "-") // Replace multiple hyphens with single hyphen
+    .replace(/^-+/, "") // Trim hyphens from start
+    .replace(/-+$/, ""); // Trim hyphens from end
 }
-
 
 // Utility function to connect to FTP
 async function connectToFTP(ftpClient) {
@@ -49,24 +48,24 @@ async function connectToFTP(ftpClient) {
 export async function createProduct(data) {
   const ftpClient = new ftp.Client();
   ftpClient.ftp.verbose = true;
-  
+
   try {
     console.log("Received product data:", data);
-    
+
     // Generate slug from title
     let slug = generateSlug(data.title);
-    
+
     // Check if slug already exists and make it unique if needed
     const existingProduct = await db.product.findFirst({
       where: { slug },
     });
-    
+
     // If slug exists, append a random string to make it unique
     if (existingProduct) {
       const randomString = Math.random().toString(36).substring(2, 7);
       slug = `${slug}-${randomString}`;
     }
-    
+
     // First create the product
     const product = await db.product.create({
       data: {
@@ -95,22 +94,22 @@ export async function createProduct(data) {
         cod: data.cod || "yes",
       },
     });
-    
+
     // Handle product images
     if (data.images && data.images.length > 0) {
       await handleProductImages(ftpClient, product.id, data.images);
     }
-    
+
     // Handle product attributes
     if (data.attributes && data.attributes.length > 0) {
       await handleProductAttributes(product.id, data.attributes);
     }
-    
+
     // Handle product variants if hasVariants is true
     if (data.hasVariants && data.variants && data.variants.length > 0) {
       await handleProductVariants(ftpClient, product.id, data.variants);
     }
-    
+
     // Fetch the complete product with relationships for the response
     const completeProduct = await db.product.findUnique({
       where: { id: product.id },
@@ -143,7 +142,7 @@ export async function createProduct(data) {
         },
       },
     });
-    
+
     return completeProduct;
   } catch (error) {
     console.error("Error creating product:", error);
@@ -290,7 +289,7 @@ async function handleProductVariants(ftpClient, productId, variants) {
 export async function getOneProduct(id) {
   try {
     const productId = parseInt(id);
-console.log(productId)
+    console.log("productId", productId);
     const product = await db.product.findUnique({
       where: { id: productId },
       include: {
@@ -397,13 +396,13 @@ export async function deleteProductById(id) {
         where: { product_id: productId },
         select: { id: true },
       });
-      
-      const productAttributeIds = productAttributes.map(attr => attr.id);
-      
+
+      const productAttributeIds = productAttributes.map((attr) => attr.id);
+
       if (productAttributeIds.length > 0) {
         await tx.productAttributeValue.deleteMany({
-          where: { 
-            product_attribute_id: { in: productAttributeIds } 
+          where: {
+            product_attribute_id: { in: productAttributeIds },
           },
         });
       }
@@ -412,26 +411,26 @@ export async function deleteProductById(id) {
       await tx.productAttribute.deleteMany({
         where: { product_id: productId },
       });
-      
+
       // Delete VariantAttributeValues through their parent ProductVariants
       const productVariants = await tx.productVariant.findMany({
         where: { product_id: productId },
         select: { id: true },
       });
-      
-      const variantIds = productVariants.map(variant => variant.id);
-      
+
+      const variantIds = productVariants.map((variant) => variant.id);
+
       if (variantIds.length > 0) {
         await tx.variantAttributeValue.deleteMany({
-          where: { 
-            variant_id: { in: variantIds } 
+          where: {
+            variant_id: { in: variantIds },
           },
         });
-        
+
         // Delete images linked to variants
         await tx.productImage.deleteMany({
-          where: { 
-            product_variant_id: { in: variantIds } 
+          where: {
+            product_variant_id: { in: variantIds },
           },
         });
       }
@@ -499,7 +498,7 @@ export async function getProducts({
     if (featured && (featured === "yes" || featured === "no")) {
       where.featured = featured;
     }
-    console.log("featureds",featured)
+    console.log("featureds", featured);
     // Determine sort order
     let orderBy = {};
     switch (sort) {
@@ -711,15 +710,15 @@ export async function updateProduct(id, data) {
     let slug = existingProduct.slug;
     if (data.title && data.title !== existingProduct.title) {
       slug = generateSlug(data.title);
-      
+
       // Check if the new slug already exists for another product
       const slugExists = await db.product.findFirst({
-        where: { 
+        where: {
           slug,
-          id: { not: productId } // Exclude the current product
+          id: { not: productId }, // Exclude the current product
         },
       });
-      
+
       // If slug exists, append a random string to make it unique
       if (slugExists) {
         const randomString = Math.random().toString(36).substring(2, 7);
@@ -1089,21 +1088,25 @@ export async function toggleProductFeatured(id, currentFeatured) {
     const updatedProduct = await db.product.update({
       where: { id: productId },
       data: {
-        featured: newFeaturedStatus
-      }
+        featured: newFeaturedStatus,
+      },
     });
 
     return {
       success: true,
       product: updatedProduct,
-      message: `Product ${updatedProduct.featured === "yes" ? "marked as featured" : "removed from featured"}`
+      message: `Product ${
+        updatedProduct.featured === "yes"
+          ? "marked as featured"
+          : "removed from featured"
+      }`,
     };
   } catch (error) {
     console.error("Error toggling product featured status:", error);
     return {
       success: false,
       error: error.message,
-      message: "Failed to update product featured status"
+      message: "Failed to update product featured status",
     };
   }
 }
@@ -1111,7 +1114,7 @@ export async function toggleProductFeatured(id, currentFeatured) {
 export async function getOneProduct2(slug) {
   try {
     // Validate slug parameter
-    if (!slug || typeof slug !== 'string') {
+    if (!slug || typeof slug !== "string") {
       throw new Error("Valid product slug is required");
     }
 

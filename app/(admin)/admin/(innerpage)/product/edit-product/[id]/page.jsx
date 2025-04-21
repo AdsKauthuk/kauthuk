@@ -180,174 +180,162 @@ const EditProductPage = () => {
     loadInitialData();
   }, []);
 
-  // First, update the useEffect that fetches product data
-useEffect(() => {
-  const fetchProductData = async () => {
-    setIsLoading(true);
-    try {
-      console.log("Fetching product data for ID:", productId);
-      const product = await getOneProduct(productId);
-      console.log("Received product data:", product);
-      setProductData(product);
+  // Fetch product data when the component mounts
+  useEffect(() => {
+    const fetchProductData = async () => {
+      setIsLoading(true);
+      try {
+        const product = await getOneProduct(productId);
+        console.log("product",product)
+        setProductData(product);
 
-      // Set up existing images with defensive check
-      if (product.ProductImages && product.ProductImages.length > 0) {
-        const images = product.ProductImages.map((img) => ({
-          id: img.id,
-          path: img.image_path,
-          url: `https://greenglow.in/kauthuk_test/${img.image_path}`,
-        }));
-        setCurrentImages(images);
-      } else {
-        // Initialize with empty array if no images
-        console.log("No product images found, initializing with empty array");
-        setCurrentImages([]);
-      }
-
-      // Set up attributes with defensive check
-      if (product.ProductAttributes && product.ProductAttributes.length > 0 && attributes.length > 0) {
-        const mappedAttributes = product.ProductAttributes.map((attr) => {
-          const attributeDetails = attributes.find(
-            (a) => a.id === attr.attribute_id
-          );
-          const values = attr.ProductAttributeValues && attr.ProductAttributeValues.length > 0
-            ? attr.ProductAttributeValues.map((val) => ({
-                attribute_value_id: val.attribute_value_id,
-                price_adjustment_rupees: val.price_adjustment_rupees,
-                price_adjustment_dollars: val.price_adjustment_dollars,
-              }))
-            : [];
-
-          return {
-            attribute_id: attr.attribute_id,
-            is_required: attr.is_required,
-            values: values,
-            attribute: attributeDetails,
-          };
-        });
-
-        setSelectedAttributes(mappedAttributes);
-      } else {
-        setSelectedAttributes([]);
-      }
-
-      // Set up variants with defensive check
-      if (product.hasVariants && product.ProductVariants && product.ProductVariants.length > 0) {
-        const mappedVariants = product.ProductVariants.map((variant) => {
-          // Map variant images if any
-          const variantImages = variant.ProductImages && variant.ProductImages.length > 0
-            ? variant.ProductImages.map((img) => ({
-                id: img.id,
-                path: img.image_path,
-                url: `https://greenglow.in/kauthuk_test/${img.image_path}`,
-              }))
-            : [];
-
-          return {
-            id: variant.id,
-            sku: variant.sku,
-            price_rupees: variant.price_rupees.toString(),
-            price_dollars: variant.price_dollars.toString(),
-            stock_count: variant.stock_count,
-            stock_status: variant.stock_status,
-            weight: variant.weight?.toString() || "",
-            is_default: variant.is_default,
-            attribute_values: variant.VariantAttributeValues && variant.VariantAttributeValues.length > 0
-              ? variant.VariantAttributeValues.map((val) => ({
-                  attribute_value_id: val.attribute_value_id,
-                }))
-              : [],
-            images: [],
-            existingImages: variantImages,
-            imagePreviews: [],
-          };
-        });
-
-        setVariants(mappedVariants);
-      } else {
-        // Initialize with a single variant for new variants
-        setVariants([
-          {
-            id: "new-1",
-            sku: "",
-            price_rupees: "",
-            price_dollars: "",
-            stock_count: 0,
-            stock_status: "yes",
-            weight: "",
-            is_default: true,
-            attribute_values: [],
-            images: [],
-            existingImages: [],
-            imagePreviews: [],
-          },
-        ]);
-      }
-
-      // Update hasVariants state
-      setHasVariants(product.hasVariants);
-
-      // Set form values correctly with additional logging
-      // Convert string IDs to actual strings for form fields
-      const formData = {
-        ...product,
-        cat_id: product.cat_id?.toString() || "",
-        subcat_id: product.subcat_id?.toString() || "",
-      };
-
-      // Reset the form with the product data, but exclude images
-      const {
-        ProductImages,
-        ProductVariants,
-        ProductAttributes,
-        ...restData
-      } = formData;
-      
-      console.log("Setting form values:", restData);
-      form.reset(restData);
-
-      // Load subcategories based on selected category
-      if (product.cat_id) {
-        const selectedCategory = categories.find(
-          (cat) => cat.id === product.cat_id
-        );
-        if (selectedCategory && selectedCategory.SubCategory) {
-          console.log("Setting subcategories:", selectedCategory.SubCategory);
-          setSubcategories(selectedCategory.SubCategory);
-        } else {
-          console.log("No subcategories found for category:", product.cat_id);
-          setSubcategories([]);
+        // Set up existing images
+        if (product.ProductImages && product.ProductImages.length > 0) {
+          const images = product.ProductImages.map((img) => ({
+            id: img.id,
+            path: img.image_path,
+            url: `https://greenglow.in/kauthuk_test/${img.image_path}`,
+          }));
+          setCurrentImages(images);
         }
-      }
-      
-      console.log("Product data fetching completed successfully");
-    } catch (error) {
-      console.error("Error fetching product data:", error);
-      toast.error("Failed to load product data: " + error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  if (productId && attributes.length > 0 && categories.length > 0) {
-    fetchProductData();
-  }
-}, [productId, attributes, categories, form]);
+        // Set up attributes
+        if (
+          product.ProductAttributes &&
+          product.ProductAttributes.length > 0 &&
+          attributes.length > 0
+        ) {
+          const mappedAttributes = product.ProductAttributes.map((attr) => {
+            const attributeDetails = attributes.find(
+              (a) => a.id === attr.attribute_id
+            );
+            const values = attr.ProductAttributeValues
+              ? attr.ProductAttributeValues.map((val) => ({
+                  attribute_value_id: val.attribute_value_id,
+                  price_adjustment_rupees: val.price_adjustment_rupees,
+                  price_adjustment_dollars: val.price_adjustment_dollars,
+                }))
+              : [];
+
+            return {
+              attribute_id: attr.attribute_id,
+              is_required: attr.is_required,
+              values: values,
+              attribute: attributeDetails,
+            };
+          });
+
+          setSelectedAttributes(mappedAttributes);
+        }
+
+        // Set up variants
+        if (
+          product.hasVariants &&
+          product.ProductVariants &&
+          product.ProductVariants.length > 0
+        ) {
+          const mappedVariants = product.ProductVariants.map((variant) => {
+            // Map variant images if any
+            const variantImages =
+              variant.ProductImages?.length > 0
+                ? variant.ProductImages.map((img) => ({
+                    id: img.id,
+                    path: img.image_path,
+                    url: `https://greenglow.in/kauthuk_test/${img.image_path}`,
+                  }))
+                : [];
+
+            return {
+              id: variant.id,
+              sku: variant.sku,
+              price_rupees: variant.price_rupees.toString(),
+              price_dollars: variant.price_dollars.toString(),
+              stock_count: variant.stock_count,
+              stock_status: variant.stock_status,
+              weight: variant.weight?.toString() || "",
+              is_default: variant.is_default,
+              attribute_values:
+                variant.VariantAttributeValues?.map((val) => ({
+                  attribute_value_id: val.attribute_value_id,
+                })) || [],
+              images: [],
+              existingImages: variantImages,
+              imagePreviews: [],
+            };
+          });
+
+          setVariants(mappedVariants);
+        } else {
+          // Initialize with a single variant for new variants
+          setVariants([
+            {
+              id: "new-1",
+              sku: "",
+              price_rupees: "",
+              price_dollars: "",
+              stock_count: 0,
+              stock_status: "yes",
+              weight: "",
+              is_default: true,
+              attribute_values: [],
+              images: [],
+              existingImages: [],
+              imagePreviews: [],
+            },
+          ]);
+        }
+
+        // Update hasVariants state
+        setHasVariants(product.hasVariants);
+
+        // Set form values correctly
+        // Convert string IDs to actual strings for form fields
+        const formData = {
+          ...product,
+          cat_id: product.cat_id?.toString() || "",
+          subcat_id: product.subcat_id?.toString() || "",
+        };
+
+        // Reset the form with the product data, but exclude images
+        const {
+          ProductImages,
+          ProductVariants,
+          ProductAttributes,
+          ...restData
+        } = formData;
+        form.reset(restData);
+
+        // Load subcategories based on selected category
+        if (product.cat_id) {
+          const selectedCategory = categories.find(
+            (cat) => cat.id === product.cat_id
+          );
+          if (selectedCategory && selectedCategory.SubCategory) {
+            setSubcategories(selectedCategory.SubCategory);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching product data:", error);
+        toast.error("Failed to load product data.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (productId && attributes.length > 0) {
+      fetchProductData();
+    }
+  }, [productId, attributes, categories, form]);
 
   // Update subcategories when category changes
   useEffect(() => {
     if (watchCategoryId) {
-      console.log("Category changed to:", watchCategoryId);
       const selectedCategory = categories.find(
         (cat) => cat.id === parseInt(watchCategoryId)
       );
-      if (selectedCategory && selectedCategory.SubCategory) {
-        console.log("Found subcategories:", selectedCategory.SubCategory);
+      if (selectedCategory) {
         setSubcategories(selectedCategory.SubCategory || []);
         form.setValue("subcat_id", ""); // Reset subcategory selection
-      } else {
-        console.log("No subcategories found for category ID:", watchCategoryId);
-        setSubcategories([]);
       }
     }
   }, [watchCategoryId, categories, form]);
