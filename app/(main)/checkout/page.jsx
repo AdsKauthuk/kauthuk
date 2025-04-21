@@ -405,12 +405,9 @@ const CheckoutPage = () => {
     return calculateShippingCost(cart, watchShippingMethod, currency);
   }, [cart, watchShippingMethod, currency]);
 
-  // Calculate tax (assumed 10%)
-  const taxRate = 0.1;
-  const tax = subtotal * taxRate;
-
+  
   // Calculate total (with tax)
-  const subtotalWithTax = subtotal * (1 + taxRate);
+  const subtotalWithTax = subtotal ;
   const total = subtotalWithTax + shippingCost;
 
   // Calculate total weight for display
