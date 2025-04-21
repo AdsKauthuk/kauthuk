@@ -516,7 +516,7 @@ export const getCategories3 = cache(async () => {
         SubCategory: true
       },
       orderBy: {
-        catName: 'asc'
+        order_no: 'asc'
       }
     });
     

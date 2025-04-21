@@ -19,6 +19,7 @@ model Category {
   showHome    Statuses @default(active)
   description String?  @db.Text
   image       String?  @db.VarChar(255)
+  order_no    Int      @default(0) // Added order_no field for sorting categories
   banner      String?  @db.VarChar(255) // Added banner field
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -577,7 +578,7 @@ model SiteContent {
 model FooterCategory {
   id           Int          @id @default(autoincrement())
   title        String       @db.VarChar(100)
-  displayOrder Int          @default(0)      // To control the order of categories
+  displayOrder Int          @default(0) // To control the order of categories
   status       Statuses     @default(active) // To enable/disable categories
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
@@ -585,16 +586,16 @@ model FooterCategory {
 }
 
 model FooterLink {
-  id               Int       @id @default(autoincrement())
-  footerCategoryId Int       // Make this required
-  title            String    @db.VarChar(100)
-  link             String    @db.VarChar(255)
-  description      String?   @db.LongText
-  displayOrder     Int       @default(0)      // To control the order of links
-  status           Statuses  @default(active) // To enable/disable links
-  isExternal       Boolean   @default(false)  // Whether link opens in new tab
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id               Int      @id @default(autoincrement())
+  footerCategoryId Int // Make this required
+  title            String   @db.VarChar(100)
+  link             String   @db.VarChar(255)
+  description      String?  @db.LongText
+  displayOrder     Int      @default(0) // To control the order of links
+  status           Statuses @default(active) // To enable/disable links
+  isExternal       Boolean  @default(false) // Whether link opens in new tab
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   FooterCategory FooterCategory @relation(fields: [footerCategoryId], references: [id], onDelete: Cascade)
 }
@@ -639,4 +640,3 @@ enum DisplayPage {
   detail
   success
 }
-
