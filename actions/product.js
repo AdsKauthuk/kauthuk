@@ -290,7 +290,7 @@ async function handleProductVariants(ftpClient, productId, variants) {
 export async function getOneProduct(id) {
   try {
     const productId = parseInt(id);
-
+console.log(productId)
     const product = await db.product.findUnique({
       where: { id: productId },
       include: {

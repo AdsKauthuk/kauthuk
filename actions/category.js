@@ -180,7 +180,11 @@ export async function getCategories({
 export async function getCategories2() {
   try {
     // Fetch all categories without pagination or filtering
-    const categories = await db.category.findMany();
+    const categories = await db.category.findMany({
+      include: {
+        SubCategory: true // This is crucial to get the subcategories
+      },
+    });
 
     return {
       categories: categories || [], // Ensure categories is never null

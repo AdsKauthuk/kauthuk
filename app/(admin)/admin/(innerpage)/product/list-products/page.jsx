@@ -125,7 +125,8 @@ const ListProductsPage = () => {
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
   const [categories, setCategories] = useState([]);
-
+  const [subcategoryFilter, setSubcategoryFilter] = useState("");
+  const [subcategories, setSubcategories] = useState([]);
   const itemsPerPage = 50;
   const router = useRouter();
 
@@ -148,6 +149,7 @@ const ListProductsPage = () => {
         limit: itemsPerPage,
         sort: sortBy,
         category: categoryFilter === "all" ? "" : categoryFilter,
+        subcategory: subcategoryFilter === "all" ? "" : subcategoryFilter,
         status: statusFilter === "all" ? "" : statusFilter,
         featured: featuredFilter === "all" ? "" : featuredFilter, // Added featured filter
       });
@@ -162,6 +164,26 @@ const ListProductsPage = () => {
   };
 
   useEffect(() => {
+    // Reset subcategory when category changes
+    setSubcategoryFilter("all");
+
+    // Only fetch subcategories when a specific category is selected
+    if (categoryFilter && categoryFilter !== "all") {
+      // Find the selected category and get its subcategories
+      const selectedCategory = categories.find(
+        (cat) => cat.id.toString() === categoryFilter
+      );
+      if (selectedCategory && selectedCategory.SubCategory) {
+        setSubcategories(selectedCategory.SubCategory);
+      } else {
+        setSubcategories([]);
+      }
+    } else {
+      setSubcategories([]);
+    }
+  }, [categoryFilter, categories]);
+
+  useEffect(() => {
     fetchProducts();
     fetchCategories();
   }, []);
@@ -173,6 +195,7 @@ const ListProductsPage = () => {
     currentPage,
     sortBy,
     categoryFilter,
+    subcategoryFilter,
     statusFilter,
     featuredFilter, // Added to dependency array
   ]);
@@ -182,6 +205,7 @@ const ListProductsPage = () => {
     setSortBy("latest");
     setCategoryFilter("all");
     setStatusFilter("all");
+    setSubcategoryFilter("all"); // Add this
     setFeaturedFilter("all"); // Reset featured filter
     setCurrentPage(1);
     setShowFilters(false);
@@ -437,7 +461,32 @@ const ListProductsPage = () => {
                   </SelectContent>
                 </Select>
               </div>
-
+              {/* Add this after your category filter */}
+              <div>
+                <label className="text-sm font-medium mb-1 block">
+                  Subcategory
+                </label>
+                <Select
+                  value={subcategoryFilter}
+                  onValueChange={setSubcategoryFilter}
+                  disabled={categoryFilter === "all" || !subcategories.length}
+                >
+                  <SelectTrigger className="w-full border-blue-200 dark:border-blue-900/50 focus:ring-blue-500">
+                    <SelectValue placeholder="All Subcategories" />
+                  </SelectTrigger>
+                  <SelectContent className="border-gray-400 dark:border-blue-900">
+                    <SelectItem value="all">All Subcategories</SelectItem>
+                    {subcategories.map((subcategory) => (
+                      <SelectItem
+                        key={subcategory.id}
+                        value={subcategory.id.toString()}
+                      >
+                        {subcategory.subcategory}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div>
                 <label className="text-sm font-medium mb-1 block">Status</label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -454,8 +503,13 @@ const ListProductsPage = () => {
 
               {/* Added Featured Filter */}
               <div>
-                <label className="text-sm font-medium mb-1 block">Featured</label>
-                <Select value={featuredFilter} onValueChange={setFeaturedFilter}>
+                <label className="text-sm font-medium mb-1 block">
+                  Featured
+                </label>
+                <Select
+                  value={featuredFilter}
+                  onValueChange={setFeaturedFilter}
+                >
                   <SelectTrigger className="w-full border-blue-200 dark:border-blue-900/50 focus:ring-blue-500">
                     <SelectValue placeholder="All Products" />
                   </SelectTrigger>
@@ -615,7 +669,7 @@ const ListProductsPage = () => {
                           )}
                         </div>
                       </td>
-                      
+
                       <td className="p-4 border-b border-gray-400 dark:border-blue-900/30 text-center">
                         <div className="flex flex-col items-center gap-2">
                           {item.featured === "yes" ? (
@@ -676,7 +730,7 @@ const ListProductsPage = () => {
                           </Button>
                         </div>
                       </td>
-                      
+
                       <td className="p-4 border-b border-gray-400 dark:border-blue-900/30 text-center">
                         {item.status === "active" ? (
                           <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-200 border-none">
@@ -812,7 +866,7 @@ const ListProductsPage = () => {
                         Inactive
                       </Badge>
                     )}
-                    
+
                     {item.featured === "yes" && (
                       <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border-none">
                         <Star size={12} className="mr-1" />
@@ -913,7 +967,7 @@ const ListProductsPage = () => {
                       <Eye size={16} className="mr-1" />
                       View
                     </Button>
-                    
+
                     <Button
                       onClick={async () => {
                         setActionLoading(`feature-${item.id}`);
@@ -944,12 +998,19 @@ const ListProductsPage = () => {
                       {actionLoading === `feature-${item.id}` ? (
                         <span className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mr-1"></span>
                       ) : (
-                        <Star size={16} className={item.featured === "yes" ? "text-yellow-500 fill-yellow-500 mr-1" : "text-gray-400 mr-1"} />
+                        <Star
+                          size={16}
+                          className={
+                            item.featured === "yes"
+                              ? "text-yellow-500 fill-yellow-500 mr-1"
+                              : "text-gray-400 mr-1"
+                          }
+                        />
                       )}
                       {item.featured === "yes" ? "Unfeature" : "Feature"}
                     </Button>
                   </div>
-                  
+
                   <div className="flex gap-2">
                     <Button
                       onClick={() =>
@@ -1224,7 +1285,9 @@ const ListProductsPage = () => {
                         <Star size={12} className="mr-1" />
                         Yes
                       </Badge>
-                    ) : "No"}
+                    ) : (
+                      "No"
+                    )}
                   </span>
                 </div>
               </div>
@@ -1373,7 +1436,7 @@ const ListProductsPage = () => {
 
                               <div className="flex-1">
                                 <div className="flex justify-between">
-                                <div className="font-medium text-slate-700 dark:text-slate-300">
+                                  <div className="font-medium text-slate-700 dark:text-slate-300">
                                     {variant.is_default && (
                                       <Badge
                                         variant="outline"
