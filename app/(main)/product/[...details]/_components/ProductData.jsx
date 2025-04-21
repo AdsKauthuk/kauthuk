@@ -55,6 +55,7 @@ import {
   Truck,
   Share2,
   Weight,
+  DollarSign,
 } from "lucide-react";
 
 // Server Actions
@@ -87,6 +88,7 @@ const ProductDetails = () => {
   const { addToCart } = useCart();
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loadingRelated, setLoadingRelated] = useState(false);
+  const { currency } = useCart();
 
   // Refs for navigation buttons
   const prevRef = useRef(null);
@@ -296,7 +298,7 @@ const ProductDetails = () => {
         : product.price_dollars,
       image: productImages.length > 0 ? productImages[0].image_path : null,
       quantity: quantity,
-      tax:product?.tax || 0,
+      tax: product?.tax || 0,
       weight: product.weight,
       variant: selectedVariant
         ? {
@@ -319,11 +321,18 @@ const ProductDetails = () => {
   };
 
   const currentPrice = selectedVariant
-    ? selectedVariant.price_rupees
-    : product?.price_rupees || 0;
+    ? parseFloat(selectedVariant.price_rupees) +
+      (currency === "INR" && product?.tax
+        ? (parseFloat(selectedVariant.price_rupees) * product?.tax) / 100
+        : 0)
+    : parseFloat(product?.price_rupees) +
+        (currency === "INR" && product?.tax
+          ? (parseFloat(product?.price_rupees) * product?.tax) / 100
+          : 0) || 0;
+
   const currentPriceDollars = selectedVariant
-    ? selectedVariant.price_dollars
-    : product?.price_dollars || 0;
+    ? parseFloat(selectedVariant.price_dollars)
+    : parseFloat(product?.price_dollars) || 0;
   const currentStock = selectedVariant
     ? selectedVariant.stock_count
     : product?.stock_count || 0;
@@ -637,10 +646,21 @@ const ProductDetails = () => {
             <div className="flex flex-col">
               <div className="flex items-end gap-2">
                 <div className="flex items-center">
-                  <IndianRupee className="h-5 w-5 text-[#6B2F1A]" />
-                  <span className="text-2xl md:text-3xl font-bold text-[#6B2F1A]">
-                    {formatPrice(currentPrice)}
-                  </span>
+                  {currency === "INR" ? (
+                    <>
+                      <IndianRupee className="h-5 w-5 text-[#6B2F1A]" />
+                      <span className="text-2xl md:text-3xl font-bold text-[#6B2F1A]">
+                        {formatPrice(currentPrice)}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <DollarSign className="h-5 w-5 text-[#6B2F1A]" />
+                      <span className="text-2xl md:text-3xl font-bold text-[#6B2F1A]">
+                        {formatPrice(currentPriceDollars)}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
 
