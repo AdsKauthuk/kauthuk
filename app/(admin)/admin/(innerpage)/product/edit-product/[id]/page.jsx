@@ -186,7 +186,6 @@ const EditProductPage = () => {
       setIsLoading(true);
       try {
         const product = await getOneProduct(productId);
-        console.log("product",product)
         setProductData(product);
 
         // Set up existing images
