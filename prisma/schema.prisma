@@ -85,6 +85,7 @@ model Product {
   cod              YesNo    @default(yes)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+  slug             String   @unique @db.VarChar(255)  // Added slug field with unique constraint
 
   SubCategory       SubCategory        @relation(fields: [subcat_id], references: [id])
   ProductVariants   ProductVariant[]

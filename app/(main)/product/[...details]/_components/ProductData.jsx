@@ -58,7 +58,7 @@ import {
 } from "lucide-react";
 
 // Server Actions
-import { getOneProduct, getProducts } from "@/actions/product";
+import { getOneProduct2, getProducts } from "@/actions/product";
 import ProductCard from "@/components/ProductCard";
 import { toast } from "sonner";
 
@@ -102,8 +102,8 @@ const ProductDetails = () => {
           setLoading(false);
           return;
         }
-
-        const productData = await getOneProduct(params.details[0]);
+console.log("params.details[0]",params.details[0])
+        const productData = await getOneProduct2(params.details[0]);
 
         if (!productData) {
           setLoading(false);

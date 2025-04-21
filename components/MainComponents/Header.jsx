@@ -259,7 +259,7 @@ const Header = () => {
                     {searchResults.map((product) => (
                       <PopoverClose asChild key={product.id}>
                         <Link
-                          href={`/product/${product.id}`}
+                          href={`/product/${product?.slug}`}
                           className="flex items-center p-3 hover:bg-gray-50 border-b border-gray-100"
                         >
                           <div className="relative h-12 w-12 rounded-md overflow-hidden bg-gray-100 mr-3">

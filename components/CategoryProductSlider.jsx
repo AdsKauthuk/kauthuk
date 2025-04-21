@@ -86,6 +86,7 @@ const ProductCard = ({ product, index }) => {
     ProductImages = [],
     hasVariants = false,
     description = "",
+    slug
   } = product;
 
   // Choose the first image or use a fallback
@@ -151,7 +152,7 @@ const ProductCard = ({ product, index }) => {
               isHovered ? "opacity-100" : "opacity-0"
             )}
           >
-            <Link href={`/product/${id}`}>
+            <Link href={`/product/${slug}`}>
               <motion.button
                 className="w-10 h-10 rounded-full bg-white text-gray-800 flex items-center justify-center hover:bg-indigo-500 hover:text-white transition-colors shadow-md"
                 whileHover={{ scale: 1.1 }}
@@ -178,7 +179,7 @@ const ProductCard = ({ product, index }) => {
             </p>
           </div>
 
-          <Link href={`/product/${id}`} className="mt-4 block">
+          <Link href={`/product/${slug}`} className="mt-4 block">
             <motion.button
               className="w-full py-2.5 px-4 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white rounded-lg flex items-center justify-center gap-2 shadow-sm transition-all"
               whileHover={{ scale: 1.02 }}

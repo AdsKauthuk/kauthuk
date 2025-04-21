@@ -60,7 +60,7 @@ const toBase64 = (str) =>
     ? Buffer.from(str).toString("base64")
     : window.btoa(str);
 
-const ProductCard = ({ id, title, price_rupees, price_dollars, images, index }) => {
+const ProductCard = ({ id, title, price_rupees, price_dollars, images, index,slug }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -117,7 +117,7 @@ const ProductCard = ({ id, title, price_rupees, price_dollars, images, index }) 
     e.preventDefault();
     e.stopPropagation();
     const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-      `${window.location.origin}/product/${id}`
+      `${window.location.origin}/product/${slug}`
     )}`;
     window.open(url, "_blank", "width=600,height=400");
     setShowShareMenu(false);
@@ -128,7 +128,7 @@ const ProductCard = ({ id, title, price_rupees, price_dollars, images, index }) 
     e.stopPropagation();
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
       `Check out this product: ${title}`
-    )}&url=${encodeURIComponent(`${window.location.origin}/product/${id}`)}`;
+    )}&url=${encodeURIComponent(`${window.location.origin}/product/${slug}`)}`;
     window.open(url, "_blank", "width=600,height=400");
     setShowShareMenu(false);
   };
@@ -137,7 +137,7 @@ const ProductCard = ({ id, title, price_rupees, price_dollars, images, index }) 
     e.preventDefault();
     e.stopPropagation();
     const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
-      `${window.location.origin}/product/${id}`
+      `${window.location.origin}/product/${slug}`
     )}`;
     window.open(url, "_blank", "width=600,height=400");
     setShowShareMenu(false);
@@ -146,7 +146,7 @@ const ProductCard = ({ id, title, price_rupees, price_dollars, images, index }) 
   const copyLink = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const url = `${window.location.origin}/product/${id}`;
+    const url = `${window.location.origin}/product/${slug}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -171,7 +171,7 @@ const ProductCard = ({ id, title, price_rupees, price_dollars, images, index }) 
         )}
 
         {/* Image Container */}
-        <Link href={`/product/${id}`} className="block relative aspect-square">
+        <Link href={`/product/${slug}`} className="block relative aspect-square">
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-[85%] h-[85%] relative">
               <Image
@@ -219,7 +219,7 @@ const ProductCard = ({ id, title, price_rupees, price_dollars, images, index }) 
           <div className="mb-2 h-12">
             {" "}
             {/* Added fixed height of 3rem (48px) for 2 lines */}
-            <Link href={`/product/${id}`}>
+            <Link href={`/product/${slug}`}>
               <h3 className="playfair text-base font-medium text-[#6B2F1A] line-clamp-2 hover:text-[#6B2F1A] transition-colors">
                 {title || "Product"}
               </h3>
@@ -551,6 +551,7 @@ const ProductSlider = ({
                     price_dollars={product.price_dollars}
                     images={product.ProductImages}
                     index={index}
+                    slug={product.slug}
                   />
                 </SwiperSlide>
               ))}

@@ -223,6 +223,7 @@ const FeaturedProductsSlider = ({
                     images={product.ProductImages}
                     index={index}
                     featured={true} // Add a prop to indicate this is a featured product
+                    slug={product.slug}
                   />
                 </SwiperSlide>
               ))}

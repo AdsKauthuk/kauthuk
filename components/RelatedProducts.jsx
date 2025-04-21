@@ -251,11 +251,11 @@ const RelatedProductCard = ({ product }) => {
       navigator.share({
         title: product.title,
         text: `Check out this product: ${product.title}`,
-        url: `${window.location.origin}/product/${product.id}`,
+        url: `${window.location.origin}/product/${product?.slug}`,
       }).catch((error) => console.log('Error sharing:', error));
     } else {
       // Fallback - copy link to clipboard
-      const url = `${window.location.origin}/product/${product.id}`;
+      const url = `${window.location.origin}/product/${product?.slug}`;
       navigator.clipboard.writeText(url);
       setCopied(true);
       toast.success("Link copied to clipboard!");
@@ -375,7 +375,7 @@ const RelatedProductCard = ({ product }) => {
               isHovered ? "opacity-100" : "opacity-0"
             }`}
           >
-            <Link href={`/product/${product?.id}`}>
+            <Link href={`/product/${product?.slug}`}>
               <button className="w-10 h-10 rounded-full bg-white text-[#6B2F1A] flex items-center justify-center hover:bg-[#6B2F1A] hover:text-white transition-colors shadow-md">
                 <Eye className="w-5 h-5" />
               </button>
@@ -418,7 +418,7 @@ const RelatedProductCard = ({ product }) => {
           </div>
 
           <div className="mt-4 flex gap-2">
-            <Link href={`/product/${product?.id}`} className="flex-1">
+            <Link href={`/product/${product?.slug}`} className="flex-1">
               <button
                 type="button"
                 className="w-full py-2.5 px-4 bg-[#6B2F1A] hover:bg-[#5A2814] text-white rounded-lg flex items-center justify-center gap-2 transition-colors"

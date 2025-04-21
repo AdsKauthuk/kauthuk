@@ -150,7 +150,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
       >
         <div className="relative aspect-square overflow-hidden">
           <Link
-            href={`/product/${product?.id}`}
+            href={`/product/${product?.slug}`}
             className="block w-full h-full cursor-pointer"
           >
             <div className="absolute inset-0 flex items-center justify-center">
@@ -212,7 +212,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
               isHovered ? "opacity-100" : "opacity-0"
             }`}
           >
-            <Link href={`/product/${product?.id}`}>
+            <Link href={`/product/${product?.slug}`}>
               <button className="w-10 h-10 rounded-full bg-white text-[#6B2F1A] flex items-center justify-center hover:bg-[#6B2F1A] hover:text-white transition-colors shadow-md">
                 <Eye className="w-5 h-5" />
               </button>
@@ -237,7 +237,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
           </div>
 
           <div className="mt-4 flex gap-2">
-            <Link href={`/product/${product?.id}`} className="flex-1">
+            <Link href={`/product/${product?.slug}`} className="flex-1">
               <button
                 type="button"
                 className="w-full py-2.5 px-4 bg-[#6B2F1A] hover:bg-[#5A2814] text-white rounded-lg flex items-center justify-center gap-2 transition-colors"
@@ -279,7 +279,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
       >
         <div className="relative w-full md:w-1/4 aspect-square md:aspect-auto overflow-hidden rounded-lg">
           <Link
-            href={`/product/${product?.id}`}
+            href={`/product/${product?.slug}`}
             className="block w-full h-full cursor-pointer"
           >
             <div className="absolute inset-0 flex items-center justify-center">
@@ -395,7 +395,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
               >
                 <ShoppingCart className="w-5 h-5" />
               </button>
-              <Link href={`/product/${product?.id}`}>
+              <Link href={`/product/${product?.slug}`}>
                 <button
                   type="button"
                   className="px-6 py-2 bg-[#6B2F1A] hover:bg-[#5A2814] text-white rounded-lg transition-colors"

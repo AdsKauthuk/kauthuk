@@ -1,4 +1,4 @@
-import { getOneProduct } from '@/actions/product';
+import { getOneProduct2 } from '@/actions/product';
 import React from 'react';
 import ProductDetails from './_components/ProductData';
 
@@ -10,7 +10,7 @@ export async function generateMetadata({ params }) {
   let product;
   try {
     if (!id) throw new Error('Product ID is missing');
-    product = await getOneProduct(id);
+    product = await getOneProduct2(id);
     if (!product) throw new Error('Product not found');
   } catch (error) {
     console.error('Error fetching product metadata:', error);

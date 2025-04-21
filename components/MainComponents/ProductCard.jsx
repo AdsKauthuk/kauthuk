@@ -46,6 +46,7 @@ const ProductCard = ({
   images,
   index,
   featured = false,
+  slug
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
@@ -103,7 +104,7 @@ const ProductCard = ({
     e.preventDefault();
     e.stopPropagation();
     const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-      `${window.location.origin}/product/${id}`
+      `${window.location.origin}/product/${slug}`
     )}`;
     window.open(url, "_blank", "width=600,height=400");
     setShowShareMenu(false);
@@ -114,7 +115,7 @@ const ProductCard = ({
     e.stopPropagation();
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
       `Check out this product: ${title}`
-    )}&url=${encodeURIComponent(`${window.location.origin}/product/${id}`)}`;
+    )}&url=${encodeURIComponent(`${window.location.origin}/product/${slug}`)}`;
     window.open(url, "_blank", "width=600,height=400");
     setShowShareMenu(false);
   };
@@ -123,7 +124,7 @@ const ProductCard = ({
     e.preventDefault();
     e.stopPropagation();
     const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
-      `${window.location.origin}/product/${id}`
+      `${window.location.origin}/product/${slug}`
     )}`;
     window.open(url, "_blank", "width=600,height=400");
     setShowShareMenu(false);
@@ -132,7 +133,7 @@ const ProductCard = ({
   const copyLink = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const url = `${window.location.origin}/product/${id}`;
+    const url = `${window.location.origin}/product/${slug}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -168,7 +169,7 @@ const ProductCard = ({
 
         {/* Image Container */}
         <Link
-          href={`/product/${id}`}
+          href={`/product/${slug}`}
           className="block relative aspect-square overflow-hidden"
         >
           <div className="absolute inset-0 flex items-center justify-center">
@@ -216,7 +217,7 @@ const ProductCard = ({
         {/* Content Container */}
         <div className="p-4 flex flex-col flex-grow">
           <div className="mb-2">
-            <Link href={`/product/${id}`}>
+            <Link href={`/product/${slug}`}>
               <h3 className="playfair text-base font-medium text-[#6B2F1A] line-clamp-2 hover:text-[#6B2F1A] transition-colors">
                 {title || "Product"}
               </h3>

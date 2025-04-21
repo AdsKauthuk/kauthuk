@@ -137,7 +137,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
     e.preventDefault();
     e.stopPropagation();
     const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-      `${window.location.origin}/product/${product.id}`
+      `${window.location.origin}/product/${product.slug}`
     )}`;
     window.open(url, "_blank", "width=600,height=400");
     setShowShareMenu(false);
@@ -149,7 +149,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
       `Check out this product: ${product.title}`
     )}&url=${encodeURIComponent(
-      `${window.location.origin}/product/${product.id}`
+      `${window.location.origin}/product/${product.slug}`
     )}`;
     window.open(url, "_blank", "width=600,height=400");
     setShowShareMenu(false);
@@ -159,7 +159,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
     e.preventDefault();
     e.stopPropagation();
     const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
-      `${window.location.origin}/product/${product.id}`
+      `${window.location.origin}/product/${product.slug}`
     )}`;
     window.open(url, "_blank", "width=600,height=400");
     setShowShareMenu(false);
@@ -168,7 +168,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
   const copyLink = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const url = `${window.location.origin}/product/${product.id}`;
+    const url = `${window.location.origin}/product/${product.slug}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     toast.success("Link copied to clipboard!");
@@ -200,7 +200,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
         {/* Product Image Container */}
         <div className="relative aspect-square overflow-hidden">
           <Link
-            href={`/product/${product?.id}`}
+            href={`/product/${product?.slug}`}
             className="block w-full h-full"
           >
             <div className="absolute inset-0 flex items-center justify-center cursor-pointer">
@@ -252,7 +252,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
           </div> */}
 
           {/* Quick View Overlay - Appears on hover */}
-          <Link href={`/product/${product?.id}`}>
+          <Link href={`/product/${product?.slug}`}>
             <div
               className={`absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer`}
             >
@@ -269,7 +269,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
         {/* Content Container */}
         <div className="p-4 flex flex-col flex-grow">
           <div className="mb-2">
-            <Link href={`/product/${product?.id}`}>
+            <Link href={`/product/${product?.slug}`}>
               <h3 className="playfair text-base font-medium text-[#6B2F1A] line-clamp-2 hover:text-[#6B2F1A] transition-colors">
                 {product?.title || "Product Name"}
               </h3>
@@ -402,7 +402,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
         {/* Image Container */}
         <div className="relative w-full md:w-64 aspect-square md:aspect-auto overflow-hidden rounded-lg">
           <Link
-            href={`/product/${product?.id}`}
+            href={`/product/${product?.slug}`}
             className="block w-full h-full cursor-pointer"
           >
             <Image
@@ -441,7 +441,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
           </div>
 
           {/* Quick View Overlay - Appears on hover */}
-          <Link href={`/product/${product?.id}`}>
+          <Link href={`/product/${product?.slug}`}>
             <div
               className={`absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer`}
             >
@@ -471,7 +471,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
           </div>
 
           <div className="mb-auto">
-            <Link href={`/product/${product?.id}`}>
+            <Link href={`/product/${product?.slug}`}>
               <h3 className="font-playfair text-xl font-medium text-gray-800 mb-2 hover:text-[#6B2F1A] transition-colors">
                 {product?.title || "Product Name"}
               </h3>

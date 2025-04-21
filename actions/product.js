@@ -18,6 +18,19 @@ const FTP_CONFIG = {
   remoteDir: "/kauthuk_test/",
 };
 
+function generateSlug(title) {
+  return title
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')     // Replace spaces with hyphens
+    .replace(/[^\w\-]+/g, '') // Remove non-word chars
+    .replace(/\-\-+/g, '-')   // Replace multiple hyphens with single hyphen
+    .replace(/^-+/, '')       // Trim hyphens from start
+    .replace(/-+$/, '');      // Trim hyphens from end
+}
+
+
 // Utility function to connect to FTP
 async function connectToFTP(ftpClient) {
   if (ftpClient.closed) {
@@ -36,16 +49,31 @@ async function connectToFTP(ftpClient) {
 export async function createProduct(data) {
   const ftpClient = new ftp.Client();
   ftpClient.ftp.verbose = true;
-
+  
   try {
     console.log("Received product data:", data);
-
+    
+    // Generate slug from title
+    let slug = generateSlug(data.title);
+    
+    // Check if slug already exists and make it unique if needed
+    const existingProduct = await db.product.findFirst({
+      where: { slug },
+    });
+    
+    // If slug exists, append a random string to make it unique
+    if (existingProduct) {
+      const randomString = Math.random().toString(36).substring(2, 7);
+      slug = `${slug}-${randomString}`;
+    }
+    
     // First create the product
     const product = await db.product.create({
       data: {
         cat_id: parseInt(data.cat_id),
         subcat_id: parseInt(data.subcat_id),
         title: data.title,
+        slug: slug, // Add the generated slug
         description: data.description,
         status: data.status || "active",
         hasVariants: data.hasVariants || false,
@@ -67,22 +95,22 @@ export async function createProduct(data) {
         cod: data.cod || "yes",
       },
     });
-
+    
     // Handle product images
     if (data.images && data.images.length > 0) {
       await handleProductImages(ftpClient, product.id, data.images);
     }
-
+    
     // Handle product attributes
     if (data.attributes && data.attributes.length > 0) {
       await handleProductAttributes(product.id, data.attributes);
     }
-
+    
     // Handle product variants if hasVariants is true
     if (data.hasVariants && data.variants && data.variants.length > 0) {
       await handleProductVariants(ftpClient, product.id, data.variants);
     }
-
+    
     // Fetch the complete product with relationships for the response
     const completeProduct = await db.product.findUnique({
       where: { id: product.id },
@@ -115,7 +143,7 @@ export async function createProduct(data) {
         },
       },
     });
-
+    
     return completeProduct;
   } catch (error) {
     console.error("Error creating product:", error);
@@ -679,9 +707,30 @@ export async function updateProduct(id, data) {
       throw new Error("Product not found");
     }
 
+    // Generate new slug if title has changed
+    let slug = existingProduct.slug;
+    if (data.title && data.title !== existingProduct.title) {
+      slug = generateSlug(data.title);
+      
+      // Check if the new slug already exists for another product
+      const slugExists = await db.product.findFirst({
+        where: { 
+          slug,
+          id: { not: productId } // Exclude the current product
+        },
+      });
+      
+      // If slug exists, append a random string to make it unique
+      if (slugExists) {
+        const randomString = Math.random().toString(36).substring(2, 7);
+        slug = `${slug}-${randomString}`;
+      }
+    }
+
     // Prepare update data for the product
     const updateData = {
       title: data.title,
+      slug: slug, // Add the updated slug
       description: data.description,
       status: data.status,
       hasVariants: data.hasVariants,
@@ -1056,5 +1105,69 @@ export async function toggleProductFeatured(id, currentFeatured) {
       error: error.message,
       message: "Failed to update product featured status"
     };
+  }
+}
+
+export async function getOneProduct2(slug) {
+  try {
+    // Validate slug parameter
+    if (!slug || typeof slug !== 'string') {
+      throw new Error("Valid product slug is required");
+    }
+
+    const product = await db.product.findUnique({
+      where: { slug: slug.trim() },
+      include: {
+        SubCategory: {
+          include: {
+            Category: true,
+          },
+        },
+        ProductImages: true, // Get all images without filtering
+        ProductAttributes: {
+          include: {
+            Attribute: true,
+            ProductAttributeValues: {
+              include: {
+                AttributeValue: true,
+              },
+            },
+          },
+        },
+        ProductVariants: {
+          include: {
+            VariantAttributeValues: {
+              include: {
+                AttributeValue: {
+                  include: {
+                    Attribute: true,
+                  },
+                },
+              },
+            },
+            ProductImages: true,
+          },
+        },
+      },
+    });
+
+    if (!product) {
+      throw new Error("Product not found");
+    }
+
+    // Check if we got any product images
+    if (product.ProductImages.length === 0) {
+      console.log("No images found for product slug:", slug);
+    } else {
+      console.log(
+        `Found ${product.ProductImages.length} images for product slug:`,
+        slug
+      );
+    }
+
+    return product;
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    throw new Error(`Failed to fetch the product: ${error.message}`);
   }
 }
