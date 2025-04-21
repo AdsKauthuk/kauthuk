@@ -615,6 +615,7 @@ export async function searchProducts(query, limit = 5) {
     // Transform the data for frontend use
     const formattedProducts = products.map(product => ({
       id: product.id,
+      tax:product.tax,
       title: product.title || 'Untitled Product',
       description: product.description 
         ? (product.description.substring(0, 100) + (product.description.length > 100 ? '...' : '')) 

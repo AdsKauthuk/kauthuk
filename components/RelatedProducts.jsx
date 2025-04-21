@@ -181,17 +181,17 @@ const RelatedProductCard = ({ product }) => {
   // Get price based on currency
   const getPrice = () => {
     return currency === "INR" 
-      ? product?.price_rupees || 0 
+      ? product?.price_rupees + (product.tax ? ((parseFloat(product?.price_rupees) * product.tax) / 100) : 0) || 0 
       : product?.price_dollars || 0;
   };
   
   // Get base price based on currency
   const getBasePrice = () => {
     if (currency === "INR") {
-      return product?.base_price || 0;
+      return product?.base_price+ (product.tax ? ((parseFloat(product?.base_price) * product.tax) / 100) : 0) || 0 ;
     } else {
       // Simple conversion for USD if base_price is in INR
-      return product?.base_price ? (product.base_price / 80) : 0;
+      return product?.base_price ? (product.price_dollars) : 0;
     }
   };
   

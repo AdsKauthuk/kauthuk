@@ -122,7 +122,6 @@ const ProductCart = () => {
     clearCart 
   } = useCart();
   
-  // Calculate subtotal with tax included (10%)
   const subtotalWithTax = totals[currency];
   
   // Calculate shipping cost based on weight for INR

@@ -1,37 +1,35 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, Suspense } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  CheckCircle2,
+  ChevronDown,
+  DollarSign,
+  Eye,
+  Grid3x3,
+  IndianRupee,
+  Loader2,
+  Rows3,
+  Search,
+  ShoppingCart,
+  SlidersHorizontal,
+  X
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Search,
-  SlidersHorizontal,
-  ChevronDown,
-  X,
-  ShoppingCart,
-  Heart,
-  Star,
-  Eye,
-  Grid3x3,
-  Rows3,
-  CheckCircle2,
-  Loader2,
-} from "lucide-react";
-import { IndianRupee, DollarSign } from "lucide-react";
+import React, { Suspense, useCallback, useEffect, useState } from "react";
 // Import UI components
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { Slider } from "@/components/ui/slider";
-import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -40,17 +38,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Slider } from "@/components/ui/slider";
 
 // Import the getProducts server action
-import { getProducts } from "@/actions/product";
 import { getCategories } from "@/actions/category"; // Assuming you have this action
-import { toast } from "sonner";
+import { getProducts } from "@/actions/product";
 import { useCart } from "@/providers/CartProvider";
+import { toast } from "sonner";
+import ProductCard from "./ProductCard";
 
 const shimmer = (w, h) => `
 <svg width="${w}" height="${h}" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -74,345 +74,7 @@ const toBase64 = (str) =>
 
 // Product card component
 // Product card component
-const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  
-  // Use cart context to access currency preferences
-  const { currency, formatPrice, toggleCurrency } = useCart();
-  
-  // Safely handle image URL
-  const imageUrl =
-    product?.ProductImages && product.ProductImages.length > 0
-      ? `https://greenglow.in/kauthuk_test/${product.ProductImages[0].image_path}`
-      : "/assets/images/placeholder.png";
 
-  // Get price based on currency
-  const getPrice = () => {
-    return currency === "INR" 
-      ? product?.price_rupees || 0 
-      : product?.price_dollars || 0;
-  };
-
-  // Calculate discount if applicable based on current currency
-  const getCurrentBasePrice = () => {
-    return currency === "INR"
-      ? product?.base_price || 0
-      : product?.base_price ? (product.base_price / 80) : 0; // Simple conversion for base price
-  };
-  
-  const finalPrice = getPrice();
-  const basePrice = getCurrentBasePrice();
-  const hasDiscount = basePrice > finalPrice;
-  
-  const discountPercentage = hasDiscount
-    ? Math.round(((basePrice - finalPrice) / basePrice) * 100)
-    : 0;
-
-  // Determine if product is in stock
-  const inStock = product?.stock_status === "yes" && product?.stock_count > 0;
-
-  const handleAddToCart = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (onAddToCart && inStock) {
-      onAddToCart(product);
-    } else if (!inStock) {
-      toast("Product Out of Stock");
-    }
-  };
-  
-  // Handle currency toggle
-  const handleCurrencyToggle = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    toggleCurrency();
-  };
-
-  const truncateDescription = (text, maxLength = 80) => {
-    if (!text) return "";
-    return text.length > maxLength
-      ? `${text.substring(0, maxLength)}...`
-      : text;
-  };
-
-  const gridCard = (
-    <motion.div
-      className="h-full"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      layout
-    >
-      <div
-        className="group h-full rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-500 ease-out border border-[#6B2F1A]/10"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <div className="relative aspect-square overflow-hidden">
-          <Link
-            href={`/product/${product?.slug}`}
-            className="block w-full h-full cursor-pointer"
-          >
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-[85%] h-[85%] relative">
-                <Image
-                  src={imageUrl}
-                  alt={product?.title || "Product Image"}
-                  fill
-                  placeholder="blur"
-                  blurDataURL={`data:image/svg+xml;base64,${toBase64(
-                    shimmer(700, 475)
-                  )}`}
-                  className="object-cover transition-all duration-500 ease-in-out group-hover:scale-105"
-                />
-              </div>
-            </div>
-          </Link>
-
-          {/* Discount badge */}
-          {hasDiscount && (
-            <div className="absolute top-3 left-3 z-10">
-              <Badge className="px-2 py-1 bg-[#b38d4a] text-white font-bold shadow-sm" style={{ fontFamily: "Poppins, sans-serif" }}>
-                -{discountPercentage}%
-              </Badge>
-            </div>
-          )}
-
-          {/* Stock status badge */}
-          <div className="absolute top-3 right-3 z-10">
-            <Badge
-              className={`px-2 py-1 font-medium shadow-sm ${
-                inStock
-                  ? "bg-green-100 text-green-800"
-                  : "bg-red-100 text-red-800"
-              }`}
-              style={{ fontFamily: "Poppins, sans-serif" }}
-            >
-              {inStock ? "In Stock" : "Out of Stock"}
-            </Badge>
-          </div>
-          
-          {/* Currency toggle */}
-          {/* <div className="absolute bottom-3 right-3 z-10">
-            <button 
-              onClick={handleCurrencyToggle}
-              className="w-8 h-8 rounded-full bg-white/80 hover:bg-white flex items-center justify-center transition-all shadow-sm"
-            >
-              {currency === "INR" ? (
-                <IndianRupee className="w-4 h-4 text-[#6B2F1A]" />
-              ) : (
-                <DollarSign className="w-4 h-4 text-[#6B2F1A]" />
-              )}
-            </button>
-          </div> */}
-
-          {/* Action buttons overlay */}
-          <div
-            className={`absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center gap-3 transition-opacity duration-300 ${
-              isHovered ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <Link href={`/product/${product?.slug}`}>
-              <button className="w-10 h-10 rounded-full bg-white text-[#6B2F1A] flex items-center justify-center hover:bg-[#6B2F1A] hover:text-white transition-colors shadow-md">
-                <Eye className="w-5 h-5" />
-              </button>
-            </Link>
-          </div>
-        </div>
-
-        <div className="p-5">
-          <h3 className="text-lg font-medium text-gray-900 line-clamp-1 mb-1 group-hover:text-[#6B2F1A] transition-colors">
-            {product?.title || "Product Name"}
-          </h3>
-
-          <div className="flex items-baseline gap-2">
-            <p className="text-xl font-bold text-[#6B2F1A]" style={{ fontFamily: "Playfair Display, serif" }}>
-              {formatPrice(finalPrice)}
-            </p>
-            {hasDiscount && (
-              <p className="text-sm text-gray-500 line-through" style={{ fontFamily: "Poppins, sans-serif" }}>
-                {formatPrice(basePrice)}
-              </p>
-            )}
-          </div>
-
-          <div className="mt-4 flex gap-2">
-            <Link href={`/product/${product?.slug}`} className="flex-1">
-              <button
-                type="button"
-                className="w-full py-2.5 px-4 bg-[#6B2F1A] hover:bg-[#5A2814] text-white rounded-lg flex items-center justify-center gap-2 transition-colors"
-                style={{ fontFamily: "Poppins, sans-serif" }}
-              >
-                View Details
-              </button>
-            </Link>
-            <button
-              type="button"
-              className={`p-2.5 ${
-                inStock
-                  ? "bg-[#fee3d8]/70 hover:bg-[#fee3d8] text-[#6B2F1A]"
-                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
-              } rounded-lg transition-colors`}
-              onClick={handleAddToCart}
-              disabled={!inStock}
-            >
-              <ShoppingCart className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-
-  const listCard = (
-    <motion.div
-      className="h-full"
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.3 }}
-      layout
-    >
-      <div
-        className="group h-full rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-500 p-4 flex flex-col md:flex-row gap-6 border border-[#6B2F1A]/10"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <div className="relative w-full md:w-1/4 aspect-square md:aspect-auto overflow-hidden rounded-lg">
-          <Link
-            href={`/product/${product?.slug}`}
-            className="block w-full h-full cursor-pointer"
-          >
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-[85%] h-[85%] relative">
-                <Image
-                  src={imageUrl}
-                  alt={product?.title || "Product Image"}
-                  fill
-                  placeholder="blur"
-                  blurDataURL={`data:image/svg+xml;base64,${toBase64(
-                    shimmer(700, 475)
-                  )}`}
-                  className="object-cover transition-all duration-500 ease-in-out group-hover:scale-105"
-                />
-              </div>
-            </div>
-          </Link>
-
-          {/* Discount badge */}
-          {hasDiscount && (
-            <div className="absolute top-3 left-3 z-10">
-              <Badge className="px-2 py-1 bg-[#b38d4a] text-white font-bold shadow-sm" style={{ fontFamily: "Poppins, sans-serif" }}>
-                -{discountPercentage}%
-              </Badge>
-            </div>
-          )}
-          
-          {/* Currency toggle */}
-          <div className="absolute bottom-3 right-3 z-10">
-            <button 
-              onClick={handleCurrencyToggle}
-              className="w-8 h-8 rounded-full bg-white/80 hover:bg-white flex items-center justify-center transition-all shadow-sm"
-            >
-              {currency === "INR" ? (
-                <IndianRupee className="w-4 h-4 text-[#6B2F1A]" />
-              ) : (
-                <DollarSign className="w-4 h-4 text-[#6B2F1A]" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        <div className="flex-1 flex flex-col">
-          <div className="mb-auto">
-            <div className="flex items-center justify-between mb-2">
-              <Badge
-                className={`px-2 py-1 font-medium shadow-sm ${
-                  inStock
-                    ? "bg-green-100 text-green-800"
-                    : "bg-red-100 text-red-800"
-                }`}
-                style={{ fontFamily: "Poppins, sans-serif" }}
-              >
-                {inStock ? "In Stock" : "Out of Stock"}
-              </Badge>
-            </div>
-
-            <h3 className="text-xl font-medium text-gray-900 mb-2 group-hover:text-[#6B2F1A] transition-colors" >
-              {product?.title || "Product Name"}
-            </h3>
-
-            {/* Additional product details */}
-            <div className="hidden md:grid grid-cols-2 gap-x-6 gap-y-2 mb-4">
-              {product?.weight && (
-                <div className="flex items-center text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>
-                  <CheckCircle2 className="w-4 h-4 text-green-500 mr-2" />
-                  <span>Weight: {product.weight} kg</span>
-                </div>
-              )}
-              {product?.hasVariants && (
-                <div className="flex items-center text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>
-                  <CheckCircle2 className="w-4 h-4 text-green-500 mr-2" />
-                  <span>Multiple variants available</span>
-                </div>
-              )}
-              {product?.SubCategory && (
-                <div className="flex items-center text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>
-                  <CheckCircle2 className="w-4 h-4 text-green-500 mr-2" />
-                  <span>Category: {product.SubCategory.subcategory}</span>
-                </div>
-              )}
-              {product?.free_shipping === "yes" && (
-                <div className="flex items-center text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>
-                  <CheckCircle2 className="w-4 h-4 text-green-500 mr-2" />
-                  <span>Free Shipping</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between mt-4">
-            <div className="flex items-baseline gap-2">
-              <p className="text-2xl font-bold text-[#6B2F1A]" style={{ fontFamily: "Playfair Display, serif" }}>
-                {formatPrice(finalPrice)}
-              </p>
-              {hasDiscount && (
-                <p className="text-sm text-gray-500 line-through" style={{ fontFamily: "Poppins, sans-serif" }}>
-                  {formatPrice(basePrice)}
-                </p>
-              )}
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                type="button"
-                className={`px-4 py-2 ${
-                  inStock
-                    ? "bg-[#fee3d8]/70 hover:bg-[#fee3d8] text-[#6B2F1A]"
-                    : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                } rounded-lg transition-colors`}
-                onClick={handleAddToCart}
-                disabled={!inStock}
-              >
-                <ShoppingCart className="w-5 h-5" />
-              </button>
-              <Link href={`/product/${product?.slug}`}>
-                <button
-                  type="button"
-                  className="px-6 py-2 bg-[#6B2F1A] hover:bg-[#5A2814] text-white rounded-lg transition-colors"
-                  style={{ fontFamily: "Poppins, sans-serif" }}
-                >
-                  View Details
-                </button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-
-  return layout === "grid" ? gridCard : listCard;
-};
 
 // Filter sidebar component
 const FilterSidebar = ({
@@ -484,13 +146,23 @@ const FilterSidebar = ({
       <Sheet open={isOpen} onOpenChange={onClose}>
         <SheetContent className="w-full max-w-md sm:max-w-lg overflow-y-auto">
           <SheetHeader className="mb-6">
-            <SheetTitle className="text-2xl text-[#6B2F1A]" style={{ fontFamily: "Playfair Display, serif" }}>Filters</SheetTitle>
+            <SheetTitle
+              className="text-2xl text-[#6B2F1A]"
+              style={{ fontFamily: "Playfair Display, serif" }}
+            >
+              Filters
+            </SheetTitle>
           </SheetHeader>
 
           <div className="space-y-6">
             {/* Price Range */}
             <div>
-              <h3 className="font-medium text-lg mb-4 text-[#6B2F1A]" style={{ fontFamily: "Playfair Display, serif" }}>Price Range</h3>
+              <h3
+                className="font-medium text-lg mb-4 text-[#6B2F1A]"
+                style={{ fontFamily: "Playfair Display, serif" }}
+              >
+                Price Range
+              </h3>
               <Slider
                 value={priceRange}
                 max={50000}
@@ -499,10 +171,16 @@ const FilterSidebar = ({
                 className="mb-2"
               />
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600" style={{ fontFamily: "Poppins, sans-serif" }}>
+                <span
+                  className="text-sm text-gray-600"
+                  style={{ fontFamily: "Poppins, sans-serif" }}
+                >
                   ₹{priceRange[0].toLocaleString()}
                 </span>
-                <span className="text-sm text-gray-600" style={{ fontFamily: "Poppins, sans-serif" }}>
+                <span
+                  className="text-sm text-gray-600"
+                  style={{ fontFamily: "Poppins, sans-serif" }}
+                >
                   ₹{priceRange[1].toLocaleString()}
                 </span>
               </div>
@@ -512,7 +190,12 @@ const FilterSidebar = ({
 
             {/* Category Selection */}
             <div>
-              <h3 className="font-medium text-lg mb-4 text-[#6B2F1A]" style={{ fontFamily: "Playfair Display, serif" }}>Categories</h3>
+              <h3
+                className="font-medium text-lg mb-4 text-[#6B2F1A]"
+                style={{ fontFamily: "Playfair Display, serif" }}
+              >
+                Categories
+              </h3>
               <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
                 {categories && categories.length > 0 ? (
                   categories.map((category) => (
@@ -535,7 +218,10 @@ const FilterSidebar = ({
                     </div>
                   ))
                 ) : (
-                  <p className="text-gray-500 text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>
+                  <p
+                    className="text-gray-500 text-sm"
+                    style={{ fontFamily: "Poppins, sans-serif" }}
+                  >
                     No categories available
                   </p>
                 )}
@@ -546,7 +232,12 @@ const FilterSidebar = ({
 
             {/* Availability */}
             <div>
-              <h3 className="font-medium text-lg mb-4 text-[#6B2F1A]" style={{ fontFamily: "Playfair Display, serif" }}>Availability</h3>
+              <h3
+                className="font-medium text-lg mb-4 text-[#6B2F1A]"
+                style={{ fontFamily: "Playfair Display, serif" }}
+              >
+                Availability
+              </h3>
               <RadioGroup
                 value={selectedAvailability}
                 onValueChange={setSelectedAvailability}
@@ -561,7 +252,7 @@ const FilterSidebar = ({
                       id={`availability-${option.value}`}
                       className="border-[#6B2F1A]/50 text-[#6B2F1A] data-[state=checked]:border-[#6B2F1A] data-[state=checked]:text-[#6B2F1A]"
                     />
-                    <Label 
+                    <Label
                       htmlFor={`availability-${option.value}`}
                       style={{ fontFamily: "Poppins, sans-serif" }}
                     >
@@ -597,7 +288,12 @@ const FilterSidebar = ({
       {/* Desktop sidebar */}
       <div className="hidden md:block w-full sticky top-24">
         <div className="bg-white rounded-xl shadow-sm p-6 border border-[#6B2F1A]/10">
-          <h3 className="font-bold text-xl mb-6 text-[#6B2F1A]" style={{ fontFamily: "Playfair Display, serif" }}>Filters</h3>
+          <h3
+            className="font-bold text-xl mb-6 text-[#6B2F1A]"
+            style={{ fontFamily: "Playfair Display, serif" }}
+          >
+            Filters
+          </h3>
 
           <Accordion
             type="multiple"
@@ -606,7 +302,10 @@ const FilterSidebar = ({
           >
             {/* Price Range */}
             <AccordionItem value="price" className="border-b-0">
-              <AccordionTrigger className="py-2 text-base font-medium hover:no-underline text-[#6B2F1A]" style={{ fontFamily: "Playfair Display, serif" }}>
+              <AccordionTrigger
+                className="py-2 text-base font-medium hover:no-underline text-[#6B2F1A]"
+                style={{ fontFamily: "Playfair Display, serif" }}
+              >
                 Price Range
               </AccordionTrigger>
               <AccordionContent>
@@ -618,10 +317,16 @@ const FilterSidebar = ({
                   className="mb-2"
                 />
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600" style={{ fontFamily: "Poppins, sans-serif" }}>
+                  <span
+                    className="text-sm text-gray-600"
+                    style={{ fontFamily: "Poppins, sans-serif" }}
+                  >
                     ₹{priceRange[0].toLocaleString()}
                   </span>
-                  <span className="text-sm text-gray-600" style={{ fontFamily: "Poppins, sans-serif" }}>
+                  <span
+                    className="text-sm text-gray-600"
+                    style={{ fontFamily: "Poppins, sans-serif" }}
+                  >
                     ₹{priceRange[1].toLocaleString()}
                   </span>
                 </div>
@@ -630,7 +335,10 @@ const FilterSidebar = ({
 
             {/* Category Selection */}
             <AccordionItem value="category" className="border-b-0">
-              <AccordionTrigger className="py-2 text-base font-medium hover:no-underline text-[#6B2F1A]" style={{ fontFamily: "Playfair Display, serif" }}>
+              <AccordionTrigger
+                className="py-2 text-base font-medium hover:no-underline text-[#6B2F1A]"
+                style={{ fontFamily: "Playfair Display, serif" }}
+              >
                 Categories
               </AccordionTrigger>
               <AccordionContent>
@@ -658,7 +366,10 @@ const FilterSidebar = ({
                       </div>
                     ))
                   ) : (
-                    <p className="text-gray-500 text-sm" style={{ fontFamily: "Poppins, sans-serif" }}>
+                    <p
+                      className="text-gray-500 text-sm"
+                      style={{ fontFamily: "Poppins, sans-serif" }}
+                    >
                       No categories available
                     </p>
                   )}
@@ -668,7 +379,10 @@ const FilterSidebar = ({
 
             {/* Availability */}
             <AccordionItem value="availability" className="border-b-0">
-              <AccordionTrigger className="py-2 text-base font-medium hover:no-underline text-[#6B2F1A]" style={{ fontFamily: "Playfair Display, serif" }}>
+              <AccordionTrigger
+                className="py-2 text-base font-medium hover:no-underline text-[#6B2F1A]"
+                style={{ fontFamily: "Playfair Display, serif" }}
+              >
                 Availability
               </AccordionTrigger>
               <AccordionContent>
@@ -686,7 +400,7 @@ const FilterSidebar = ({
                         id={`desktop-availability-${option.value}`}
                         className="border-[#6B2F1A]/50 text-[#6B2F1A] data-[state=checked]:border-[#6B2F1A] data-[state=checked]:text-[#6B2F1A]"
                       />
-                      <Label 
+                      <Label
                         htmlFor={`desktop-availability-${option.value}`}
                         style={{ fontFamily: "Poppins, sans-serif" }}
                       >
@@ -753,7 +467,12 @@ const ActiveFilters = ({ filters, onRemove, onClearAll }) => {
 
   return (
     <div className="flex flex-wrap items-center gap-2 mb-6">
-      <span className="text-sm font-medium text-gray-700" style={{ fontFamily: "Poppins, sans-serif" }}>Active Filters:</span>
+      <span
+        className="text-sm font-medium text-gray-700"
+        style={{ fontFamily: "Poppins, sans-serif" }}
+      >
+        Active Filters:
+      </span>
 
       {/* Category filters */}
       {filters.categories?.map((category) => (
@@ -954,7 +673,7 @@ const ProductListingPage = () => {
 
     fetchCategories();
   }, []);
-  
+
   // Update sort option and URL when sort changes
   useEffect(() => {
     if (sortOption !== urlParams.sortParam) {
@@ -1115,7 +834,7 @@ const ProductListingPage = () => {
     e.preventDefault();
     updateURLParams({ q: searchQuery, page: 1 });
   };
-  
+
   // Handle clearing search
   const handleClearSearch = () => {
     setSearchQuery("");
@@ -1220,10 +939,16 @@ const ProductListingPage = () => {
               </button>
             </form>
 
-            <h1 className="text-3xl font-bold text-[#6B2F1A] mb-2" style={{ fontFamily: "Playfair Display, serif" }}>
+            <h1
+              className="text-3xl font-bold text-[#6B2F1A] mb-2"
+              style={{ fontFamily: "Playfair Display, serif" }}
+            >
               {getPageTitle()}
             </h1>
-            <p className="text-gray-600" style={{ fontFamily: "Poppins, sans-serif" }}>
+            <p
+              className="text-gray-600"
+              style={{ fontFamily: "Poppins, sans-serif" }}
+            >
               {filteredProducts.length} products found
             </p>
           </div>
@@ -1288,17 +1013,36 @@ const ProductListingPage = () => {
                   onValueChange={setSortOption}
                 >
                   <SelectTrigger className="w-[180px] bg-white border-[#6B2F1A]/20 focus:ring-[#6B2F1A]">
-                    <SelectValue placeholder="Sort by" style={{ fontFamily: "Poppins, sans-serif" }} />
+                    <SelectValue
+                      placeholder="Sort by"
+                      style={{ fontFamily: "Poppins, sans-serif" }}
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="latest" style={{ fontFamily: "Poppins, sans-serif" }}>Latest</SelectItem>
-                    <SelectItem value="price_low" style={{ fontFamily: "Poppins, sans-serif" }}>
+                    <SelectItem
+                      value="latest"
+                      style={{ fontFamily: "Poppins, sans-serif" }}
+                    >
+                      Latest
+                    </SelectItem>
+                    <SelectItem
+                      value="price_low"
+                      style={{ fontFamily: "Poppins, sans-serif" }}
+                    >
                       Price: Low to High
                     </SelectItem>
-                    <SelectItem value="price_high" style={{ fontFamily: "Poppins, sans-serif" }}>
+                    <SelectItem
+                      value="price_high"
+                      style={{ fontFamily: "Poppins, sans-serif" }}
+                    >
                       Price: High to Low
                     </SelectItem>
-                    <SelectItem value="popular" style={{ fontFamily: "Poppins, sans-serif" }}>Popularity</SelectItem>
+                    <SelectItem
+                      value="popular"
+                      style={{ fontFamily: "Poppins, sans-serif" }}
+                    >
+                      Popularity
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1315,16 +1059,27 @@ const ProductListingPage = () => {
             {loading ? (
               <div className="flex flex-col items-center justify-center py-20">
                 <Loader2 className="h-12 w-12 animate-spin text-[#6B2F1A] mb-4" />
-                <p className="text-gray-500 text-lg animate-pulse" style={{ fontFamily: "Poppins, sans-serif" }}>
+                <p
+                  className="text-gray-500 text-lg animate-pulse"
+                  style={{ fontFamily: "Poppins, sans-serif" }}
+                >
                   Loading products...
                 </p>
               </div>
             ) : error ? (
               <div className="bg-[#fee3d8]/30 rounded-xl p-6 text-center border border-[#6B2F1A]/20">
-                <p className="text-[#6B2F1A] font-medium text-lg mb-2" style={{ fontFamily: "Playfair Display, serif" }}>
+                <p
+                  className="text-[#6B2F1A] font-medium text-lg mb-2"
+                  style={{ fontFamily: "Playfair Display, serif" }}
+                >
                   Oops! Something went wrong
                 </p>
-                <p className="text-gray-600" style={{ fontFamily: "Poppins, sans-serif" }}>{error}</p>
+                <p
+                  className="text-gray-600"
+                  style={{ fontFamily: "Poppins, sans-serif" }}
+                >
+                  {error}
+                </p>
                 <button
                   type="button"
                   onClick={() => window.location.reload()}
@@ -1336,10 +1091,16 @@ const ProductListingPage = () => {
               </div>
             ) : filteredProducts.length === 0 ? (
               <div className="bg-[#F9F4F0] rounded-xl p-10 text-center border border-[#6B2F1A]/20">
-                <p className="text-[#6B2F1A] font-medium text-xl mb-3" style={{ fontFamily: "Playfair Display, serif" }}>
+                <p
+                  className="text-[#6B2F1A] font-medium text-xl mb-3"
+                  style={{ fontFamily: "Playfair Display, serif" }}
+                >
                   No products found
                 </p>
-                <p className="text-gray-500 mb-6" style={{ fontFamily: "Poppins, sans-serif" }}>
+                <p
+                  className="text-gray-500 mb-6"
+                  style={{ fontFamily: "Poppins, sans-serif" }}
+                >
                   Try adjusting your search or filter criteria
                 </p>
                 <button
@@ -1363,11 +1124,9 @@ const ProductListingPage = () => {
                 >
                   {filteredProducts.map((product) => (
                     <ProductCard
-                      key={product?.id || Math.random().toString()}
-                      product={product}
-                      layout={layout}
-                      onAddToCart={handleAddToCart}
-                    />
+                    key={product?.id || Math.random().toString()} 
+
+                    product={product} layout={layout} />
                   ))}
                 </motion.div>
               </AnimatePresence>
@@ -1395,7 +1154,10 @@ const ProductListingPage = () => {
                   {getPaginationArray().map((page, index) => (
                     <React.Fragment key={index}>
                       {page === "..." ? (
-                        <span className="w-10 h-10 flex items-center justify-center text-gray-500" style={{ fontFamily: "Poppins, sans-serif" }}>
+                        <span
+                          className="w-10 h-10 flex items-center justify-center text-gray-500"
+                          style={{ fontFamily: "Poppins, sans-serif" }}
+                        >
                           ...
                         </span>
                       ) : (

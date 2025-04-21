@@ -62,8 +62,8 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
   // Get price based on currency
   const getPrice = () => {
     return currency === "INR" 
-      ? product?.price_rupees || 0 
-      : product?.price_dollars || 0;
+      ? parseFloat(product?.price_rupees) + (product.tax ? ((parseFloat(product?.price_rupees) * product.tax) / 100) : 0) || 0 
+      : parseFloat(product?.price_dollars)  || 0;
   };
   
   // Get the final price
@@ -71,8 +71,8 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
   
   // Calculate discount if applicable (based on current currency)
   const baseComparisonPrice = currency === "INR" 
-    ? product?.base_price || 0 
-    : (product?.base_price / 80) || 0; // Simple conversion for base price
+    ? parseFloat(product?.base_price) + (product.tax ? ((parseFloat(product?.base_price) * product.tax) / 100) : 0) || 0  
+    : parseFloat(product?.price_dollars) || 0; // Simple conversion for base price
     
   const hasDiscount = baseComparisonPrice > finalPrice;
   
@@ -81,7 +81,6 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
         ((baseComparisonPrice - finalPrice) / baseComparisonPrice) * 100
       )
     : 0;
-
   // Determine if product is in stock
   const inStock = product?.stock_status === "yes" && product?.stock_count > 0;
 

@@ -296,6 +296,7 @@ const ProductDetails = () => {
         : product.price_dollars,
       image: productImages.length > 0 ? productImages[0].image_path : null,
       quantity: quantity,
+      tax:product?.tax || 0,
       weight: product.weight,
       variant: selectedVariant
         ? {

@@ -56,25 +56,7 @@ const ProductCard = ({ product, index }) => {
   const [rating] = useState(Math.floor(Math.random() * 2) + 4); // Random 4-5 star rating
   const { addToCart } = useCart();
 
-  const handleAddToCart = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
 
-    addToCart({
-      id: product.id,
-      title: product.title,
-      price: parseFloat(product.price_rupees),
-      priceDollars: parseFloat(
-        product.price_dollars || product.price_rupees / 80
-      ), // Assuming a conversion rate
-      quantity: 1,
-      image:
-        ProductImages && ProductImages.length > 0
-          ? `https://greenglow.in/kauthuk_test/${ProductImages[0].image_path}`
-          : "/assets/images/placeholder.png",
-      maxStock: product.stock_count || 10,
-    });
-  };
   if (!product) return null;
 
   // Safely extract product properties with fallbacks
