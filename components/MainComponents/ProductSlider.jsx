@@ -60,7 +60,7 @@ const toBase64 = (str) =>
     ? Buffer.from(str).toString("base64")
     : window.btoa(str);
 
-const ProductCard = ({ id, title, price_rupees, price_dollars, images, index,slug }) => {
+const ProductCard = ({ id, title, price_rupees, price_dollars, images, index,slug,tax }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -78,7 +78,7 @@ const ProductCard = ({ id, title, price_rupees, price_dollars, images, index,slu
   // Get price based on currency
   const getPrice = () => {
     return currency === "INR" 
-      ? price_rupees || 0 
+      ? price_rupees  + (tax ? ((parseFloat(price_rupees) * tax) / 100) : 0) || 0
       : price_dollars || 0;
   };
 
@@ -548,6 +548,7 @@ const ProductSlider = ({
                     id={product.id}
                     title={product.title}
                     price_rupees={product.price_rupees}
+                    tax={product?.tax||0}
                     price_dollars={product.price_dollars}
                     images={product.ProductImages}
                     index={index}
