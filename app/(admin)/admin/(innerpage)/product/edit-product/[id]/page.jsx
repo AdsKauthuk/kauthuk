@@ -1,10 +1,10 @@
 "use client";
 
 import {
-  getOneProduct,
-  updateProduct,
   getCategoriesAndSubcategories,
+  getOneProduct,
   getProductAttributes,
+  updateProduct,
 } from "@/actions/product";
 import {
   Breadcrumb,
@@ -18,47 +18,45 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
   CardDescription,
   CardFooter,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 import { createProductSchema } from "@/lib/validators";
 import { zodResolver } from "@hookform/resolvers/zod";
 import MDEditor from "@uiw/react-md-editor";
-import { format } from "date-fns";
 import {
-  HomeIcon,
   ArrowLeft,
-  Package,
-  Type,
-  Upload,
-  PenTool,
-  Save,
-  Pencil,
-  Image as ImageIcon,
-  Tag,
-  DollarSign,
   CheckCircle2,
-  Settings,
-  Truck,
-  ShoppingCart,
-  Layers,
   CircleDollarSign,
   Clock,
+  DollarSign,
+  HomeIcon,
+  Image as ImageIcon,
+  Layers,
+  Package,
+  Pencil,
+  PenTool,
   Plus,
+  Save,
+  Settings,
+  ShoppingCart,
+  Tag,
   Trash2,
+  Truck,
+  Type,
+  Upload,
   X,
 } from "lucide-react";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { useRouter, useParams } from "next/navigation";
 
 import {
   Accordion,
@@ -146,7 +144,7 @@ const EditProductPage = () => {
       meta_keywords: "",
       meta_description: "",
       hsn_code: "",
-      tax: "",
+      tax: "0",
       weight: "",
       free_shipping: "no",
       cod: "yes",
