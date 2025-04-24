@@ -21,7 +21,7 @@ const FooterLinkGroup = ({ title, children }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="py-1.5">
+    <div className="py-1">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-between w-full md:cursor-default group"
@@ -37,7 +37,7 @@ const FooterLinkGroup = ({ title, children }) => {
         />
       </button>
       <div
-        className={`mt-2 space-y-1 transition-all overflow-hidden md:block ${
+        className={`mt-1.5 space-y-0.5 transition-all overflow-hidden md:block ${
           isOpen ? "max-h-96" : "max-h-0 md:max-h-none"
         }`}
       >
@@ -83,9 +83,9 @@ const Footer = () => {
   return (
     <footer className="w-full bg-gradient-to-b from-[#7B3B24] to-[#5A2714] text-white">
       <div className="px-4 sm:px-6 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-          {/* Logo and Description - 5 columns on md+ */}
-          <div className="md:col-span-5">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
+          {/* Logo and Description - 4 columns on md+ */}
+          <div className="md:col-span-4">
             <div className="flex flex-col space-y-4">
               {/* Logo */}
               <Link href="/" className="inline-block">
@@ -172,11 +172,11 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Dynamic Footer Categories - 7 columns dynamically divided */}
-          <div className="md:col-span-7">
+          {/* Dynamic Footer Categories - 8 columns dynamically divided */}
+          <div className="md:col-span-8">
             {loading ? (
               // Loading state for footer links
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {[1, 2, 3].map((index) => (
                   <div key={index} className="animate-pulse">
                     <div className="h-4 bg-white/20 rounded w-24 mb-3"></div>
@@ -190,12 +190,12 @@ const Footer = () => {
               </div>
             ) : (
               // Dynamic footer categories
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 {footerData.length > 0 &&
                   footerData.map((category) => (
                     <div key={category.id} className="playfair">
                       <FooterLinkGroup title={category.title}>
-                        <ul className="space-y-1 poppins">
+                        <ul className="space-y-0.5 poppins">
                           {category.FooterLinks.map((link) => (
                             <li key={link.id}>
                               {link.isExternal ? (
@@ -222,70 +222,78 @@ const Footer = () => {
                       </FooterLinkGroup>
                     </div>
                   ))}
-
-                {/* Contact Section - Always present */}
-                <div className=" playfair">
-                  <FooterLinkGroup title="Contact Us">
-                    {companyContact ? (
-                      <div className="space-y-2">
-                        <div className="flex items-start group">
-                          <MapPin
-                            size={12}
-                            className="mt-0.5 mr-1.5 flex-shrink-0 text-white/70 group-hover:text-white transition-colors"
-                          />
-                          <p className="text-xs text-white/70 group-hover:text-white transition-colors poppins">
-                            {companyContact.address_line1}
-                            {companyContact.address_line2 && (
-                              <>
-                                <br />
-                                {companyContact.address_line2}
-                              </>
-                            )}
-                            <br />
-                            {companyContact.city}, {companyContact.state}{" "}
-                            {companyContact.postal_code}
-                          </p>
-                        </div>
-                        <div className="flex items-center group">
-                          <Phone
-                            size={12}
-                            className="mr-1.5 flex-shrink-0 text-white/70 group-hover:text-white transition-colors"
-                          />
-                          <a
-                            href={`tel:${companyContact.phone}`}
-                            className="text-xs text-white/70 group-hover:text-white transition-colors"
-                          >
-                            {companyContact.phone}
-                          </a>
-                        </div>
-                        <div className="flex items-center group">
-                          <Mail
-                            size={12}
-                            className="mr-1.5 flex-shrink-0 text-white/70 group-hover:text-white transition-colors"
-                          />
-                          <a
-                            href={`mailto:${companyContact.email}`}
-                            className="text-xs text-white/70 group-hover:text-white transition-colors"
-                          >
-                            {companyContact.email}
-                          </a>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-start">
-                        <MapPin
-                          size={12}
-                          className="mt-0.5 mr-1.5 flex-shrink-0 text-white/70"
-                        />
-                        <p className="text-xs text-white/70">
-                          Contact information unavailable
-                        </p>
-                      </div>
-                    )}
-                  </FooterLinkGroup>
-                </div>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Contact Section - Positioned at the bottom */}
+        <div className="mt-8 pt-4 border-t border-white/10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-1 playfair">
+              <FooterLinkGroup title="Contact Us">
+                {companyContact ? (
+                  <div className="space-y-2">
+                    <div className="flex items-start group">
+                      <MapPin
+                        size={12}
+                        className="mt-0.5 mr-1.5 flex-shrink-0 text-white/70 group-hover:text-white transition-colors"
+                      />
+                      <p className="text-xs text-white/70 group-hover:text-white transition-colors poppins">
+                        {companyContact.address_line1}
+                        {companyContact.address_line2 && (
+                          <>
+                            <br />
+                            {companyContact.address_line2}
+                          </>
+                        )}
+                        <br />
+                        {companyContact.city}, {companyContact.state}{" "}
+                        {companyContact.postal_code}
+                      </p>
+                    </div>
+                    <div className="flex items-center group">
+                      <Phone
+                        size={12}
+                        className="mr-1.5 flex-shrink-0 text-white/70 group-hover:text-white transition-colors"
+                      />
+                      <a
+                        href={`tel:${companyContact.phone}`}
+                        className="text-xs text-white/70 group-hover:text-white transition-colors"
+                      >
+                        {companyContact.phone}
+                      </a>
+                    </div>
+                    <div className="flex items-center group">
+                      <Mail
+                        size={12}
+                        className="mr-1.5 flex-shrink-0 text-white/70 group-hover:text-white transition-colors"
+                      />
+                      <a
+                        href={`mailto:${companyContact.email}`}
+                        className="text-xs text-white/70 group-hover:text-white transition-colors"
+                      >
+                        {companyContact.email}
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-start">
+                    <MapPin
+                      size={12}
+                      className="mt-0.5 mr-1.5 flex-shrink-0 text-white/70"
+                    />
+                    <p className="text-xs text-white/70">
+                      Contact information unavailable
+                    </p>
+                  </div>
+                )}
+              </FooterLinkGroup>
+            </div>
+            
+            <div className="md:col-span-2">
+              {/* Empty space for now or could add a newsletter signup form */}
+            </div>
           </div>
         </div>
 
