@@ -322,7 +322,7 @@ const SubcategoryPage = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
-              <h2 className="playfair-italic text-2xl md:text-3xl font-bold text-[#b38d4a] mb-2">
+              <h2 className="playfair text-2xl font-bold text-[#b38d4a] mb-2">
                 All {subcategory?.subcategory || "Products"}
               </h2>
               <p className="font-poppins text-gray-500 text-sm">
