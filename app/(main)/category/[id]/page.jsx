@@ -355,9 +355,9 @@ const CategoryPage = () => {
 
 <section className="py-10 bg-[#FFFBF9] px-10">
   <div className="container mx-auto px-4">
-    <div className="flex items-center justify-between mb-8">
-      <div>
-        <h2 className="playfair-italic text-2xl md:text-3xl font-bold text-[#6B2F1A] mb-2">
+    <div className="flex items-center justify-between mb-8 w-full">
+      <div className="w-full">
+        <h2 className="text-2xl font-bold text-[#6B2F1A] mb-2 text-center">
           Browse by Subcategory
         </h2>
       </div>
