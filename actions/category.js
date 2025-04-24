@@ -9,6 +9,50 @@ import * as ftp from "basic-ftp";
 
 const localTempDir = os.tmpdir();
 
+// Helper function to generate a slug from a title
+function generateSlug(text) {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")     // Replace spaces with hyphens
+    .replace(/[^\w\-]+/g, "") // Remove non-word chars
+    .replace(/\-\-+/g, "-")   // Replace multiple hyphens with single hyphen
+    .replace(/^-+/, "")       // Trim hyphens from start
+    .replace(/-+$/, "");      // Trim hyphens from end
+}
+
+// Helper function to ensure slug uniqueness
+async function ensureUniqueSlug(slug, existingId = null) {
+  // Check if the slug already exists in the database
+  const existing = await db.category.findFirst({
+    where: {
+      slug: slug,
+      ...(existingId ? { id: { not: existingId } } : {}),
+    },
+  });
+
+  if (!existing) return slug;
+
+  // If slug exists, append a timestamp to make it unique
+  const timestamp = new Date().getTime().toString().slice(-4);
+  return `${slug}-${timestamp}`;
+}
+
+// Helper function to get the highest order number
+async function getNextOrderNumber() {
+  const highestOrder = await db.category.findFirst({
+    orderBy: {
+      order_no: 'desc',
+    },
+    select: {
+      order_no: true,
+    },
+  });
+
+  return highestOrder ? highestOrder.order_no + 1 : 0;
+}
+
 export async function createCategory(data) {
   const ftpClient = new ftp.Client();
   ftpClient.ftp.verbose = true;
@@ -18,11 +62,22 @@ export async function createCategory(data) {
       throw new Error("Category title is required");
     }
 
+    // Generate slug from title
+    const baseSlug = generateSlug(data.title);
+    const uniqueSlug = await ensureUniqueSlug(baseSlug);
+    
+    // Get order number (either from data or next available)
+    const orderNo = data.order_no !== undefined ? 
+      parseInt(data.order_no) : 
+      await getNextOrderNumber();
+
     // Create the category
     const category = await db.category.create({
       data: {
         catName: data.title.trim(),
         description: data.description || null,
+        slug: uniqueSlug,
+        order_no: orderNo,
       },
     });
 
@@ -153,14 +208,38 @@ export async function getCategories({
         }
       : {};
 
+    // Define orderBy based on sort parameter
+    let orderBy = {};
+    
+    switch(sort) {
+      case "latest":
+        orderBy = { id: "desc" };
+        break;
+      case "oldest":
+        orderBy = { id: "asc" };
+        break;
+      case "name_asc":
+        orderBy = { catName: "asc" };
+        break;
+      case "name_desc":
+        orderBy = { catName: "desc" };
+        break;
+      case "order_asc":
+        orderBy = { order_no: "asc" };
+        break;
+      case "order_desc":
+        orderBy = { order_no: "desc" };
+        break;
+      default:
+        orderBy = { id: "desc" };
+    }
+
     // Fetch categories with pagination and search filter
     const categories = await db.category.findMany({
       where,
       skip,
       take: isNaN(limitNum) ? 15 : limitNum,
-      orderBy: {
-        id: sort === "latest" ? "desc" : "asc", // Sort by creation date
-      },
+      orderBy,
     });
 
     // Get total count for pagination calculation
@@ -184,6 +263,9 @@ export async function getCategories2() {
       include: {
         SubCategory: true // This is crucial to get the subcategories
       },
+      orderBy: {
+        order_no: 'asc'  // Order by order_no
+      }
     });
 
     return {
@@ -206,6 +288,9 @@ export async function updateCategory(data) {
     const id = data.get ? data.get('id') : data.id;
     const title = data.get ? data.get('title') : data.title;
     const description = data.get ? data.get('description') : data.description;
+    const orderNo = data.get ? 
+      (data.get('order_no') ? parseInt(data.get('order_no')) : null) : 
+      (data.order_no ? parseInt(data.order_no) : null);
     
     // Check if we have the required data
     if (!id || !title) {
@@ -226,10 +311,19 @@ export async function updateCategory(data) {
       throw new Error("Category not found");
     }
 
+    // Generate new slug if title has changed
+    let slug = existingCategory.slug;
+    if (title.toString().trim() !== existingCategory.catName) {
+      const baseSlug = generateSlug(title);
+      slug = await ensureUniqueSlug(baseSlug, categoryId);
+    }
+
     // Prepare update data
     const updateData = {
       catName: title.toString().trim(),
       description: description ? description.toString() : existingCategory.description,
+      slug: slug,
+      order_no: orderNo !== null ? orderNo : existingCategory.order_no || 0,
     };
 
     // Connect to FTP if we have any images to upload
@@ -507,6 +601,89 @@ export async function deleteCategoryById(id) {
 }
 
 /**
+ * Fetch a category by its slug
+ * @param {string} slug - The category slug to lookup
+ * @param {boolean} includeSubcategories - Whether to include subcategories
+ * @returns {Promise<Object>} The category with related data
+ */
+export async function getCategoryBySlug(slug, includeSubcategories = true) {
+  try {
+    if (!slug) {
+      throw new Error("Category slug is required");
+    }
+    
+    console.log("slug", slug);
+    
+    // Initialize the query with the select property
+    const query = {
+      where: {
+        slug: slug,
+      },
+      select: {
+        id: true,
+        catName: true,
+        description: true,
+        image: true,
+        banner: true,
+        slug: true,
+        showHome: true,
+        order_no: true,
+        createdAt: true,
+        updatedAt: true,
+      }
+    };
+
+    // Optionally include subcategories
+    if (includeSubcategories) {
+      query.select.SubCategory = {
+        select: {
+          id: true,
+          subcategory: true,
+          slug: true,
+          image: true,
+          order_no: true,
+          _count: {
+            select: {
+              Product: true
+            }
+          }
+        },
+        orderBy: {
+          order_no: 'asc'
+        }
+      };
+    }
+
+    const category = await db.category.findUnique(query);
+
+    if (!category) {
+      return { 
+        success: false, 
+        error: "Category not found" 
+      };
+    }
+
+    // Format subcategories with product count if included
+    if (includeSubcategories && category.SubCategory) {
+      category.SubCategory = category.SubCategory.map(sc => ({
+        ...sc,
+        productCount: sc._count.Product
+      }));
+    }
+
+    return {
+      success: true,
+      category
+    };
+  } catch (error) {
+    console.error("Error fetching category by slug:", error);
+    return {
+      success: false,
+      error: "Failed to fetch category"
+    };
+  }
+}
+/**
  * Fetch all categories with their subcategories
  * This function is cached to improve performance
  */
@@ -517,7 +694,11 @@ export const getCategories3 = cache(async () => {
         showHome: 'active' 
       },
       include: {
-        SubCategory: true
+        SubCategory: {
+          orderBy: {
+            order_no: 'asc'
+          }
+        }
       },
       orderBy: {
         order_no: 'asc'
@@ -543,7 +724,7 @@ export const getFeaturedCategories = cache(async () => {
       },
       take: 4,
       orderBy: {
-        id: 'desc' // Get the most recently added categories
+        order_no: 'asc' // Order by order_no instead of id
       }
     });
     
@@ -710,6 +891,8 @@ export async function getAllCategories() {
         id: true,
         catName: true,
         showHome: true,
+        slug: true,
+        order_no: true,
         _count: {
           select: {
             SubCategory: true
@@ -717,7 +900,7 @@ export async function getAllCategories() {
         }
       },
       orderBy: {
-        catName: 'asc'
+        order_no: 'asc'
       }
     });
 
@@ -738,20 +921,28 @@ export async function getHomeCategories() {
       select: {
         id: true,
         catName: true,
+        slug: true,
         SubCategory: {
           select: {
             id: true,
             subcategory: true,
+            slug: true,
             _count: {
               select: {
                 Product: true
               }
             }
           },
-          take: 5 // Limit subcategories
+          take: 5, // Limit subcategories
+          orderBy: {
+            order_no: 'asc'
+          }
         }
       },
-      take: 6 // Limit to 6 categories for home page
+      take: 6, // Limit to 6 categories for home page
+      orderBy: {
+        order_no: 'asc'
+      }
     });
 
     return { success: true, categories: categories || [] };
@@ -781,6 +972,8 @@ export async function getSubcategories(categoryId) {
         id: true,
         subcategory: true,
         image: true,
+        slug: true,
+        order_no: true,
         _count: {
           select: {
             Product: true
@@ -788,7 +981,7 @@ export async function getSubcategories(categoryId) {
         }
       },
       orderBy: {
-        subcategory: 'asc'
+        order_no: 'asc'
       }
     });
 

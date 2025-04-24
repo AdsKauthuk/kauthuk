@@ -76,7 +76,7 @@ const MainPage = () => {
             key={featuredCategories[0].id}
             category={featuredCategories[0].id} 
             title={`${featuredCategories[0].catName}`} 
-            viewAllLink={`/category/${featuredCategories[0].id}`}
+            viewAllLink={`/category/${featuredCategories[0].slug}`}
             limit={8}
           />
           
@@ -97,7 +97,7 @@ const MainPage = () => {
                 key={category.id}
                 category={category.id} 
                 title={`${category.catName} `} 
-                viewAllLink={`/category/${category.id}`}
+                viewAllLink={`/category/${category.slug}`}
                 // displayType={displayTypes[index] || "default"}
                 limit={8}
               />

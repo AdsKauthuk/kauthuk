@@ -35,7 +35,7 @@ import {
 
 // Import server actions
 import { getProducts } from "@/actions/product";
-import { getSubcategories } from "@/actions/category";
+import { getSubcategories, getCategoryBySlug } from "@/actions/category";
 
 // Import ProductCard from your existing component
 import ProductCard from "@/components/ProductCard";
@@ -63,7 +63,7 @@ const toBase64 = (str) =>
 const CategoryPage = () => {
   const params = useParams();
   const router = useRouter();
-  const categoryId = params?.id;
+  const categorySlug = params?.id; // This is the slug, not the ID
 
   // State variables
   const [category, setCategory] = useState(null);
@@ -77,10 +77,10 @@ const CategoryPage = () => {
   const [sortOption, setSortOption] = useState("latest");
   const [productCount, setProductCount] = useState(0);
 
-  // Fetch subcategories and initial products on component mount
+  // Fetch category by slug, then subcategories and initial products
   useEffect(() => {
-    if (!categoryId) {
-      setError("Category ID is required");
+    if (!categorySlug) {
+      setError("Category slug is required");
       setLoading(false);
       return;
     }
@@ -89,28 +89,34 @@ const CategoryPage = () => {
       try {
         setLoading(true);
 
-        // Fetch subcategories
-        const subcategoriesResponse = await getSubcategories(categoryId);
-
-        if (!subcategoriesResponse.success) {
+        // First, fetch the category by slug
+        const categoryResponse = await getCategoryBySlug(categorySlug, true);
+        
+        if (!categoryResponse.success || !categoryResponse.category) {
           throw new Error(
-            subcategoriesResponse.error || "Failed to fetch subcategories"
+            categoryResponse.error || "Failed to fetch category"
           );
         }
 
-        // Set subcategories data
-        setSubcategories(subcategoriesResponse.subcategories || []);
-
-        // Get product count from subcategories
-        const totalProducts = subcategoriesResponse.subcategories.reduce(
-          (total, sub) => total + (sub._count?.Product || 0),
-          0
-        );
-        setProductCount(totalProducts);
+        // Set category data
+        const categoryData = categoryResponse.category;
+        setCategory(categoryData);
+        
+        // Set subcategories from the response
+        if (categoryData.SubCategory) {
+          setSubcategories(categoryData.SubCategory);
+          
+          // Get product count from subcategories
+          const totalProducts = categoryData.SubCategory.reduce(
+            (total, sub) => total + (sub.productCount || 0),
+            0
+          );
+          setProductCount(totalProducts);
+        }
 
         // Fetch products for this category
         const productsResponse = await getProducts({
-          category: categoryId,
+          category: categoryData.id.toString(),
           limit: 12,
           sort: sortOption,
         });
@@ -120,15 +126,6 @@ const CategoryPage = () => {
 
           // Set featured products (first 4 products)
           setFeaturedProducts(productsResponse.products.slice(0, 4));
-
-          // If category name is not directly available from subcategories response,
-          // extract it from the first product's category
-          if (
-            productsResponse.products.length > 0 &&
-            productsResponse.products[0].SubCategory?.Category
-          ) {
-            setCategory(productsResponse.products[0].SubCategory.Category);
-          }
         }
       } catch (err) {
         console.error("Error fetching category data:", err);
@@ -139,7 +136,7 @@ const CategoryPage = () => {
     };
 
     fetchCategoryData();
-  }, [categoryId]);
+  }, [categorySlug]);
 
   // Handle subcategory change
   const handleSubcategoryChange = async (subcategoryId) => {
@@ -149,7 +146,7 @@ const CategoryPage = () => {
       // If "all" is selected, fetch all products from the category
       if (subcategoryId === "all") {
         const response = await getProducts({
-          category: categoryId,
+          category: category.id.toString(),
           limit: 12,
           sort: sortOption,
         });
@@ -198,7 +195,7 @@ const CategoryPage = () => {
       } else {
         // Fetch all products for the category with the new sort option
         const response = await getProducts({
-          category: categoryId,
+          category: category.id.toString(),
           limit: 12,
           sort: option,
         });
@@ -480,7 +477,7 @@ const CategoryPage = () => {
                       {item.subcategory}
                     </h3>
                     <p className="font-poppins text-sm text-gray-500 mt-1 text-center w-full mx-auto">
-                      {item._count?.Product || 0} items
+                      {item.productCount || 0} items
                     </p>
                     {currentSubcategory === item.id && (
                       <Badge className="mt-2 bg-[#fee3d8] text-[#6B2F1A] border-none font-poppins">
@@ -632,7 +629,7 @@ const CategoryPage = () => {
           {products.length > 0 && (
             <div className="mt-16 text-center">
               <Button
-                onClick={() => router.push(`/products?category=${categoryId}`)}
+                onClick={() => router.push(`/products?category=${category.id}`)}
                 variant="outline"
                 className="border-[#6B2F1A]/20 text-[#6B2F1A] hover:bg-[#fee3d8] font-poppins group"
               >

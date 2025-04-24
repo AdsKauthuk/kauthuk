@@ -421,7 +421,7 @@ const ProductDetails = () => {
                 <>
                   <BreadcrumbItem>
                     <BreadcrumbLink
-                      href={`/category/${product.SubCategory.Category.id}`}
+                      href={`/category/${product.SubCategory.Category.slug}`}
                       className="text-[#6B2F1A]/70 hover:text-[#6B2F1A]"
                     >
                       {product.SubCategory.Category.catName}
@@ -434,7 +434,7 @@ const ProductDetails = () => {
                 <>
                   <BreadcrumbItem>
                     <BreadcrumbLink
-                      href={`/subcategory/${product.SubCategory.id}`}
+                      href={`/subcategory/${product.SubCategory.slug}`}
                       className="text-[#6B2F1A]/70 hover:text-[#6B2F1A]"
                     >
                       {product.SubCategory.subcategory}

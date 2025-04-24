@@ -23,6 +23,7 @@ model Category {
   banner      String?  @db.VarChar(255) // Added banner field
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  slug        String   @unique @db.VarChar(255)  // Added slug field with unique constraint
 
   SubCategory SubCategory[]
 }
@@ -36,6 +37,8 @@ model SubCategory {
   banner      String?  @db.VarChar(255) // Added banner field
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  slug        String   @unique @db.VarChar(255)  // Added slug field with unique constraint
+  order_no    Int      @default(0)      // Added order_no field for sorting subcategories
 
   Category Category  @relation(fields: [cat_id], references: [id])
   Product  Product[]

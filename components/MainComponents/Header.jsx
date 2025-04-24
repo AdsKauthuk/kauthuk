@@ -159,7 +159,7 @@ const Header = () => {
     return activeCategories.map((category) => ({
       id: category.id,
       name: category.catName.toUpperCase(),
-      href: `/category/${category.id}`,
+      href: `/category/${category.slug}`,
       icon: `https://greenglow.in/kauthuk_test/${category.image}`,
       subcategories: category.SubCategory || [],
     }));

@@ -257,7 +257,7 @@ const CategoryProductSlider = ({
         "Discover our curated selection of high-quality products."
       : "Discover our curated selection of high-quality products.");
   const displayViewAllLink =
-    viewAllLink || (category ? `/category/${category.id}` : "/products");
+    viewAllLink || (category ? `/category/${category.slug}` : "/products");
 
   // Choose Swiper effect based on prop
   let swiperProps = {};

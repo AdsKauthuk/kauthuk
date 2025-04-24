@@ -90,6 +90,10 @@ import {
   FileImage,
   Image,
   ImageIcon,
+  ArrowUpDown,
+  Link as LinkIcon,
+  AlertCircle,
+  Info,
 } from "lucide-react";
 
 // Hooks and Utilities
@@ -106,6 +110,20 @@ import {
   updateSubcategory,
 } from "@/actions/subcategory";
 import { toast } from "sonner";
+
+// Helper function to generate slug preview (client-side version, must match server-side)
+function generateSlugPreview(text) {
+  if (!text) return '';
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")     // Replace spaces with hyphens
+    .replace(/[^\w\-]+/g, "") // Remove non-word chars
+    .replace(/\-\-+/g, "-")   // Replace multiple hyphens with single hyphen
+    .replace(/^-+/, "")       // Trim hyphens from start
+    .replace(/-+$/, "");      // Trim hyphens from end
+}
 
 const SubcategoryPage = () => {
   const [showFilters, setShowFilters] = useState(false);
@@ -125,14 +143,18 @@ const SubcategoryPage = () => {
     cat_id: "",
     description: "",
     image: null,
-    banner: null, // Added banner field
+    banner: null,
+    order_no: 0,
+    slug: "",
   });
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const [bannerPreview, setBannerPreview] = useState(null); // Added banner preview
+  const [bannerPreview, setBannerPreview] = useState(null);
   const [editImagePreview, setEditImagePreview] = useState(null);
-  const [editBannerPreview, setEditBannerPreview] = useState(null); // Added edit banner preview
+  const [editBannerPreview, setEditBannerPreview] = useState(null);
+  const [slugPreview, setSlugPreview] = useState("");
+  const [editSlugPreview, setEditSlugPreview] = useState("");
 
   const itemsPerPage = 15;
   const router = useRouter();
@@ -147,6 +169,9 @@ const SubcategoryPage = () => {
     watch,
   } = useForm({
     resolver: zodResolver(SubcategorySchema),
+    defaultValues: {
+      order_no: 0,
+    }
   });
 
   const {
@@ -206,7 +231,8 @@ const SubcategoryPage = () => {
       setShowCreateModal(false);
       reset();
       setImagePreview(null);
-      setBannerPreview(null); // Reset banner preview
+      setBannerPreview(null);
+      setSlugPreview("");
       fetchSubcategories();
     }
   }, [subcategory]);
@@ -216,12 +242,23 @@ const SubcategoryPage = () => {
       toast.success("Subcategory updated successfully");
       setShowEditModal(false);
       setEditImagePreview(null);
-      setEditBannerPreview(null); // Reset edit banner preview
+      setEditBannerPreview(null);
+      setEditSlugPreview("");
       fetchSubcategories();
     }
   }, [updatedSubcategory]);
 
-  // Watch for image changes in create form
+  // Generate slug preview from title
+  const watchTitle = watch("title");
+  useEffect(() => {
+    if (watchTitle) {
+      setSlugPreview(generateSlugPreview(watchTitle));
+    } else {
+      setSlugPreview("");
+    }
+  }, [watchTitle]);
+
+  // Watch for form field changes in create form
   const watchImage = watch("image");
   useEffect(() => {
     if (watchImage && watchImage[0]) {
@@ -234,7 +271,6 @@ const SubcategoryPage = () => {
     }
   }, [watchImage]);
 
-  // Watch for banner changes in create form
   const watchBanner = watch("banner");
   useEffect(() => {
     if (watchBanner && watchBanner[0]) {
@@ -246,6 +282,15 @@ const SubcategoryPage = () => {
       reader.readAsDataURL(file);
     }
   }, [watchBanner]);
+
+  // Generate slug preview for edit form
+  useEffect(() => {
+    if (formData.title) {
+      setEditSlugPreview(generateSlugPreview(formData.title));
+    } else {
+      setEditSlugPreview("");
+    }
+  }, [formData.title]);
 
   const onSubmitCreate = async (data) => {
     await createSubcategoryFN(data);
@@ -259,6 +304,7 @@ const SubcategoryPage = () => {
     formDataObj.append("title", formData.title);
     formDataObj.append("cat_id", formData.cat_id);
     formDataObj.append("description", formData.description || "");
+    formDataObj.append("order_no", formData.order_no || 0);
     
     if (formData.image && formData.image[0]) {
       formDataObj.append("image", formData.image[0]);
@@ -307,10 +353,13 @@ const SubcategoryPage = () => {
       cat_id: item.cat_id,
       description: item.description || "",
       image: null,
-      banner: null, // Initialize banner as null
+      banner: null,
+      order_no: item.order_no || 0,
+      slug: item.slug || "",
     });
     setEditImagePreview(item.image ? `https://greenglow.in/kauthuk_test/${item.image}` : null);
     setEditBannerPreview(item.banner ? `https://greenglow.in/kauthuk_test/${item.banner}` : null);
+    setEditSlugPreview(item.slug || generateSlugPreview(item.subcategory));
     setShowEditModal(true);
   };
 
@@ -347,6 +396,12 @@ const SubcategoryPage = () => {
         </td>
         <td className="p-4 border-b border-gray-400 dark:border-blue-900/30">
           <div className="h-5 bg-blue-100 dark:bg-blue-900/30 rounded w-3/4"></div>
+        </td>
+        <td className="p-4 border-b border-gray-400 dark:border-blue-900/30">
+          <div className="h-5 bg-blue-100 dark:bg-blue-900/30 rounded w-1/2"></div>
+        </td>
+        <td className="p-4 border-b border-gray-400 dark:border-blue-900/30">
+          <div className="h-5 bg-blue-100 dark:bg-blue-900/30 rounded w-1/4"></div>
         </td>
         <td className="p-4 border-b border-gray-400 dark:border-blue-900/30">
           <div className="flex justify-center space-x-2">
@@ -523,6 +578,8 @@ const SubcategoryPage = () => {
                     <SelectItem value="oldest">Oldest First</SelectItem>
                     <SelectItem value="name_asc">Name (A-Z)</SelectItem>
                     <SelectItem value="name_desc">Name (Z-A)</SelectItem>
+                    <SelectItem value="order_asc">Display Order (Low-High)</SelectItem>
+                    <SelectItem value="order_desc">Display Order (High-Low)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -549,6 +606,13 @@ const SubcategoryPage = () => {
                 <tr className="bg-blue-50/80 dark:bg-blue-900/20 border-b border-gray-400 dark:border-blue-900/30">
                   <th className="text-left p-4 font-medium text-slate-700 dark:text-slate-300">Category</th>
                   <th className="text-left p-4 font-medium text-slate-700 dark:text-slate-300">Subcategory</th>
+                  <th className="text-left p-4 font-medium text-slate-700 dark:text-slate-300">Slug</th>
+                  <th className="text-center p-4 font-medium text-slate-700 dark:text-slate-300">
+                    <div className="flex items-center justify-center">
+                      <span>Order</span>
+                      <ArrowUpDown size={14} className="ml-1" />
+                    </div>
+                  </th>
                   <th className="text-center p-4 font-medium text-slate-700 dark:text-slate-300">Actions</th>
                 </tr>
               </thead>
@@ -601,6 +665,19 @@ const SubcategoryPage = () => {
                       </td>
                       
                       <td className="p-4 border-b border-gray-400 dark:border-blue-900/30">
+                        <div className="flex items-center text-sm text-slate-500 dark:text-slate-400">
+                          <LinkIcon size={14} className="mr-1 text-slate-400" />
+                          {item.slug || generateSlugPreview(item.subcategory)}
+                        </div>
+                      </td>
+                      
+                      <td className="p-4 border-b border-gray-400 dark:border-blue-900/30 text-center">
+                        <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">
+                          {item.order_no}
+                        </Badge>
+                      </td>
+                      
+                      <td className="p-4 border-b border-gray-400 dark:border-blue-900/30">
                         <div className="flex justify-center items-center space-x-2">
                           <Button
                             onClick={() => handleEdit(item)}
@@ -632,7 +709,7 @@ const SubcategoryPage = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={3} className="p-8 text-center text-slate-500 dark:text-slate-400">
+                    <td colSpan={5} className="p-8 text-center text-slate-500 dark:text-slate-400">
                       <div className="flex flex-col items-center justify-center">
                         <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mb-3">
                           <PanelRight size={32} className="text-blue-300 dark:text-blue-700" />
@@ -702,16 +779,21 @@ const SubcategoryPage = () => {
                       {item.description}
                     </p>
                   )}
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 mb-2">
                     {item.banner && (
                       <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/40">
                         <ImageIcon size={12} className="mr-1" />
                         Has Banner
                       </Badge>
                     )}
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Created {new Date(item.createdAt).toLocaleDateString()}
-                    </p>
+                    <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">
+                      <ArrowUpDown size={12} className="mr-1" />
+                      Order: {item.order_no}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center text-xs text-slate-500 dark:text-slate-400">
+                    <LinkIcon size={12} className="mr-1 text-slate-400" />
+                    <span className="truncate">{item.slug || generateSlugPreview(item.subcategory)}</span>
                   </div>
                 </CardContent>
                 
@@ -863,6 +945,51 @@ const SubcategoryPage = () => {
                   {errors.title.message}
                 </p>
               )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="slug-preview" className="flex items-center text-slate-700 dark:text-slate-300">
+                <LinkIcon size={14} className="mr-1" />
+                Slug Preview
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info size={14} className="ml-1 text-slate-400" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs text-xs">The slug is automatically generated from the title and will be used in URLs. The final slug may be slightly different to ensure uniqueness.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </Label>
+              <div className="border rounded-md bg-gray-50 dark:bg-gray-800 p-2 text-sm text-slate-500 dark:text-slate-400 flex items-center">
+                <span className="text-slate-400">/</span>
+                {slugPreview || <span className="italic text-slate-400">Generated from title</span>}
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="order_no" className="flex items-center text-slate-700 dark:text-slate-300">
+                <ArrowUpDown size={14} className="mr-1" />
+                Display Order
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info size={14} className="ml-1 text-slate-400" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs text-xs">Controls the order of subcategories in listings. Lower numbers appear first.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </Label>
+              <Input
+                id="order_no"
+                type="number"
+                placeholder="0"
+                {...register("order_no", { valueAsNumber: true })}
+                className="border-blue-200 dark:border-blue-900/50 focus-visible:ring-blue-500"
+              />
             </div>
             
             <div className="space-y-2">
@@ -1066,6 +1193,51 @@ const SubcategoryPage = () => {
               {errors.title && (
                 <p className="text-sm text-red-500 dark:text-red-400">{errors.title?.message}</p>
               )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-slug-preview" className="flex items-center text-slate-700 dark:text-slate-300">
+                <LinkIcon size={14} className="mr-1" />
+                Slug Preview
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info size={14} className="ml-1 text-slate-400" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs text-xs">The slug will be regenerated from the title if you change it. The final slug may be slightly different to ensure uniqueness.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </Label>
+              <div className="border rounded-md bg-gray-50 dark:bg-gray-800 p-2 text-sm text-slate-500 dark:text-slate-400 flex items-center">
+                <span className="text-slate-400">/</span>
+                {editSlugPreview || <span className="italic text-slate-400">Generated from title</span>}
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="edit-order_no" className="flex items-center text-slate-700 dark:text-slate-300">
+                <ArrowUpDown size={14} className="mr-1" />
+                Display Order
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info size={14} className="ml-1 text-slate-400" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs text-xs">Controls the order of subcategories in listings. Lower numbers appear first.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </Label>
+              <Input
+                id="edit-order_no"
+                type="number"
+                value={formData.order_no}
+                onChange={(e) => setFormData({ ...formData, order_no: parseInt(e.target.value) || 0 })}
+                className="border-blue-200 dark:border-blue-900/50 focus-visible:ring-blue-500"
+              />
             </div>
             
             <div className="space-y-2">

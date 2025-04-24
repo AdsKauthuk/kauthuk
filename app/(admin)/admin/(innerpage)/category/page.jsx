@@ -93,6 +93,9 @@ import {
   FileImage,
   Image,
   ImageIcon,
+  ArrowUpDown,
+  Link as LinkIcon,
+  Info,
 } from "lucide-react";
 
 // Hooks and Utilities
@@ -110,6 +113,20 @@ import {
 } from "@/actions/category";
 import { toast } from "sonner";
 
+// Helper function to generate slug preview (client-side version, must match server-side)
+function generateSlugPreview(text) {
+  if (!text) return '';
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")     // Replace spaces with hyphens
+    .replace(/[^\w\-]+/g, "") // Remove non-word chars
+    .replace(/\-\-+/g, "-")   // Replace multiple hyphens with single hyphen
+    .replace(/^-+/, "")       // Trim hyphens from start
+    .replace(/-+$/, "");      // Trim hyphens from end
+}
+
 const CategoryPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -126,14 +143,18 @@ const CategoryPage = () => {
     title: "",
     description: "",
     image: null,
-    banner: null, // Added banner field
+    banner: null,
+    order_no: 0,
+    slug: "",
   });
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const [bannerPreview, setBannerPreview] = useState(null); // Added banner preview
+  const [bannerPreview, setBannerPreview] = useState(null);
   const [editImagePreview, setEditImagePreview] = useState(null);
-  const [editBannerPreview, setEditBannerPreview] = useState(null); // Added edit banner preview
+  const [editBannerPreview, setEditBannerPreview] = useState(null);
+  const [slugPreview, setSlugPreview] = useState("");
+  const [editSlugPreview, setEditSlugPreview] = useState("");
 
   const itemsPerPage = 15;
   const router = useRouter();
@@ -147,6 +168,9 @@ const CategoryPage = () => {
     watch,
   } = useForm({
     resolver: zodResolver(CategorySchema),
+    defaultValues: {
+      order_no: 0,
+    }
   });
 
   const {
@@ -192,7 +216,8 @@ const CategoryPage = () => {
       setShowCreateModal(false);
       reset();
       setImagePreview(null);
-      setBannerPreview(null); // Reset banner preview
+      setBannerPreview(null);
+      setSlugPreview("");
       fetchCategories();
     }
   }, [category]);
@@ -202,10 +227,21 @@ const CategoryPage = () => {
       toast.success("Category updated successfully");
       setShowEditModal(false);
       setEditImagePreview(null);
-      setEditBannerPreview(null); // Reset edit banner preview
+      setEditBannerPreview(null);
+      setEditSlugPreview("");
       fetchCategories();
     }
   }, [updatedCategory]);
+
+  // Generate slug preview from title
+  const watchTitle = watch("title");
+  useEffect(() => {
+    if (watchTitle) {
+      setSlugPreview(generateSlugPreview(watchTitle));
+    } else {
+      setSlugPreview("");
+    }
+  }, [watchTitle]);
 
   // Watch for image changes in create form
   const watchImage = watch("image");
@@ -233,6 +269,15 @@ const CategoryPage = () => {
     }
   }, [watchBanner]);
 
+  // Generate slug preview for edit form
+  useEffect(() => {
+    if (formData.title) {
+      setEditSlugPreview(generateSlugPreview(formData.title));
+    } else {
+      setEditSlugPreview("");
+    }
+  }, [formData.title]);
+
   const onSubmitCreate = async (data) => {
     await createCategoryFN(data);
   };
@@ -244,6 +289,7 @@ const CategoryPage = () => {
     formDataObj.append("id", formData.id);
     formDataObj.append("title", formData.title);
     formDataObj.append("description", formData.description || "");
+    formDataObj.append("order_no", formData.order_no.toString());
 
     if (formData.image && formData.image[0]) {
       formDataObj.append("image", formData.image[0]);
@@ -305,7 +351,9 @@ const CategoryPage = () => {
       title: item.catName,
       description: item.description || "",
       image: null,
-      banner: null, // Initialize banner as null
+      banner: null,
+      order_no: item.order_no || 0,
+      slug: item.slug || "",
     });
     setEditImagePreview(
       item.image ? `https://greenglow.in/kauthuk_test/${item.image}` : null
@@ -313,6 +361,7 @@ const CategoryPage = () => {
     setEditBannerPreview(
       item.banner ? `https://greenglow.in/kauthuk_test/${item.banner}` : null
     );
+    setEditSlugPreview(item.slug || generateSlugPreview(item.catName));
     setShowEditModal(true);
   };
 
@@ -347,6 +396,12 @@ const CategoryPage = () => {
         <tr key={`skeleton-${index}`} className="animate-pulse">
           <td className="p-4 border-b border-gray-400 dark:border-blue-900/30">
             <div className="h-5 bg-blue-100 dark:bg-blue-900/30 rounded w-3/4"></div>
+          </td>
+          <td className="p-4 border-b border-gray-400 dark:border-blue-900/30">
+            <div className="h-5 bg-blue-100 dark:bg-blue-900/30 rounded w-1/2"></div>
+          </td>
+          <td className="p-4 border-b border-gray-400 dark:border-blue-900/30">
+            <div className="h-5 bg-blue-100 dark:bg-blue-900/30 rounded w-1/4"></div>
           </td>
           <td className="p-4 border-b border-gray-400 dark:border-blue-900/30">
             <div className="h-6 w-16 bg-blue-100 dark:bg-blue-900/30 rounded mx-auto"></div>
@@ -525,6 +580,10 @@ const CategoryPage = () => {
                   <SelectContent className="border-gray-400 dark:border-blue-900">
                     <SelectItem value="latest">Latest First</SelectItem>
                     <SelectItem value="oldest">Oldest First</SelectItem>
+                    <SelectItem value="name_asc">Name (A-Z)</SelectItem>
+                    <SelectItem value="name_desc">Name (Z-A)</SelectItem>
+                    <SelectItem value="order_asc">Display Order (Low-High)</SelectItem>
+                    <SelectItem value="order_desc">Display Order (High-Low)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -551,6 +610,15 @@ const CategoryPage = () => {
                 <tr className="bg-blue-50/80 dark:bg-blue-900/20 border-b border-gray-400 dark:border-blue-900/30">
                   <th className="text-left p-4 font-medium text-slate-700 dark:text-slate-300">
                     Title
+                  </th>
+                  <th className="text-left p-4 font-medium text-slate-700 dark:text-slate-300">
+                    Slug
+                  </th>
+                  <th className="text-center p-4 font-medium text-slate-700 dark:text-slate-300">
+                    <div className="flex items-center justify-center">
+                      <span>Order</span>
+                      <ArrowUpDown size={14} className="ml-1" />
+                    </div>
                   </th>
                   <th className="text-center p-4 font-medium text-slate-700 dark:text-slate-300">
                     Show On Home
@@ -588,13 +656,29 @@ const CategoryPage = () => {
                             <div className="font-medium text-slate-700 dark:text-slate-300">
                               {item.catName}
                             </div>
-                            {item.description && (
-                              <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
-                                {item.description}
+                           
+                            {item.banner && (
+                              <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/40">
+                                  Has Banner
+                                </Badge>
                               </div>
                             )}
                           </div>
                         </div>
+                      </td>
+
+                      <td className="p-4 border-b border-gray-400 dark:border-blue-900/30">
+                        <div className="flex items-center text-sm text-slate-500 dark:text-slate-400">
+                          <LinkIcon size={14} className="mr-1 text-slate-400" />
+                          {item.slug || generateSlugPreview(item.catName)}
+                        </div>
+                      </td>
+                      
+                      <td className="p-4 border-b border-gray-400 dark:border-blue-900/30 text-center">
+                        <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">
+                          {item.order_no !== undefined ? item.order_no : 0}
+                        </Badge>
                       </td>
 
                       <td className="p-4 border-b border-gray-400 dark:border-blue-900/30 text-center">
@@ -666,7 +750,7 @@ const CategoryPage = () => {
                 ) : (
                   <tr>
                     <td
-                      colSpan={3}
+                      colSpan={5}
                       className="p-8 text-center text-slate-500 dark:text-slate-400"
                     >
                       <div className="flex flex-col items-center justify-center">
@@ -745,30 +829,37 @@ const CategoryPage = () => {
                       )}
                     />
                   </div>
-                  {item.description && (
-                    <CardDescription className="text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-                      {item.description}
-                    </CardDescription>
-                  )}
+                 
                 </CardHeader>
 
                 <CardContent className="p-4 pt-0">
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      item.showHome === "active"
-                        ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-900/40"
-                        : "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-800"
-                    )}
-                  >
-                    {actionLoading === item.id
-                      ? "Updating..."
-                      : item.showHome === "active"
-                      ? "Shown on Homepage"
-                      : "Hidden from Homepage"}
-                  </Badge>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        item.showHome === "active"
+                          ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-900/40"
+                          : "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-800"
+                      )}
+                    >
+                      {actionLoading === item.id
+                        ? "Updating..."
+                        : item.showHome === "active"
+                        ? "Shown on Homepage"
+                        : "Hidden from Homepage"}
+                    </Badge>
+                    <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">
+                      <ArrowUpDown size={12} className="mr-1" />
+                      Order: {item.order_no !== undefined ? item.order_no : 0}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex items-center text-xs text-slate-500 dark:text-slate-400 mb-2">
+                    <LinkIcon size={12} className="mr-1 text-slate-400" />
+                    <span className="truncate">{item.slug || generateSlugPreview(item.catName)}</span>
+                  </div>
 
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Created {new Date(item.createdAt).toLocaleDateString()}
                   </p>
                 </CardContent>
@@ -931,24 +1022,58 @@ const CategoryPage = () => {
             </div>
 
             <div className="space-y-2">
-              <Label
-                htmlFor="description"
-                className="text-slate-700 dark:text-slate-300"
-              >
-                Description (Optional)
+              <Label htmlFor="slug-preview" className="flex items-center text-slate-700 dark:text-slate-300">
+                <LinkIcon size={14} className="mr-1" />
+                Slug Preview
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info size={14} className="ml-1 text-slate-400" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs text-xs">The slug is automatically generated from the title and will be used in URLs. The final slug may be slightly different to ensure uniqueness.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </Label>
-              <Textarea
-                id="description"
-                placeholder="Enter category description"
-                {...register("description")}
+              <div className="border rounded-md bg-gray-50 dark:bg-gray-800 p-2 text-sm text-slate-500 dark:text-slate-400 flex items-center">
+                <span className="text-slate-400">/</span>
+                {slugPreview || <span className="italic text-slate-400">Generated from title</span>}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="order_no" className="flex items-center text-slate-700 dark:text-slate-300">
+                <ArrowUpDown size={14} className="mr-1" />
+                Display Order
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info size={14} className="ml-1 text-slate-400" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs text-xs">Controls the order of categories in listings. Lower numbers appear first.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </Label>
+              <Input
+                id="order_no"
+                type="number"
+                placeholder="0"
+                {...register("order_no", { valueAsNumber: true })}
                 className="border-blue-200 dark:border-blue-900/50 focus-visible:ring-blue-500"
-                rows={3}
               />
             </div>
 
+            
+
             <Tabs defaultValue="thumbnail" className="w-full">
               <TabsList className="grid grid-cols-2 mb-2">
-                <TabsTrigger value="thumbnail" className="flex items-center gap-1">
+                <TabsTrigger
+                  value="thumbnail"
+                  className="flex items-center gap-1"
+                >
                   <FileImage size={14} />
                   Thumbnail Image
                 </TabsTrigger>
@@ -957,7 +1082,7 @@ const CategoryPage = () => {
                   Banner Image
                 </TabsTrigger>
               </TabsList>
-            
+
               <TabsContent value="thumbnail" className="space-y-2">
                 <Label
                   htmlFor="image"
@@ -1001,7 +1126,7 @@ const CategoryPage = () => {
                   </div>
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="banner" className="space-y-2">
                 <Label
                   htmlFor="banner"
@@ -1021,7 +1146,8 @@ const CategoryPage = () => {
                         className="border-0 p-0"
                       />
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                        Banner image for category page (1200×300px recommended). Supported formats: JPG, PNG.
+                        Banner image for category page (1200×300px recommended).
+                        Supported formats: JPG, PNG.
                       </p>
                     </div>
                   </div>
@@ -1117,26 +1243,67 @@ const CategoryPage = () => {
             </div>
 
             <div className="space-y-2">
-              <Label
-                htmlFor="editDescription"
-                className="text-slate-700 dark:text-slate-300"
-              >
-                Description (Optional)
+              <Label htmlFor="edit-slug-preview" className="flex items-center text-slate-700 dark:text-slate-300">
+                <LinkIcon size={14} className="mr-1" />
+                Slug Preview
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info size={14} className="ml-1 text-slate-400" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs text-xs">The slug will be regenerated from the title if you change it. The final slug may be slightly different to ensure uniqueness.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </Label>
-              <Textarea
-                id="editDescription"
-                value={formData.description || ""}
+              <div className="border rounded-md bg-gray-50 dark:bg-gray-800 p-2 text-sm text-slate-500 dark:text-slate-400 flex items-center">
+                <span className="text-slate-400">/</span>
+                {editSlugPreview || <span className="italic text-slate-400">Generated from title</span>}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="editOrderNo"
+                className="text-slate-700 dark:text-slate-300 flex items-center gap-1"
+              >
+                <ArrowUpDown size={14} className="mr-1" />
+                Display Order
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info size={14} className="ml-1 text-slate-400" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs text-xs">Controls the order of categories in listings. Lower numbers display first.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </Label>
+              <Input
+                id="editOrderNo"
+                type="number"
+                min="0"
+                value={formData.order_no}
                 onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
+                  setFormData({
+                    ...formData,
+                    order_no: parseInt(e.target.value) || 0,
+                  })
                 }
                 className="border-blue-200 dark:border-blue-900/50 focus-visible:ring-blue-500"
-                rows={3}
               />
             </div>
 
+            
+
             <Tabs defaultValue="thumbnail" className="w-full">
               <TabsList className="grid grid-cols-2 mb-2">
-                <TabsTrigger value="thumbnail" className="flex items-center gap-1">
+                <TabsTrigger
+                  value="thumbnail"
+                  className="flex items-center gap-1"
+                >
                   <FileImage size={14} />
                   Thumbnail Image
                 </TabsTrigger>
@@ -1145,7 +1312,7 @@ const CategoryPage = () => {
                   Banner Image
                 </TabsTrigger>
               </TabsList>
-            
+
               <TabsContent value="thumbnail" className="space-y-2">
                 <Label
                   htmlFor="editImage"
@@ -1165,7 +1332,8 @@ const CategoryPage = () => {
                         className="border-0 p-0"
                       />
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                        Leave empty to keep current image. Supported formats: JPG, PNG.
+                        Leave empty to keep current image. Supported formats:
+                        JPG, PNG.
                       </p>
                     </div>
                   </div>
@@ -1193,7 +1361,7 @@ const CategoryPage = () => {
                   </div>
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="banner" className="space-y-2">
                 <Label
                   htmlFor="editBanner"
@@ -1213,7 +1381,8 @@ const CategoryPage = () => {
                         className="border-0 p-0"
                       />
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                        Leave empty to keep current banner. Banner image for category page (1200×300px recommended).
+                        Leave empty to keep current banner. Banner image for
+                        category page (1200×300px recommended).
                       </p>
                     </div>
                   </div>

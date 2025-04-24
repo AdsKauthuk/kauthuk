@@ -33,7 +33,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Import server actions
-import { getSubcategories } from "@/actions/category";
+import { getSubcategoryBySlug } from "@/actions/subcategory";
 import { getProducts } from "@/actions/product";
 
 // Import ProductCard from your existing component
@@ -62,7 +62,7 @@ const toBase64 = (str) =>
 const SubcategoryPage = () => {
   const params = useParams();
   const router = useRouter();
-  const subcategoryId = params?.id;
+  const subcategorySlug = params?.id; // This is actually the slug, not the ID
 
   // State variables
   const [subcategory, setSubcategory] = useState(null);
@@ -78,8 +78,8 @@ const SubcategoryPage = () => {
 
   // Fetch subcategory and initial products on component mount
   useEffect(() => {
-    if (!subcategoryId) {
-      setError("Subcategory ID is required");
+    if (!subcategorySlug) {
+      setError("Subcategory slug is required");
       setLoading(false);
       return;
     }
@@ -88,49 +88,42 @@ const SubcategoryPage = () => {
       try {
         setLoading(true);
 
-        // Fetch products for this subcategory
+        // First, fetch the subcategory by slug along with related subcategories
+        const subcategoryResponse = await getSubcategoryBySlug(subcategorySlug, true, true);
+        
+        if (!subcategoryResponse.success || !subcategoryResponse.subcategory) {
+          throw new Error(subcategoryResponse.error || "Failed to fetch subcategory");
+        }
+
+        // Set subcategory data
+        const subcategoryData = subcategoryResponse.subcategory;
+        setSubcategory(subcategoryData);
+        
+        // Set product count
+        setProductCount(subcategoryData.productCount || 0);
+        
+        // Set parent category if available
+        if (subcategoryData.Category) {
+          setParentCategory(subcategoryData.Category);
+        }
+        
+        // Set related subcategories
+        if (subcategoryResponse.relatedSubcategories) {
+          setRelatedSubcategories(subcategoryResponse.relatedSubcategories);
+        }
+
+        // Now fetch products for this subcategory using the actual ID
         const productsResponse = await getProducts({
-          subcategory: subcategoryId,
+          subcategory: subcategoryData.id.toString(),
           limit: 20,
           sort: sortOption,
         });
 
         if (productsResponse && productsResponse.products) {
           setProducts(productsResponse.products);
-          setProductCount(productsResponse.products.length);
 
           // Set featured products (first 4 products)
           setFeaturedProducts(productsResponse.products.slice(0, 4));
-
-          // Extract subcategory and parent category info from the first product
-          if (
-            productsResponse.products.length > 0 &&
-            productsResponse.products[0].SubCategory
-          ) {
-            const firstProduct = productsResponse.products[0];
-            setSubcategory(firstProduct.SubCategory);
-
-            if (firstProduct.SubCategory.Category) {
-              setParentCategory(firstProduct.SubCategory.Category);
-
-              // Fetch related subcategories from the same parent category
-              const subcategoriesResponse = await getSubcategories(
-                firstProduct.SubCategory.Category.id
-              );
-              if (subcategoriesResponse.success) {
-                // Filter out the current subcategory from related subcategories
-                const filtered = subcategoriesResponse.subcategories.filter(
-                  (sub) => sub.id !== parseInt(subcategoryId)
-                );
-                setRelatedSubcategories(filtered || []);
-              }
-            }
-          } else if (productsResponse.products.length === 0) {
-            // If no products, try to fetch subcategory info directly
-            // Note: You might need to create a specific API function for this
-            // For now, we'll handle the empty state gracefully
-            setError("No products found in this subcategory");
-          }
         }
       } catch (err) {
         console.error("Error fetching subcategory data:", err);
@@ -141,16 +134,18 @@ const SubcategoryPage = () => {
     };
 
     fetchSubcategoryData();
-  }, [subcategoryId]);
+  }, [subcategorySlug]);
 
   // Handle sort change
   const handleSortChange = async (option) => {
+    if (!subcategory) return;
+    
     try {
       setLoading(true);
       setSortOption(option);
 
       const response = await getProducts({
-        subcategory: subcategoryId,
+        subcategory: subcategory.id.toString(),
         limit: 20,
         sort: option,
       });
@@ -242,7 +237,7 @@ const SubcategoryPage = () => {
           </>
         )}
 
-        <div className="container  px-10 py-5 relative z-10">
+        <div className="container px-10 py-5 relative z-10">
           <Breadcrumb className="mb-8 text-xs">
             <BreadcrumbList>
               <BreadcrumbItem>
@@ -281,7 +276,7 @@ const SubcategoryPage = () => {
                   />
                   <BreadcrumbItem>
                     <BreadcrumbLink
-                      href={`/category/${parentCategory.id}`}
+                      href={`/category/${parentCategory.slug}`}
                       className={`hover:opacity-100 font-poppins text-xs ${
                         hasBanner
                           ? "text-[#6B2F1A]/80 hover:text-[#6B2F1A]"
@@ -413,7 +408,7 @@ const SubcategoryPage = () => {
               </p>
               {parentCategory && (
                 <Button
-                  onClick={() => router.push(`/category/${parentCategory.id}`)}
+                  onClick={() => router.push(`/category/${parentCategory.slug}`)}
                   className="bg-[#6B2F1A] hover:bg-[#5A2814] text-white font-poppins"
                 >
                   Back to {parentCategory.catName}
@@ -444,7 +439,7 @@ const SubcategoryPage = () => {
           {products.length > 0 && parentCategory && (
             <div className="mt-16 text-center">
               <Button
-                onClick={() => router.push(`/category/${parentCategory.id}`)}
+                onClick={() => router.push(`/category/${parentCategory.slug}`)}
                 variant="outline"
                 className="border-[#6B2F1A]/20 text-[#6B2F1A] hover:bg-[#fee3d8] font-poppins group"
               >
@@ -455,6 +450,7 @@ const SubcategoryPage = () => {
           )}
         </div>
       </section>
+      
       {/* Related Subcategories Section */}
       {relatedSubcategories.length > 0 && (
         <section className="py-10 bg-[#FFFBF9] px-10">
@@ -472,7 +468,7 @@ const SubcategoryPage = () => {
                 <Card
                   key={sub.id}
                   className="cursor-pointer transition-all hover:shadow-md border border-gray-200 hover:border-[#6B2F1A]/30"
-                  onClick={() => router.push(`/subcategory/${sub.id}`)}
+                  onClick={() => router.push(`/subcategory/${sub.slug}`)}
                 >
                   <CardContent className="p-6 flex flex-col items-center justify-center text-center">
                     <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4 bg-[#fee3d8] text-[#6B2F1A]">

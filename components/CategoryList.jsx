@@ -66,7 +66,7 @@ const CategoryList = () => {
               <div className="absolute -inset-2 z-0 pointer-events-none group-hover:pointer-events-auto"></div>
 
               <Link
-                href={`/category/${category.id}`}
+                href={`/category/${category.slug}`}
                 className="whitespace-nowrap py-2 text-lg font-bold uppercase text-[#fee3d8] transition-colors relative hover:text-[#b38d4a] flex items-center poppins-black"
               >
                 <span className="relative  flex-shrink-0">
@@ -100,7 +100,7 @@ const CategoryList = () => {
                       {category.SubCategory.map((subcat) => (
                         <Link
                           key={subcat.id}
-                          href={`/subcategory/${subcat.id}`}
+                          href={`/subcategory/${subcat.slug}`}
                           className="flex items-center justify-between px-4 py-2 text-sm text-black hover:bg-[#F9F4F0] hover:text-[#6B2F1A] rounded-md transition-colors category-heading"
                         >
                           <span>{subcat.subcategory}</span>
@@ -111,7 +111,7 @@ const CategoryList = () => {
 
                     <div className="pt-3 mt-3 border-t border-gray-100 px-4">
                       <Link
-                        href={`/category/${category.id}`}
+                        href={`/category/${category.slug}`}
                         className="flex items-center text-left w-full text-sm font-medium text-black hover:text-[#5A2814] rounded-md transition-colors playfair-italic"
                       >
                         View All
