@@ -160,7 +160,7 @@ const SiteContentPage = () => {
 
   return (
     <div className="bg-[#F9F4F0] pt-8 pb-16">
-      <div className="container max-w-7xl mx-auto px-4">
+      <div className="container mx-auto px-4">
         {/* Breadcrumb */}
         <Breadcrumb className="mb-8 text-sm text-gray-500">
           <BreadcrumbList>
