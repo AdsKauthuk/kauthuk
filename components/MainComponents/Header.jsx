@@ -8,7 +8,15 @@ import {
 } from "@/actions/category";
 import { useCart } from "@/providers/CartProvider";
 import { useUserAuth } from "@/providers/UserProvider";
-import { LogOut, Menu, Search, ShoppingCart, User, X } from "lucide-react";
+import {
+  Book,
+  LogOut,
+  Menu,
+  Search,
+  ShoppingCart,
+  User,
+  X,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -278,7 +286,15 @@ const Header = () => {
                             </p>
                             <p className="text-sm font-medium text-[#6B2F1A] mt-1">
                               {currency === "INR"
-                                ? formatPrice(product.price+ (product.tax ? ((parseFloat(product?.price) * product.tax) / 100) : 0) || 0 , "INR")
+                                ? formatPrice(
+                                    product.price +
+                                      (product.tax
+                                        ? (parseFloat(product?.price) *
+                                            product.tax) /
+                                          100
+                                        : 0) || 0,
+                                    "INR"
+                                  )
                                 : formatPrice(product.priceDollars, "USD")}
                             </p>
                           </div>
@@ -405,7 +421,15 @@ const Header = () => {
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
-
+            <Link href="/blog">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-[#5A2814] relative"
+              >
+                <Book className="h-4 w-4 mr-2" />
+              </Button>
+            </Link>
             {/* Cart Icon */}
             <Link href="/cart">
               <Button
@@ -549,6 +573,7 @@ const Header = () => {
                       </Link>
                     </>
                   )}
+
                   <Link
                     href="/cart"
                     className="block py-2 border-b border-gray-100 text-[#6B2F1A] font-poppins"
