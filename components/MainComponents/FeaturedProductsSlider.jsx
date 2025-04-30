@@ -224,6 +224,7 @@ const FeaturedProductsSlider = ({
                     index={index}
                     featured={true} // Add a prop to indicate this is a featured product
                     slug={product.slug}
+                    tax={product?.tax || 0} // Pass the tax information to ProductCard
                   />
                 </SwiperSlide>
               ))}
