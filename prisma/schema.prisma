@@ -23,7 +23,7 @@ model Category {
   banner      String?  @db.VarChar(255) // Added banner field
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  slug        String   @unique @db.VarChar(255)  // Added slug field with unique constraint
+  slug        String   @unique @db.VarChar(255) // Added slug field with unique constraint
 
   SubCategory SubCategory[]
 }
@@ -37,8 +37,8 @@ model SubCategory {
   banner      String?  @db.VarChar(255) // Added banner field
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  slug        String   @unique @db.VarChar(255)  // Added slug field with unique constraint
-  order_no    Int      @default(0)      // Added order_no field for sorting subcategories
+  slug        String   @unique @db.VarChar(255) // Added slug field with unique constraint
+  order_no    Int      @default(0) // Added order_no field for sorting subcategories
 
   Category Category  @relation(fields: [cat_id], references: [id])
   Product  Product[]
@@ -88,7 +88,7 @@ model Product {
   cod              YesNo    @default(yes)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
-  slug             String   @unique @db.VarChar(255)  // Added slug field with unique constraint
+  slug             String   @unique @db.VarChar(255) // Added slug field with unique constraint
 
   SubCategory       SubCategory        @relation(fields: [subcat_id], references: [id])
   ProductVariants   ProductVariant[]
@@ -328,6 +328,7 @@ model User {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
+  CouponUsages      CouponUsage[]
   DeliveryAddresses DeliveryAddress[]
   BillingAddresses  BillingAddress[]
   Orders            Order[]
@@ -471,6 +472,8 @@ model Order {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
+  // Add this relation to the existing Order model
+  CouponUsages   CouponUsage[]
   User           User            @relation(fields: [user_id], references: [id])
   OrderProducts  OrderProduct[]
   ShippingDetail ShippingDetail?
@@ -643,4 +646,52 @@ enum DisplayPage {
   home
   detail
   success
+}
+
+model Coupon {
+  id               Int          @id @default(autoincrement())
+  code             String       @unique @db.VarChar(50)
+  description      String?      @db.Text
+  discount_type    DiscountType @default(percentage)
+  discount_value   Decimal      @db.Decimal(10, 2) // Percentage or fixed amount
+  min_order_value  Decimal?     @db.Decimal(10, 2) // Minimum order value required
+  max_discount     Decimal?     @db.Decimal(10, 2) // Maximum discount amount (for percentage discounts)
+  start_date       DateTime     @default(now())
+  end_date         DateTime?
+  usage_limit      Int? // Total number of times coupon can be used
+  user_usage_limit Int? // Number of times a single user can use this coupon
+  status           Statuses     @default(active)
+  is_first_order   Boolean      @default(false) // Whether this coupon is for first-time customers only
+  product_ids      String?      @db.Text // Comma-separated list of specific product IDs this coupon applies to
+  category_ids     String?      @db.Text // Comma-separated list of category IDs this coupon applies to
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  // Relations
+  CouponUsages CouponUsage[]
+}
+
+// Coupon Usage model to track coupon usage
+model CouponUsage {
+  id              Int      @id @default(autoincrement())
+  coupon_id       Int
+  user_id         Int
+  order_id        Int
+  used_at         DateTime @default(now())
+  discount_amount Decimal  @db.Decimal(10, 2)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  Coupon Coupon @relation(fields: [coupon_id], references: [id])
+  User   User   @relation(fields: [user_id], references: [id])
+  Order  Order  @relation(fields: [order_id], references: [id])
+
+  @@unique([coupon_id, order_id])
+}
+
+// Add this enum for discount types
+enum DiscountType {
+  percentage
+  fixed
 }

@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import { useCart } from "@/providers/CartProvider";
+import { useUserAuth } from "@/providers/UserProvider";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Script from "next/script";
-import { useCart } from "@/providers/CartProvider";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useUserAuth } from "@/providers/UserProvider";
 
 // UI Components
 import {
@@ -24,20 +23,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 
 // Form handling
-import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
 
 // Icons
@@ -71,6 +63,7 @@ import {
 } from "@/actions/order";
 import { CountrySelect, StateSelect } from "@/components/CountryStateSelects";
 import Head from "next/head";
+import CouponSection from "@/components/CouponSection";
 
 // Razorpay Script Loader Component
 const RazorpayScript = ({ onLoad }) => {
@@ -311,7 +304,9 @@ const CheckoutPage = () => {
   const [checkoutMode, setCheckoutMode] = useState(
     isAuthenticated ? "loggedIn" : "guest"
   );
-
+  // Add these new state variables in your CheckoutPage component
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [discount, setDiscount] = useState(0);
   // Form with validation
   const {
     register,
@@ -358,6 +353,10 @@ const CheckoutPage = () => {
   const watchShippingMethod = watch("shippingMethod");
   const watchPaymentMethod = watch("paymentMethod");
   const watchCreateAccount = watch("createAccount");
+  // Calculate the discount amount
+  const discountAmount = useMemo(() => {
+    return appliedCoupon ? parseFloat(appliedCoupon.discount_amount) : 0;
+  }, [appliedCoupon]);
 
   // Populate form with user data if they're logged in
   useEffect(() => {
@@ -405,10 +404,12 @@ const CheckoutPage = () => {
     return calculateShippingCost(cart, watchShippingMethod, currency);
   }, [cart, watchShippingMethod, currency]);
 
-  
   // Calculate total (with tax)
-  const subtotalWithTax = subtotal ;
-  const total = subtotalWithTax + shippingCost;
+  const subtotalWithTax = subtotal;
+  // Update your final total calculation to include the discount
+  const total = useMemo(() => {
+    return subtotalWithTax - discountAmount + shippingCost;
+  }, [subtotalWithTax, discountAmount, shippingCost]);
 
   // Calculate total weight for display
   const totalWeight = useMemo(() => {
@@ -577,14 +578,15 @@ const CheckoutPage = () => {
         orderId: orderId,
       });
 
-console.log("verificationResult",verificationResult)
-
+      console.log("verificationResult", verificationResult);
 
       if (verificationResult.success) {
         setPaymentSuccess(true);
         clearCart();
         toast.success("Payment successful!");
-        router.push(`/thank-you?orderId=${orderId}&total=${total}&currency=${currency}&items=${itemCount}`);
+        router.push(
+          `/thank-you?orderId=${orderId}&total=${total}&currency=${currency}&items=${itemCount}`
+        );
 
         // Optional: Redirect or show success page
         // router.push('/order-confirmation');
@@ -633,6 +635,9 @@ console.log("verificationResult",verificationResult)
         tax: tax, // Store tax separately even if included in subtotal
         total: total,
         totalWeight,
+        couponCode: appliedCoupon ? appliedCoupon.code : null,
+        discount: discountAmount,
+        couponId: appliedCoupon ? appliedCoupon.id : null,
         isGuest: !isAuthenticated,
         userId: user?.id,
         paymentStatus: data.paymentMethod === "cod" ? "pending" : "pending",
@@ -656,10 +661,10 @@ console.log("verificationResult",verificationResult)
           setPaymentSuccess(true);
           clearCart();
           setIsProcessing(false);
-          router.push(`/thank-you?orderId=${result.order.id}&total=${total}&currency=${currency}&items=${itemCount}`);
-
+          router.push(
+            `/thank-you?orderId=${result.order.id}&total=${total}&currency=${currency}&items=${itemCount}`
+          );
         }, 1500);
-        
       } else if (
         data.paymentMethod === "card" ||
         data.paymentMethod === "upi"
@@ -696,7 +701,21 @@ console.log("verificationResult",verificationResult)
       setIsProcessing(false);
     }
   };
-
+  // Handler function for when a coupon is applied
+  const handleCouponApplied = (coupon) => {
+    setAppliedCoupon(coupon);
+    setDiscount(coupon ? parseFloat(coupon.discount_amount) : 0);
+  };
+  // Check if this is the user's first order - to show first-time user coupons
+  const isFirstOrder = useMemo(() => {
+    // Only consider it a first order if the user is logged in
+    if (isAuthenticated && user) {
+      return (
+        user.isFirstOrder === true || (user.orders && user.orders.length === 0)
+      );
+    }
+    return false;
+  }, [isAuthenticated, user]);
   const onSubmit = async (data) => {
     try {
       // Different behavior based on current step
@@ -2070,7 +2089,15 @@ console.log("verificationResult",verificationResult)
                         </div>
                       ))}
                     </div>
-
+                    <CouponSection
+                      cartTotal={subtotalWithTax}
+                      userId={user?.id || 0}
+                      isFirstOrder={isFirstOrder}
+                      cartItems={cart}
+                      currency={currency}
+                      onCouponApplied={handleCouponApplied}
+                      formatPrice={formatPrice}
+                    />
                     <Separator className="bg-gray-200 my-4" />
 
                     {/* Price Breakdown */}
@@ -2088,7 +2115,20 @@ console.log("verificationResult",verificationResult)
                         </span>
                         <span>{formatPrice(subtotalWithTax)}</span>
                       </div>
-
+                      {/* In your price breakdown section, add this after the subtotal */}
+                      {appliedCoupon && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600 flex items-center">
+                            Discount
+                            <span className="ml-2 text-xs text-green-600 font-medium">
+                              {appliedCoupon.code}
+                            </span>
+                          </span>
+                          <span className="text-green-600">
+                            -{formatPrice(discountAmount)}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Shipping</span>
                         {shippingCost > 0 ? (
@@ -2131,15 +2171,7 @@ console.log("verificationResult",verificationResult)
                             Protected with 256-bit SSL encryption
                           </p>
                         </div>
-                        <div className="flex items-start space-x-3">
-                          <HeartHandshake className="h-4 w-4 text-[#6B2F1A] mt-0.5" />
-                          <p className="text-xs text-gray-600">
-                            <span className="font-medium">
-                              Satisfaction Guaranteed:
-                            </span>{" "}
-                            30-day money back guarantee
-                          </p>
-                        </div>
+                        
                         <div className="flex items-start space-x-3">
                           <Wallet className="h-4 w-4 text-[#6B2F1A] mt-0.5" />
                           <p className="text-xs text-gray-600">
