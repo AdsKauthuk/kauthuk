@@ -7,6 +7,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { CountrySelect, StateSelect } from "@/components/CountryStateSelects";
+import { useCountryStateFields } from "@/components/checkout/countryStateIntegration";
 
 // UI Components
 import {
@@ -61,7 +63,6 @@ import {
   createRazorpayOrder,
   verifyPayment,
 } from "@/actions/order";
-import { CountrySelect, StateSelect } from "@/components/CountryStateSelects";
 import Head from "next/head";
 import CouponSection from "@/components/CouponSection";
 
@@ -295,6 +296,8 @@ const CheckoutPage = () => {
     login,
     register: registerUser,
   } = useUserAuth();
+  const [billingCountryId, setBillingCountryId] = useState(null);
+  const [shippingCountryId, setShippingCountryId] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderCreated, setOrderCreated] = useState(false);
   const [order, setOrder] = useState(null);
@@ -632,7 +635,7 @@ const CheckoutPage = () => {
         currency,
         subtotal: subtotalWithTax, // Already includes tax
         shipping: shippingCost,
-        tax: tax, // Store tax separately even if included in subtotal
+        // tax: tax, // Store tax separately even if included in subtotal
         total: total,
         totalWeight,
         couponCode: appliedCoupon ? appliedCoupon.code : null,
@@ -1374,7 +1377,7 @@ const CheckoutPage = () => {
                                     label="State/Province"
                                     value={field.value}
                                     onChange={field.onChange}
-                                    countryId={getValues("billingCountry")}
+                                    countryId={billingCountryId}
                                     error={errors.billingState?.message}
                                     required={true}
                                   />
@@ -1418,6 +1421,7 @@ const CheckoutPage = () => {
                                     onChange={field.onChange}
                                     error={errors.billingCountry?.message}
                                     required={true}
+                                    onCountryIdChange={setBillingCountryId}
                                   />
                                 )}
                               />
@@ -1561,7 +1565,7 @@ const CheckoutPage = () => {
                                     label="State/Province"
                                     value={field.value}
                                     onChange={field.onChange}
-                                    countryId={getValues("shippingCountry")}
+                                    countryId={shippingCountryId}
                                     error={errors.shippingState?.message}
                                     required={true}
                                   />
@@ -1603,6 +1607,7 @@ const CheckoutPage = () => {
                                     onChange={field.onChange}
                                     error={errors.shippingCountry?.message}
                                     required={true}
+                                    onCountryIdChange={setShippingCountryId}
                                   />
                                 )}
                               />
@@ -2171,7 +2176,7 @@ const CheckoutPage = () => {
                             Protected with 256-bit SSL encryption
                           </p>
                         </div>
-                        
+
                         <div className="flex items-start space-x-3">
                           <Wallet className="h-4 w-4 text-[#6B2F1A] mt-0.5" />
                           <p className="text-xs text-gray-600">
