@@ -4,7 +4,8 @@ import { useCart } from "@/providers/CartProvider";
 import Image from "next/image";
 import { useParams, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-
+import ReactMarkdown from "react-markdown";
+import rehypeRaw from 'rehype-raw';
 // UI Components
 import {
   Accordion,
@@ -1003,11 +1004,10 @@ const ProductDetails = () => {
                 <Card className="border-[#6B2F1A]/10 shadow-sm">
                   <CardContent className="p-6">
                     <div className="prose max-w-none font-poppins">
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: product.highlights || "",
-                        }}
-                      />
+                    <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                                          {product.highlights || ""}
+                      </ReactMarkdown>
+                      
                     </div>
                   </CardContent>
                 </Card>
@@ -1018,11 +1018,10 @@ const ProductDetails = () => {
               <Card className="border-[#6B2F1A]/10 shadow-sm">
                 <CardContent className="p-6">
                   <div className="prose max-w-none font-poppins">
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: product.description || "",
-                      }}
-                    />
+                  <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                                          {product.description || ""}
+                      </ReactMarkdown>
+                   
                   </div>
                 </CardContent>
               </Card>
@@ -1033,11 +1032,10 @@ const ProductDetails = () => {
                 <Card className="border-[#6B2F1A]/10 shadow-sm">
                   <CardContent className="p-6">
                     <div className="prose max-w-none font-poppins">
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: product.terms_condition || "",
-                        }}
-                      />
+                                        <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                                          {product.terms_condition || ""}
+                      </ReactMarkdown>
+                      
                     </div>
                   </CardContent>
                 </Card>

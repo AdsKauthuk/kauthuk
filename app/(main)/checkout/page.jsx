@@ -346,7 +346,7 @@ const CheckoutPage = () => {
       shippingMethod: "standard",
       paymentMethod: "card",
       notes: "",
-      termsAccepted: false,
+      termsAccepted: true,
     },
     mode: "onChange",
   });
@@ -1834,7 +1834,7 @@ const CheckoutPage = () => {
                     </Card>
 
                     {/* Terms and Conditions */}
-                    <Card className="border-0 rounded-xl overflow-hidden shadow-sm">
+                    {/* <Card className="border-0 rounded-xl overflow-hidden shadow-sm">
                       <CardContent className="p-8">
                         <div className="flex items-start space-x-3">
                           <Controller
@@ -1880,7 +1880,7 @@ const CheckoutPage = () => {
                           </p>
                         )}
                       </CardContent>
-                    </Card>
+                    </Card> */}
                   </>
                 )}
 
