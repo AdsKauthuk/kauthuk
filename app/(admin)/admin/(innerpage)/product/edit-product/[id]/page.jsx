@@ -616,6 +616,13 @@ const EditProductPage = () => {
         images: variant.images,
       }));
     }
+    data.newImages = data.images;
+    delete data.images;
+    
+    // Add deleted image IDs
+    data.deletedImageIds = form.getValues("imagesToDelete") || [];
+    
+  
 
     return data;
   };
