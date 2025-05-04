@@ -342,7 +342,7 @@ export async function getOneProduct(id) {
       );
     }
 
-    return product;
+    return serializeProductData(product);
   } catch (error) {
     console.error("Error fetching product:", error);
     throw new Error(`Failed to fetch the product: ${error.message}`);
