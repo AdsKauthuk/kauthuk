@@ -678,64 +678,48 @@ export async function fixProductImageThumbnails() {
 
 // Update an existing product
 
+// Replace your updateProduct function in actions/product.js
 export async function updateProduct(id, data) {
   const ftpClient = new ftp.Client();
   ftpClient.ftp.verbose = true;
 
   try {
-    console.log("Updating product with id:", id, "Data:", data);
+    console.log("Updating product with id:", id);
     const productId = parseInt(id);
 
-    // Fetch the existing product to check if it exists
+    // Fetch the existing product
     const existingProduct = await db.product.findUnique({
       where: { id: productId },
-      include: {
-        ProductImages: true,
-        ProductAttributes: {
-          include: {
-            ProductAttributeValues: true,
-          },
-        },
-        ProductVariants: {
-          include: {
-            VariantAttributeValues: true,
-            ProductImages: true,
-          },
-        },
-      },
     });
 
     if (!existingProduct) {
       throw new Error("Product not found");
     }
 
-    // Generate new slug if title has changed
+    // Generate slug if needed
     let slug = existingProduct.slug;
     if (data.title && data.title !== existingProduct.title) {
       slug = generateSlug(data.title);
-
-      // Check if the new slug already exists for another product
+      // Check for duplicate slugs
       const slugExists = await db.product.findFirst({
         where: {
           slug,
-          id: { not: productId }, // Exclude the current product
+          id: { not: productId },
         },
       });
-
-      // If slug exists, append a random string to make it unique
       if (slugExists) {
         const randomString = Math.random().toString(36).substring(2, 7);
         slug = `${slug}-${randomString}`;
       }
     }
 
-    // Update the product's basic data
+    // 1. First update the basic product details
     await db.product.update({
       where: { id: productId },
       data: {
         title: data.title,
         slug: slug,
-        description: data.description,
+        description: data.description || "",
         status: data.status,
         hasVariants: data.hasVariants,
         base_price: parseFloat(data.base_price),
@@ -744,128 +728,284 @@ export async function updateProduct(id, data) {
         stock_count: parseInt(data.stock_count),
         stock_status: data.stock_status,
         quantity_limit: parseInt(data.quantity_limit),
-        terms_condition: data.terms_condition,
-        highlights: data.highlights,
-        meta_title: data.meta_title,
-        meta_keywords: data.meta_keywords,
-        meta_description: data.meta_description,
-        hsn_code: data.hsn_code,
+        terms_condition: data.terms_condition || "",
+        highlights: data.highlights || "",
+        meta_title: data.meta_title || "",
+        meta_keywords: data.meta_keywords || "",
+        meta_description: data.meta_description || "",
+        hsn_code: data.hsn_code || "",
         tax: data.tax ? parseFloat(data.tax) : null,
         weight: data.weight ? parseFloat(data.weight) : null,
         free_shipping: data.free_shipping,
         cod: data.cod,
-        ...(data.cat_id ? { cat_id: parseInt(data.cat_id) } : {}),
-        ...(data.subcat_id ? { subcat_id: parseInt(data.subcat_id) } : {}),
+        cat_id: parseInt(data.cat_id),
+        subcat_id: parseInt(data.subcat_id),
       },
     });
 
-    // Handle image reordering (if provided)
-    if (data.reorderedImageIds && data.reorderedImageIds.length > 0) {
-      try {
-        // Update display_order for each image
-        for (let i = 0; i < data.reorderedImageIds.length; i++) {
-          const imageId = parseInt(data.reorderedImageIds[i]);
-          
-          // Check if the image exists before updating
-          const image = await db.productImage.findUnique({
-            where: { id: imageId }
-          });
-          
-          if (image) {
-            await db.productImage.update({
-              where: { id: imageId },
-              data: { 
-                display_order: i,
-                // First image is main and thumbnail
-                image_type: i === 0 ? 'main' : 'gallery',
-                is_thumbnail: i === 0
-              }
-            });
-          }
-        }
-      } catch (orderError) {
-        console.error("Error reordering images:", orderError);
-        // Continue with the rest of the update even if reordering fails
-      }
-    }
-
-    
-    // Handle deleted images
+    // 2. Handle deleted images
     if (data.deletedImageIds && data.deletedImageIds.length > 0) {
-      // Delete the images from the database
+      console.log("Deleting images:", data.deletedImageIds);
+      
       for (const imageId of data.deletedImageIds) {
         try {
-          // Get the image data first for FTP deletion
+          // Get image info first for FTP deletion
           const image = await db.productImage.findUnique({
             where: { id: parseInt(imageId) }
           });
           
           if (image) {
-            // Delete from database first
+            // Delete image from database
             await db.productImage.delete({
               where: { id: parseInt(imageId) }
             });
             
-            // Then try to delete from FTP
+            // Try to delete from FTP
             try {
               await connectToFTP(ftpClient);
-              const remoteFilePath = `${FTP_CONFIG.remoteDir}${image.image_path}`;
-              await ftpClient.remove(remoteFilePath);
+              await ftpClient.remove(`${FTP_CONFIG.remoteDir}${image.image_path}`);
             } catch (ftpError) {
-              console.warn("Error deleting image from FTP:", ftpError.message);
-              // Continue even if FTP deletion fails
+              console.warn("FTP error (non-critical):", ftpError.message);
             }
           }
         } catch (dbError) {
-          console.warn("Error deleting image from database:", dbError.message);
-          // Continue with other deletions
+          console.warn("Database error:", dbError.message);
         }
       }
     }
 
-    // Upload new images if any
+    // 3. Handle image reordering
+    if (data.imagesToReorder && data.imagesToReorder.length > 0) {
+      console.log("Reordering images:", data.imagesToReorder);
+      
+      for (let i = 0; i < data.imagesToReorder.length; i++) {
+        const imageId = parseInt(data.imagesToReorder[i]);
+        
+        try {
+          // Update the display_order for this image
+          await db.productImage.update({
+            where: { id: imageId },
+            data: {
+              display_order: i,
+              image_type: i === 0 ? 'main' : 'gallery',
+              is_thumbnail: i === 0
+            }
+          });
+          console.log(`Updated image ${imageId} order to ${i}`);
+        } catch (error) {
+          console.warn(`Error updating image ${imageId}:`, error.message);
+        }
+      }
+    }
+
+    // 4. Upload new images if any
     if (data.newImages && data.newImages.length > 0) {
+      console.log("Uploading new images:", data.newImages.length);
+      
       // Connect to FTP
       await connectToFTP(ftpClient);
+      
+      // Get current image count for ordering
+      const currentImagesCount = await db.productImage.count({
+        where: { 
+          product_id: productId,
+          product_variant_id: null 
+        }
+      });
       
       // Process each new image
       for (let i = 0; i < data.newImages.length; i++) {
         const image = data.newImages[i];
         const timestamp = Date.now();
         const newImageName = `${timestamp}_${i}_${image.name}`;
-        const tempImagePath = path.join(localTempDir, newImageName);
-
-        // Convert ArrayBuffer to Buffer and save temporarily
+        const tempPath = path.join(localTempDir, newImageName);
+        
+        // Save file to temp directory
         const buffer = Buffer.from(await image.arrayBuffer());
-        await fs.writeFile(tempImagePath, buffer);
-
+        await fs.writeFile(tempPath, buffer);
+        
         // Upload to FTP
-        const remoteFilePath = `${FTP_CONFIG.remoteDir}${newImageName}`;
-        await ftpClient.uploadFrom(tempImagePath, remoteFilePath);
-
-        // Determine the display order (append to existing images)
-        const existingImagesCount = await db.productImage.count({
-          where: { 
-            product_id: productId,
-            product_variant_id: null
-          }
-        });
-
-        // Create product image record in database
+        await ftpClient.uploadFrom(tempPath, `${FTP_CONFIG.remoteDir}${newImageName}`);
+        
+        // Add to database
         await db.productImage.create({
           data: {
             product_id: productId,
             product_variant_id: null,
             image_path: newImageName,
-            image_type: existingImagesCount === 0 && i === 0 ? 'main' : 'gallery',
-            display_order: existingImagesCount + i,
-            is_thumbnail: existingImagesCount === 0 && i === 0
+            image_type: currentImagesCount === 0 && i === 0 ? 'main' : 'gallery',
+            display_order: currentImagesCount + i,
+            is_thumbnail: currentImagesCount === 0 && i === 0
           }
         });
-
-        // Remove temporary file
-        await fs.unlink(tempImagePath);
+        
+        // Clean up temp file
+        await fs.unlink(tempPath);
       }
+    }
+
+    // 5. Handle attributes if provided
+    if (data.attributes && data.attributes.length > 0) {
+      // First remove existing product attribute values
+      const existingAttributes = await db.productAttribute.findMany({
+        where: { product_id: productId },
+      });
+      
+      for (const attr of existingAttributes) {
+        await db.productAttributeValue.deleteMany({
+          where: { product_attribute_id: attr.id },
+        });
+      }
+      
+      // Then remove existing product attributes
+      await db.productAttribute.deleteMany({
+        where: { product_id: productId },
+      });
+      
+      // Add new attributes
+      for (const attr of data.attributes) {
+        // Create the product attribute
+        const productAttribute = await db.productAttribute.create({
+          data: {
+            product_id: productId,
+            attribute_id: attr.attribute_id,
+            is_required: attr.is_required || false,
+          },
+        });
+        
+        // Add attribute values if provided
+        if (attr.values && attr.values.length > 0) {
+          for (const value of attr.values) {
+            await db.productAttributeValue.create({
+              data: {
+                product_attribute_id: productAttribute.id,
+                attribute_value_id: value.attribute_value_id,
+                price_adjustment_rupees: value.price_adjustment_rupees 
+                  ? parseFloat(value.price_adjustment_rupees) 
+                  : null,
+                price_adjustment_dollars: value.price_adjustment_dollars
+                  ? parseFloat(value.price_adjustment_dollars)
+                  : null,
+              },
+            });
+          }
+        }
+      }
+    }
+
+    // 6. Handle variants if hasVariants is true
+    if (data.hasVariants && data.variants && data.variants.length > 0) {
+      // First delete any variants that need to be removed
+      if (data.variantsToDelete && data.variantsToDelete.length > 0) {
+        for (const variantId of data.variantsToDelete) {
+          await db.productVariant.delete({
+            where: { id: parseInt(variantId) },
+          });
+        }
+      }
+      
+      // Process provided variants
+      for (const variant of data.variants) {
+        // Check if this is an existing variant or a new one
+        if (typeof variant.id === 'number') {
+          // Update existing variant
+          await db.productVariant.update({
+            where: { id: variant.id },
+            data: {
+              sku: variant.sku,
+              price_rupees: parseFloat(variant.price_rupees),
+              price_dollars: parseFloat(variant.price_dollars),
+              stock_count: parseInt(variant.stock_count),
+              stock_status: variant.stock_status,
+              weight: variant.weight ? parseFloat(variant.weight) : null,
+              is_default: variant.is_default,
+            },
+          });
+          
+          // Update attribute values if needed
+          if (variant.attribute_values && variant.attribute_values.length > 0) {
+            // Delete existing attribute values first
+            await db.variantAttributeValue.deleteMany({
+              where: { variant_id: variant.id },
+            });
+            
+            // Add new attribute values
+            for (const attrValue of variant.attribute_values) {
+              await db.variantAttributeValue.create({
+                data: {
+                  variant_id: variant.id,
+                  attribute_value_id: parseInt(attrValue.attribute_value_id),
+                },
+              });
+            }
+          }
+        } else {
+          // Create new variant
+          const newVariant = await db.productVariant.create({
+            data: {
+              product_id: productId,
+              sku: variant.sku,
+              price_rupees: parseFloat(variant.price_rupees),
+              price_dollars: parseFloat(variant.price_dollars),
+              stock_count: parseInt(variant.stock_count),
+              stock_status: variant.stock_status,
+              weight: variant.weight ? parseFloat(variant.weight) : null,
+              is_default: variant.is_default,
+            },
+          });
+          
+          // Add attribute values if provided
+          if (variant.attribute_values && variant.attribute_values.length > 0) {
+            for (const attrValue of variant.attribute_values) {
+              await db.variantAttributeValue.create({
+                data: {
+                  variant_id: newVariant.id,
+                  attribute_value_id: parseInt(attrValue.attribute_value_id),
+                },
+              });
+            }
+          }
+          
+          // Handle variant images if provided
+          if (variant.images && variant.images.length > 0) {
+            await connectToFTP(ftpClient);
+            
+            for (let i = 0; i < variant.images.length; i++) {
+              const image = variant.images[i];
+              const timestamp = Date.now();
+              const newImageName = `${timestamp}_${i}_${image.name}`;
+              const tempPath = path.join(localTempDir, newImageName);
+              
+              // Save file to temp directory
+              const buffer = Buffer.from(await image.arrayBuffer());
+              await fs.writeFile(tempPath, buffer);
+              
+              // Upload to FTP
+              await ftpClient.uploadFrom(tempPath, `${FTP_CONFIG.remoteDir}${newImageName}`);
+              
+              // Add to database
+              await db.productImage.create({
+                data: {
+                  product_id: productId,
+                  product_variant_id: newVariant.id,
+                  image_path: newImageName,
+                  image_type: i === 0 ? 'main' : 'gallery',
+                  display_order: i,
+                  is_thumbnail: i === 0,
+                },
+              });
+              
+              // Clean up temp file
+              await fs.unlink(tempPath);
+            }
+          }
+        }
+      }
+    } else if (existingProduct.hasVariants) {
+      // Product switched from variants to no variants - delete all variants
+      await db.productVariant.deleteMany({
+        where: { product_id: productId },
+      });
     }
 
     // Get the updated product

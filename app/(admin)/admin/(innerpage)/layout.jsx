@@ -19,7 +19,7 @@ export default function AdminLayout({ children }) {
   return (
       <ThemeProvider defaultTheme="light" storageKey="kauthuk-theme">
         <div className={`${roboto.variable} font-sans antialiased min-h-screen bg-background`}>
-          <div className="flex h-screen">
+          <div className="flex min-h-screen">
             <Sidebar className="hidden md:flex" />
             <div className="flex flex-col flex-1 md:ml-64 h-full">
               <Header />
