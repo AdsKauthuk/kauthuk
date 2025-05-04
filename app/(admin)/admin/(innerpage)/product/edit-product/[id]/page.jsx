@@ -592,7 +592,39 @@ const EditProductPage = () => {
     setVariants(updatedVariants);
   };
 
-  // Prepare form data with selected attributes and variants
+  // Add these two functions to handle setting the main image
+  // For existing product images
+  const setMainImage = (index) => {
+    // Reorder the images array to make the selected image the first one
+    const updatedImages = [...currentImages];
+    const selectedImage = updatedImages.splice(index, 1)[0];
+    updatedImages.unshift(selectedImage);
+    setCurrentImages(updatedImages);
+
+    // Add the reordered images to the form's imagesToReorder field
+    form.setValue(
+      "imagesToReorder",
+      updatedImages.map((img) => img.id)
+    );
+  };
+
+  // For new image previews
+  const setMainNewImage = (index) => {
+    // Reorder the images in the form
+    const currentImages = form.getValues("images");
+    const updatedImages = [...currentImages];
+    const selectedImage = updatedImages.splice(index, 1)[0];
+    updatedImages.unshift(selectedImage);
+    form.setValue("images", updatedImages);
+
+    // Also update previews to match
+    const updatedPreviews = [...productImagePreviews];
+    const selectedPreview = updatedPreviews.splice(index, 1)[0];
+    updatedPreviews.unshift(selectedPreview);
+    setProductImagePreviews(updatedPreviews);
+  };
+
+  // Update the prepareFormData function to include the imagesToReorder field
   const prepareFormData = (data) => {
     // Add selected attributes
     data.attributes = selectedAttributes.map((attr) => ({
@@ -618,14 +650,23 @@ const EditProductPage = () => {
     }
     data.newImages = data.images;
     delete data.images;
-    
+
     // Add deleted image IDs
     data.deletedImageIds = form.getValues("imagesToDelete") || [];
-    
-  
+
+    // Add reordered image IDs
+    data.reorderedImageIds = form.getValues("imagesToReorder") || [];
 
     return data;
   };
+
+  // Initialize the imagesToReorder field in the form
+  useEffect(() => {
+    // Make sure form is initialized
+    if (form) {
+      form.setValue("imagesToReorder", []);
+    }
+  }, [form]);
 
   // Reset the form to its initial state with product data
   const resetForm = () => {
@@ -1419,15 +1460,37 @@ const EditProductPage = () => {
                                 className="object-cover"
                               />
                             </div>
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="icon"
-                              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 bg-red-500 hover:bg-red-600"
-                              onClick={() => handleRemoveExistingImage(index)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
+                            <div className="absolute top-2 right-2 flex gap-1">
+                              {index !== 0 && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-7 w-7 bg-white dark:bg-slate-800 border-blue-200 dark:border-blue-800 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={() => setMainImage(index)}
+                                      >
+                                        <CheckCircle2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Set as main image</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 bg-red-500 hover:bg-red-600"
+                                onClick={() => handleRemoveExistingImage(index)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
                             {index === 0 && (
                               <Badge className="absolute bottom-2 left-2 bg-blue-600 text-white dark:bg-blue-500">
                                 Main Image
@@ -1489,20 +1552,44 @@ const EditProductPage = () => {
                               alt={`Preview ${index + 1}`}
                               className="object-cover w-full h-40 rounded-lg border border-gray-400 dark:border-blue-900/30 shadow-sm"
                             />
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="icon"
-                              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 bg-red-500 hover:bg-red-600"
-                              onClick={() =>
-                                handleRemoveProductImagePreview(index)
-                              }
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                            <Badge className="absolute bottom-2 left-2 bg-blue-600 text-white dark:bg-blue-500">
-                              New Image
-                            </Badge>
+                            <div className="absolute top-2 right-2 flex gap-1">
+                              {index !== 0 && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-7 w-7 bg-white dark:bg-slate-800 border-blue-200 dark:border-blue-800 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={() => setMainNewImage(index)}
+                                      >
+                                        <CheckCircle2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Set as main image</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 bg-red-500 hover:bg-red-600"
+                                onClick={() =>
+                                  handleRemoveProductImagePreview(index)
+                                }
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            {index === 0 && (
+                              <Badge className="absolute bottom-2 left-2 bg-blue-600 text-white dark:bg-blue-500">
+                                Main Image
+                              </Badge>
+                            )}
                           </div>
                         ))}
                       </div>
