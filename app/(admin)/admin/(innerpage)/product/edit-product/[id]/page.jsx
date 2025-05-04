@@ -185,7 +185,20 @@ const EditProductPage = () => {
       try {
         const product = await getOneProduct(productId);
         setProductData(product);
-
+        console.log("Fetched product data:", product);
+  
+        // IMPORTANT: First load the subcategories based on product's category
+        // This needs to happen before form reset to ensure subcategory is available
+        if (product.cat_id && categories.length > 0) {
+          const selectedCategory = categories.find(
+            (cat) => cat.id === product.cat_id
+          );
+          if (selectedCategory && selectedCategory.SubCategory) {
+            console.log("Setting subcategories:", selectedCategory.SubCategory);
+            setSubcategories(selectedCategory.SubCategory);
+          }
+        }
+  
         // Set up existing images
         if (product.ProductImages && product.ProductImages.length > 0) {
           const images = product.ProductImages.map((img) => ({
@@ -195,7 +208,7 @@ const EditProductPage = () => {
           }));
           setCurrentImages(images);
         }
-
+  
         // Set up attributes
         if (
           product.ProductAttributes &&
@@ -213,7 +226,7 @@ const EditProductPage = () => {
                   price_adjustment_dollars: val.price_adjustment_dollars,
                 }))
               : [];
-
+  
             return {
               attribute_id: attr.attribute_id,
               is_required: attr.is_required,
@@ -221,10 +234,10 @@ const EditProductPage = () => {
               attribute: attributeDetails,
             };
           });
-
+  
           setSelectedAttributes(mappedAttributes);
         }
-
+  
         // Set up variants
         if (
           product.hasVariants &&
@@ -241,7 +254,7 @@ const EditProductPage = () => {
                     url: `https://greenglow.in/kauthuk_test/${img.image_path}`,
                   }))
                 : [];
-
+  
             return {
               id: variant.id,
               sku: variant.sku,
@@ -260,7 +273,7 @@ const EditProductPage = () => {
               imagePreviews: [],
             };
           });
-
+  
           setVariants(mappedVariants);
         } else {
           // Initialize with a single variant for new variants
@@ -281,18 +294,28 @@ const EditProductPage = () => {
             },
           ]);
         }
-
+  
         // Update hasVariants state
         setHasVariants(product.hasVariants);
-
-        // Set form values correctly
-        // Convert string IDs to actual strings for form fields
+  
+        // Set form values correctly with fallbacks for null values
         const formData = {
           ...product,
           cat_id: product.cat_id?.toString() || "",
           subcat_id: product.subcat_id?.toString() || "",
+          // Prevent null values for text fields
+          description: product.description || "",
+          terms_condition: product.terms_condition || "",
+          highlights: product.highlights || "",
+          meta_title: product.meta_title || "",
+          meta_keywords: product.meta_keywords || "",
+          meta_description: product.meta_description || "",
+          hsn_code: product.hsn_code || "",
         };
-
+  
+        // Initialize the imagesToReorder field for image ordering
+        form.setValue("imagesToReorder", []);
+  
         // Reset the form with the product data, but exclude images
         const {
           ProductImages,
@@ -301,16 +324,11 @@ const EditProductPage = () => {
           ...restData
         } = formData;
         form.reset(restData);
-
-        // Load subcategories based on selected category
-        if (product.cat_id) {
-          const selectedCategory = categories.find(
-            (cat) => cat.id === product.cat_id
-          );
-          if (selectedCategory && selectedCategory.SubCategory) {
-            setSubcategories(selectedCategory.SubCategory);
-          }
-        }
+        
+        // Log to verify values
+        console.log("Form reset with data:", restData);
+        console.log("Subcategory set to:", restData.subcat_id);
+  
       } catch (error) {
         console.error("Error fetching product data:", error);
         toast.error("Failed to load product data.");
@@ -318,8 +336,8 @@ const EditProductPage = () => {
         setIsLoading(false);
       }
     };
-
-    if (productId && attributes.length > 0) {
+  
+    if (productId && attributes.length > 0 && categories.length > 0) {
       fetchProductData();
     }
   }, [productId, attributes, categories, form]);
