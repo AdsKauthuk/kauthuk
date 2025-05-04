@@ -27,7 +27,7 @@ import {
   Truck,
   ShoppingCart,
   CircleDollarSign,
-  Clock
+  Clock,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -201,7 +201,24 @@ export default function AddProductPage() {
     setHasVariants(watchHasVariants);
   }, [watchHasVariants]);
 
-  // Handle image selection for product
+  // Add this new function to handle setting a new image as the main one
+  const setMainNewImage = (index) => {
+    // Reorder the images in the form
+    const currentImages = form.getValues("images");
+    const updatedImages = [...currentImages];
+    const selectedImage = updatedImages.splice(index, 1)[0];
+    updatedImages.unshift(selectedImage);
+    form.setValue("images", updatedImages);
+
+    // Also update previews to match
+    const updatedPreviews = [...productImagePreviews];
+    const selectedPreview = updatedPreviews.splice(index, 1)[0];
+    updatedPreviews.unshift(selectedPreview);
+    setProductImagePreviews(updatedPreviews);
+  };
+
+  // You'll also need to update the handleImageSelection function to ensure new images
+  // are properly added to the form value and previews with proper ordering
   const handleImageSelection = (e) => {
     const files = Array.from(e.target.files);
     if (files.length > 0) {
@@ -217,6 +234,22 @@ export default function AddProductPage() {
 
       setProductImagePreviews([...productImagePreviews, ...newPreviews]);
     }
+  };
+
+  // Add these functions for variant images
+  const setMainVariantImage = (variantIndex, imageIndex) => {
+    const updatedVariants = [...variants];
+    const variant = updatedVariants[variantIndex];
+
+    // Reorder the images
+    const selectedImage = variant.images.splice(imageIndex, 1)[0];
+    variant.images.unshift(selectedImage);
+
+    // Reorder the preview images
+    const selectedPreview = variant.imagePreviews.splice(imageIndex, 1)[0];
+    variant.imagePreviews.unshift(selectedPreview);
+
+    setVariants(updatedVariants);
   };
 
   // Handle removing a product image
@@ -471,7 +504,7 @@ export default function AddProductPage() {
         },
       ]);
       setActiveTab("basic");
-      
+
       // Navigate back to product list
       router.push("/admin/product/list-products");
     } catch (error) {
@@ -582,7 +615,9 @@ export default function AddProductPage() {
       <Card className="border-gray-400 dark:border-blue-900/30 shadow-sm">
         <CardContent className="p-4">
           <div className="flex justify-between mb-2">
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Form Completion</span>
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              Form Completion
+            </span>
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {
                 [
@@ -622,33 +657,33 @@ export default function AddProductPage() {
             className="w-full"
           >
             <TabsList className="grid w-full grid-cols-5 mb-8 h-auto border border-gray-400 dark:border-blue-900/30 bg-blue-50/50 dark:bg-blue-900/10 p-1 rounded-lg">
-              <TabsTrigger 
-                value="basic" 
+              <TabsTrigger
+                value="basic"
                 className="py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-sm"
               >
                 Basic Info
               </TabsTrigger>
-              <TabsTrigger 
-                value="images" 
+              <TabsTrigger
+                value="images"
                 className="py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-sm"
               >
                 Images
               </TabsTrigger>
-              <TabsTrigger 
-                value="attributes" 
+              <TabsTrigger
+                value="attributes"
                 className="py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-sm"
               >
                 Attributes
               </TabsTrigger>
-              <TabsTrigger 
-                value="variants" 
+              <TabsTrigger
+                value="variants"
                 disabled={!hasVariants}
                 className="py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-sm disabled:opacity-50"
               >
                 Variants
               </TabsTrigger>
-              <TabsTrigger 
-                value="advanced" 
+              <TabsTrigger
+                value="advanced"
                 className="py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-sm"
               >
                 Advanced
@@ -676,7 +711,8 @@ export default function AddProductPage() {
                         <FormItem>
                           <FormLabel className="text-slate-700 dark:text-slate-300 flex items-center gap-1">
                             <Type size={14} />
-                            Product Title <span className="text-red-500">*</span>
+                            Product Title{" "}
+                            <span className="text-red-500">*</span>
                           </FormLabel>
                           <FormControl>
                             <Input
@@ -709,7 +745,9 @@ export default function AddProductPage() {
                               </SelectTrigger>
                               <SelectContent className="border-gray-400 dark:border-blue-900">
                                 <SelectItem value="active">Active</SelectItem>
-                                <SelectItem value="inactive">Inactive</SelectItem>
+                                <SelectItem value="inactive">
+                                  Inactive
+                                </SelectItem>
                               </SelectContent>
                             </Select>
                           </FormControl>
@@ -793,8 +831,8 @@ export default function AddProductPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label 
-                      htmlFor="description" 
+                    <Label
+                      htmlFor="description"
                       className="text-slate-700 dark:text-slate-300 flex items-center gap-1"
                     >
                       <PenTool size={14} />
@@ -860,7 +898,7 @@ export default function AddProductPage() {
                           <FormLabel className="text-slate-700 dark:text-slate-300 flex items-center gap-1">
                             <DollarSign size={14} />
                             Price (₹) <span className="text-red-500">*</span>
-                            </FormLabel>
+                          </FormLabel>
                           <FormControl>
                             <Input
                               type="number"
@@ -1041,7 +1079,10 @@ export default function AddProductPage() {
 
                   <div className="space-y-4">
                     <h3 className="text-base font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                      <Tag size={14} className="text-blue-500 dark:text-blue-400" />
+                      <Tag
+                        size={14}
+                        className="text-blue-500 dark:text-blue-400"
+                      />
                       SEO Information
                     </h3>
                     <div className="grid grid-cols-1 gap-4">
@@ -1050,12 +1091,14 @@ export default function AddProductPage() {
                         name="meta_title"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-slate-700 dark:text-slate-300">Meta Title</FormLabel>
+                            <FormLabel className="text-slate-700 dark:text-slate-300">
+                              Meta Title
+                            </FormLabel>
                             <FormControl>
-                              <Input 
-                                placeholder="SEO title" 
+                              <Input
+                                placeholder="SEO title"
                                 className="border-blue-200 dark:border-blue-900/50 focus-visible:ring-blue-500"
-                                {...field} 
+                                {...field}
                               />
                             </FormControl>
                             <FormDescription className="text-slate-500 dark:text-slate-400">
@@ -1072,7 +1115,9 @@ export default function AddProductPage() {
                         name="meta_keywords"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-slate-700 dark:text-slate-300">Meta Keywords</FormLabel>
+                            <FormLabel className="text-slate-700 dark:text-slate-300">
+                              Meta Keywords
+                            </FormLabel>
                             <FormControl>
                               <Input
                                 placeholder="keyword1, keyword2, keyword3"
@@ -1093,7 +1138,9 @@ export default function AddProductPage() {
                         name="meta_description"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-slate-700 dark:text-slate-300">Meta Description</FormLabel>
+                            <FormLabel className="text-slate-700 dark:text-slate-300">
+                              Meta Description
+                            </FormLabel>
                             <FormControl>
                               <Textarea
                                 placeholder="Brief description for search engines..."
@@ -1117,11 +1164,15 @@ export default function AddProductPage() {
                       <FormItem className="flex flex-row items-center justify-between rounded-lg border border-blue-200 dark:border-blue-900/30 p-4 bg-blue-50/50 dark:bg-blue-900/10">
                         <div className="space-y-0.5">
                           <FormLabel className="text-base text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                            <Layers size={16} className="text-blue-500 dark:text-blue-400" />
+                            <Layers
+                              size={16}
+                              className="text-blue-500 dark:text-blue-400"
+                            />
                             Product Variants
                           </FormLabel>
                           <FormDescription className="text-slate-500 dark:text-slate-400">
-                            Enable if this product has variants like different sizes, colors, etc.
+                            Enable if this product has variants like different
+                            sizes, colors, etc.
                           </FormDescription>
                         </div>
                         <FormControl>
@@ -1136,15 +1187,15 @@ export default function AddProductPage() {
                   />
                 </CardContent>
                 <CardFooter className="flex justify-between border-t border-gray-400 dark:border-blue-900/30 px-6 py-4">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => router.back()}
                     className="border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30"
                   >
                     Cancel
                   </Button>
-                  <Button 
-                    type="button" 
+                  <Button
+                    type="button"
                     onClick={() => setActiveTab("images")}
                     className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500"
                   >
@@ -1168,8 +1219,8 @@ export default function AddProductPage() {
                 </CardHeader>
                 <CardContent className="p-6 space-y-6">
                   <div className="flex flex-col gap-2">
-                    <Label 
-                      htmlFor="product-images" 
+                    <Label
+                      htmlFor="product-images"
                       className="text-slate-700 dark:text-slate-300 flex items-center gap-1 mb-2"
                     >
                       <Upload size={14} />
@@ -1207,6 +1258,7 @@ export default function AddProductPage() {
                       {form.formState.errors.images?.message}
                     </FormMessage>
 
+                    {/* For the Images Tab - Update this part */}
                     {productImagePreviews.length > 0 && (
                       <div className="grid grid-cols-2 gap-4 mt-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                         {productImagePreviews.map((preview, index) => (
@@ -1216,15 +1268,37 @@ export default function AddProductPage() {
                               alt={`Preview ${index + 1}`}
                               className="object-cover w-full h-40 rounded-lg border border-gray-400 dark:border-blue-900/30 shadow-sm"
                             />
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="icon"
-                              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 bg-red-500 hover:bg-red-600"
-                              onClick={() => handleRemoveProductImage(index)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
+                            <div className="absolute top-2 right-2 flex gap-1">
+                              {index !== 0 && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-7 w-7 bg-white dark:bg-slate-800 border-blue-200 dark:border-blue-800 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={() => setMainNewImage(index)}
+                                      >
+                                        <CheckCircle2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Set as main image</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 bg-red-500 hover:bg-red-600"
+                                onClick={() => handleRemoveProductImage(index)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
                             {index === 0 && (
                               <Badge className="absolute bottom-2 left-2 bg-blue-600 text-white dark:bg-blue-500">
                                 Main Image
@@ -1291,7 +1365,10 @@ export default function AddProductPage() {
                         >
                           {attribute.display_name}
                         </label>
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-900/70">
+                        <Badge
+                          variant="outline"
+                          className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-900/70"
+                        >
                           {attribute.type}
                         </Badge>
                         {attribute.is_variant && (
@@ -1496,7 +1573,9 @@ export default function AddProductPage() {
                       <Card
                         key={variant.id}
                         className={`border ${
-                          variant.is_default ? "border-blue-500 dark:border-blue-700" : "border-blue-200 dark:border-blue-900/30"
+                          variant.is_default
+                            ? "border-blue-500 dark:border-blue-700"
+                            : "border-blue-200 dark:border-blue-900/30"
                         }`}
                       >
                         <CardHeader className="pb-2">
@@ -1506,7 +1585,9 @@ export default function AddProductPage() {
                                 Variant #{index + 1}
                               </CardTitle>
                               {variant.is_default && (
-                                <Badge className="bg-blue-600 dark:bg-blue-700">Default</Badge>
+                                <Badge className="bg-blue-600 dark:bg-blue-700">
+                                  Default
+                                </Badge>
                               )}
                             </div>
                             <div className="flex items-center gap-2">
@@ -1780,6 +1861,7 @@ export default function AddProductPage() {
                                 </label>
                               </div>
 
+                              {/* Update the variant images section */}
                               {variant.imagePreviews?.length > 0 && (
                                 <div className="grid grid-cols-2 gap-3 mt-3 sm:grid-cols-3 md:grid-cols-4">
                                   {variant.imagePreviews.map(
@@ -1795,20 +1877,47 @@ export default function AddProductPage() {
                                           }`}
                                           className="object-cover w-full h-32 rounded-lg border border-gray-400 dark:border-blue-900/30 shadow-sm"
                                         />
-                                        <Button
-                                          type="button"
-                                          variant="destructive"
-                                          size="icon"
-                                          className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 bg-red-500 hover:bg-red-600"
-                                          onClick={() =>
-                                            handleRemoveVariantImage(
-                                              index,
-                                              imgIndex
-                                            )
-                                          }
-                                        >
-                                          <X className="h-3 w-3" />
-                                        </Button>
+                                        <div className="absolute top-1 right-1 flex gap-1">
+                                          {imgIndex !== 0 && (
+                                            <TooltipProvider>
+                                              <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                  <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="icon"
+                                                    className="h-6 w-6 bg-white dark:bg-slate-800 border-blue-200 dark:border-blue-800 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    onClick={() =>
+                                                      setMainVariantImage(
+                                                        index,
+                                                        imgIndex
+                                                      )
+                                                    }
+                                                  >
+                                                    <CheckCircle2 className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                                                  </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                  <p>Set as main image</p>
+                                                </TooltipContent>
+                                              </Tooltip>
+                                            </TooltipProvider>
+                                          )}
+                                          <Button
+                                            type="button"
+                                            variant="destructive"
+                                            size="icon"
+                                            className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 bg-red-500 hover:bg-red-600"
+                                            onClick={() =>
+                                              handleRemoveVariantImage(
+                                                index,
+                                                imgIndex
+                                              )
+                                            }
+                                          >
+                                            <X className="h-3 w-3" />
+                                          </Button>
+                                        </div>
                                         {imgIndex === 0 && (
                                           <Badge className="absolute bottom-1 left-1 bg-blue-600 text-white dark:bg-blue-500 text-xs">
                                             Main
@@ -1872,8 +1981,8 @@ export default function AddProductPage() {
                 <CardContent className="p-6 space-y-6">
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label 
-                        htmlFor="highlights" 
+                      <Label
+                        htmlFor="highlights"
                         className="text-slate-700 dark:text-slate-300 flex items-center gap-1"
                       >
                         <PenTool size={14} />
@@ -1905,8 +2014,8 @@ export default function AddProductPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label 
-                        htmlFor="terms_condition" 
+                      <Label
+                        htmlFor="terms_condition"
                         className="text-slate-700 dark:text-slate-300 flex items-center gap-1"
                       >
                         <PenTool size={14} />
@@ -1951,10 +2060,10 @@ export default function AddProductPage() {
                             HSN Code
                           </FormLabel>
                           <FormControl>
-                            <Input 
-                              placeholder="HSN code" 
+                            <Input
+                              placeholder="HSN code"
                               className="border-blue-200 dark:border-blue-900/50 focus-visible:ring-blue-500"
-                              {...field} 
+                              {...field}
                             />
                           </FormControl>
                           <FormMessage />
@@ -2010,8 +2119,6 @@ export default function AddProductPage() {
                       )}
                     />
                   </div>
-
-                  
                 </CardContent>
                 <CardFooter className="flex justify-between border-t border-gray-400 dark:border-blue-900/30 px-6 py-4">
                   <Button
@@ -2026,7 +2133,7 @@ export default function AddProductPage() {
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button 
+                      <Button
                         type="button"
                         className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500"
                       >
@@ -2060,7 +2167,7 @@ export default function AddProductPage() {
                             </>
                           ) : (
                             <>
-                              <Save size={16} className="mr-1" /> 
+                              <Save size={16} className="mr-1" />
                               Create Product
                             </>
                           )}
