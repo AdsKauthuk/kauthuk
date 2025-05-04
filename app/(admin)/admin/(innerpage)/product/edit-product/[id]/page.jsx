@@ -1070,7 +1070,7 @@ const EditProductPage = () => {
                         render={({ field }) => (
                           <MDEditor
                             autoCapitalize="none"
-                            value={field.value}
+                            value={field.value || ""} // Add this fallback
                             onChange={field.onChange}
                             preview="edit"
                             height={300}
@@ -1370,6 +1370,7 @@ const EditProductPage = () => {
                               <Textarea
                                 placeholder="Brief description for search engines..."
                                 className="border-blue-200 dark:border-blue-900/50 focus-visible:ring-blue-500 min-h-24"
+                                value={field.value || ""} // Add this fallback
                                 {...field}
                               />
                             </FormControl>
@@ -2306,7 +2307,7 @@ const EditProductPage = () => {
                           render={({ field }) => (
                             <MDEditor
                               autoCapitalize="none"
-                              value={field.value}
+                              value={field.value || ""} // Add this fallback
                               onChange={field.onChange}
                               preview="edit"
                               height={200}
@@ -2339,7 +2340,7 @@ const EditProductPage = () => {
                           render={({ field }) => (
                             <MDEditor
                               autoCapitalize="none"
-                              value={field.value}
+                              value={field.value || ""} // Add this fallback
                               onChange={field.onChange}
                               preview="edit"
                               height={200}
