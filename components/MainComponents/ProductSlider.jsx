@@ -60,7 +60,7 @@ const toBase64 = (str) =>
     ? Buffer.from(str).toString("base64")
     : window.btoa(str);
 
-const ProductCard = ({ id, title, price_rupees, price_dollars, images, index, slug, tax }) => {
+const ProductCard = ({ id, title, price_rupees, price_dollars, images, index, slug }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -75,15 +75,11 @@ const ProductCard = ({ id, title, price_rupees, price_dollars, images, index, sl
       ? `https://greenglow.in/kauthuk_test/${images[0].image_path}`
       : "/assets/images/placeholder.png";
 
-  // Get price based on currency - FIX: Apply tax only for INR currency
   const getPrice = () => {
     if (currency === "INR") {
-      // Apply tax only for INR price
       const basePrice = parseFloat(price_rupees) || 0;
-      const taxAmount = tax ? (basePrice * tax) / 100 : 0;
-      return basePrice + taxAmount;
+      return basePrice ;
     } else {
-      // Return dollar price without tax
       return price_dollars || 0;
     }
   };
@@ -554,7 +550,6 @@ const ProductSlider = ({
                     id={product.id}
                     title={product.title}
                     price_rupees={product.price_rupees}
-                    tax={product?.tax || 0}
                     price_dollars={product.price_dollars}
                     images={product.ProductImages}
                     index={index}

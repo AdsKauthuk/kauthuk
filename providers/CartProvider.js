@@ -118,10 +118,9 @@ export function CartProvider({ children }) {
       ...product,
       id: product.id,
       title: product.title || 'Product',
-      price: parseFloat(product.price) + (product.tax ? ((parseFloat(product.price) * product.tax) / 100) : 0) || 0,
+      price: parseFloat(product.price) || 0, // No tax calculation here
       priceDollars: parseFloat(product.priceDollars) || 0,
       quantity: product.quantity || 1,
-    
       // Handle any missing fields with defaults
     };
 

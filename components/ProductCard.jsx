@@ -62,7 +62,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
   // Get price based on currency
   const getPrice = () => {
     return currency === "INR" 
-      ? parseFloat(product?.price_rupees) + (product.tax ? ((parseFloat(product?.price_rupees) * product.tax) / 100) : 0) || 0 
+      ? parseFloat(product?.price_rupees)  
       : parseFloat(product?.price_dollars)  || 0;
   };
   
@@ -71,7 +71,7 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
   
   // Calculate discount if applicable (based on current currency)
   const baseComparisonPrice = currency === "INR" 
-    ? parseFloat(product?.base_price) + (product.tax ? ((parseFloat(product?.base_price) * product.tax) / 100) : 0) || 0  
+    ? parseFloat(product?.base_price)   
     : parseFloat(product?.price_dollars) || 0; // Simple conversion for base price
     
   const hasDiscount = baseComparisonPrice > finalPrice;
@@ -496,7 +496,6 @@ const ProductCard = ({ product, layout = "grid", onAddToCart }) => {
                 )}
               </div>
               
-              {/* No tax info shown */}
             </div>
 
             <div className="flex items-center gap-3">

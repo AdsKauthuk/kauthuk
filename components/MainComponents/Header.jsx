@@ -287,12 +287,8 @@ const Header = () => {
                             <p className="text-sm font-medium text-[#6B2F1A] mt-1">
                               {currency === "INR"
                                 ? formatPrice(
-                                    product.price +
-                                      (product.tax
-                                        ? (parseFloat(product?.price) *
-                                            product.tax) /
-                                          100
-                                        : 0) || 0,
+                                    product.price 
+                                      ,
                                     "INR"
                                   )
                                 : formatPrice(product.priceDollars, "USD")}

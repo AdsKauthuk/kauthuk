@@ -298,7 +298,6 @@ const ProductDetails = () => {
         : product.price_dollars,
       image: productImages.length > 0 ? productImages[0].image_path : null,
       quantity: quantity,
-      tax: product?.tax || 0,
       weight: product.weight,
       variant: selectedVariant
         ? {
@@ -321,14 +320,8 @@ const ProductDetails = () => {
   };
 
   const currentPrice = selectedVariant
-    ? parseFloat(selectedVariant.price_rupees) +
-      (currency === "INR" && product?.tax
-        ? (parseFloat(selectedVariant.price_rupees) * product?.tax) / 100
-        : 0)
-    : parseFloat(product?.price_rupees) +
-        (currency === "INR" && product?.tax
-          ? (parseFloat(product?.price_rupees) * product?.tax) / 100
-          : 0) || 0;
+    ? parseFloat(selectedVariant.price_rupees) 
+    : parseFloat(product?.price_rupees) 
 
   const currentPriceDollars = selectedVariant
     ? parseFloat(selectedVariant.price_dollars)

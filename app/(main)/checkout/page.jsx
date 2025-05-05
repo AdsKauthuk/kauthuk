@@ -2111,12 +2111,7 @@ const CheckoutPage = () => {
                         <span className="text-gray-600 flex items-center">
                           Subtotal ({itemCount}{" "}
                           {itemCount === 1 ? "item" : "items"})
-                          <span className="inline-flex ml-1 text-gray-400">
-                            <Info
-                              className="h-3.5 w-3.5"
-                              title="Includes 10% tax"
-                            />
-                          </span>
+                          
                         </span>
                         <span>{formatPrice(subtotalWithTax)}</span>
                       </div>
