@@ -342,8 +342,7 @@ export async function getOneProduct(id) {
       );
     }
 
-    // return serializeProductData(product);
-    return product;
+    return serializeProductData(product);
   } catch (error) {
     console.error("Error fetching product:", error);
     throw new Error(`Failed to fetch the product: ${error.message}`);
@@ -1054,8 +1053,7 @@ export async function updateProduct(id, data) {
       },
     });
 
-    // return serializeProductData(updatedProduct);
-    return updatedProduct;
+    return serializeProductData(updatedProduct);
   } catch (error) {
     console.error("Error updating product:", error);
     throw new Error(`Failed to update product: ${error.message}`);
@@ -1119,8 +1117,7 @@ export async function getProductAttributes() {
       },
     });
 
-    // return serializeProductData(attributes);
-    return attributes;
+    return serializeProductData(attributes);
   } catch (error) {
     console.error("Error fetching product attributes:", error);
     throw new Error(
@@ -1144,8 +1141,7 @@ export async function getCategoriesAndSubcategories() {
       },
     });
 
-    // return serializeProductData(categories);
-    return categories;
+    return serializeProductData(categories);
   } catch (error) {
     console.error("Error fetching categories and subcategories:", error);
     throw new Error("Failed to fetch categories. Please try again later.");
