@@ -8,9 +8,8 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Calendar, Clock, Share2, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import ReactMarkdown from "react-markdown";
-import rehypeRaw from 'rehype-raw';
-import { FaFacebook, FaTwitter, FaPinterest, FaWhatsapp } from 'react-icons/fa';
+import { FaFacebook, FaTwitter, FaPinterest, FaWhatsapp } from "react-icons/fa";
+import MDEditor from "@uiw/react-md-editor";
 
 // Estimated reading time calculation
 const calculateReadingTime = (text) => {
@@ -40,13 +39,16 @@ const BlogDetailPage = () => {
 
         const blogData = await getOneBlog(blogId);
         setBlog(blogData);
-        
+
         // Calculate reading time
         setReadingTime(calculateReadingTime(blogData.description));
-        
+
         // Fetch related blogs (latest blogs excluding current one)
-        const { blogs: allBlogs } = await getBlogs({ limit: 4, sort: "latest" });
-        setRelatedBlogs(allBlogs.filter(b => b.id !== blogId).slice(0, 3));
+        const { blogs: allBlogs } = await getBlogs({
+          limit: 4,
+          sort: "latest",
+        });
+        setRelatedBlogs(allBlogs.filter((b) => b.id !== blogId).slice(0, 3));
       } catch (err) {
         console.error("Error fetching blog:", err);
         setError("This blog post doesn't exist or has been removed.");
@@ -61,30 +63,38 @@ const BlogDetailPage = () => {
   }, [id]);
 
   // Share functionality
-  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
-  const shareTitle = blog?.title || 'Blog post from Kauthuk';
+  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+  const shareTitle = blog?.title || "Blog post from Kauthuk";
 
   const shareLinks = [
     {
-      name: 'Facebook',
+      name: "Facebook",
       icon: <FaFacebook className="h-4 w-4" />,
-      url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`
+      url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+        shareUrl
+      )}`,
     },
     {
-      name: 'Twitter',
+      name: "Twitter",
       icon: <FaTwitter className="h-4 w-4" />,
-      url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`
+      url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(
+        shareUrl
+      )}&text=${encodeURIComponent(shareTitle)}`,
     },
     {
-      name: 'Pinterest',
+      name: "Pinterest",
       icon: <FaPinterest className="h-4 w-4" />,
-      url: `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(shareUrl)}&description=${encodeURIComponent(shareTitle)}`
+      url: `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(
+        shareUrl
+      )}&description=${encodeURIComponent(shareTitle)}`,
     },
     {
-      name: 'WhatsApp',
+      name: "WhatsApp",
       icon: <FaWhatsapp className="h-4 w-4" />,
-      url: `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareTitle} ${shareUrl}`)}`
-    }
+      url: `https://api.whatsapp.com/send?text=${encodeURIComponent(
+        `${shareTitle} ${shareUrl}`
+      )}`,
+    },
   ];
 
   if (loading) {
@@ -118,10 +128,12 @@ const BlogDetailPage = () => {
       <div className="w-full bg-[#f8f5f0] min-h-screen">
         <div className="container mx-auto px-4 py-12">
           <div className="max-w-lg mx-auto bg-white p-8 rounded-lg shadow-md text-center">
-            <h1 className="text-2xl font-bold text-[#7B3B24] mb-4 font-playfair">Blog Not Found</h1>
+            <h1 className="text-2xl font-bold text-[#7B3B24] mb-4 font-playfair">
+              Blog Not Found
+            </h1>
             <p className="text-gray-600 mb-6 font-poppins">{error}</p>
-            <Button 
-              onClick={() => router.push('/blog')}
+            <Button
+              onClick={() => router.push("/blog")}
               className="bg-[#7B3B24] hover:bg-[#5A2714] text-white"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -139,9 +151,9 @@ const BlogDetailPage = () => {
         <>
           {/* Back Navigation */}
           <div className="container mx-auto px-4 py-6">
-            <Button 
-              variant="ghost" 
-              onClick={() => router.push('/blog')}
+            <Button
+              variant="ghost"
+              onClick={() => router.push("/blog")}
               className="text-[#7B3B24] hover:bg-[#7B3B24]/10"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -155,7 +167,7 @@ const BlogDetailPage = () => {
               <h1 className="text-3xl md:text-4xl font-bold text-[#7B3B24] mb-4 font-playfair">
                 {blog.title}
               </h1>
-              
+
               <div className="flex flex-wrap items-center text-sm text-gray-600 mb-6 font-poppins gap-4">
                 <div className="flex items-center">
                   <Calendar className="h-4 w-4 mr-1 text-[#7B3B24]" />
@@ -194,9 +206,10 @@ const BlogDetailPage = () => {
             <div className=" mx-auto">
               <div className="bg-white rounded-lg shadow-md p-6 md:p-8 mb-8">
                 <div className="prose prose-stone max-w-none font-poppins">
-                  <ReactMarkdown rehypePlugins={[rehypeRaw]}>
-                    {blog.description}
-                  </ReactMarkdown>
+                  <MDEditor.Markdown
+                    source={blog?.description || ""}
+                    style={{ whiteSpace: "pre-wrap" }}
+                  />
                 </div>
 
                 {/* Share Section */}
@@ -233,7 +246,7 @@ const BlogDetailPage = () => {
                 <h2 className="text-2xl font-bold text-[#7B3B24] mb-8 text-center font-playfair">
                   Related Articles
                 </h2>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mx-auto">
                   {relatedBlogs.map((relatedBlog) => (
                     <Link
@@ -249,7 +262,8 @@ const BlogDetailPage = () => {
                             fill
                             className="object-cover transition-transform duration-500 group-hover:scale-105"
                             onError={(e) => {
-                              e.target.src = "/assets/images/blog-placeholder.jpg";
+                              e.target.src =
+                                "/assets/images/blog-placeholder.jpg";
                             }}
                           />
                         ) : (
@@ -274,12 +288,10 @@ const BlogDetailPage = () => {
                     </Link>
                   ))}
                 </div>
-                
+
                 <div className="text-center mt-8">
                   <Link href="/blog">
-                    <Button 
-                      className="bg-[#7B3B24] hover:bg-[#5A2714] text-white"
-                    >
+                    <Button className="bg-[#7B3B24] hover:bg-[#5A2714] text-white">
                       View All Articles
                     </Button>
                   </Link>

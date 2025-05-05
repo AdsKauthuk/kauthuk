@@ -4,8 +4,6 @@ import { useCart } from "@/providers/CartProvider";
 import Image from "next/image";
 import { useParams, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import rehypeRaw from 'rehype-raw';
 // UI Components
 import {
   Accordion,
@@ -71,6 +69,7 @@ import "swiper/css/pagination";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import PromotionalBanner from "@/components/MainComponents/PromotionalBanner";
+import MDEditor from "@uiw/react-md-editor";
 
 const ProductDetails = () => {
   const [product, setProduct] = useState(null);
@@ -1004,10 +1003,10 @@ const ProductDetails = () => {
                 <Card className="border-[#6B2F1A]/10 shadow-sm">
                   <CardContent className="p-6">
                     <div className="prose max-w-none font-poppins">
-                    <ReactMarkdown rehypePlugins={[rehypeRaw]}>
-                                          {product.highlights || ""}
-                      </ReactMarkdown>
-                      
+                      <MDEditor.Markdown
+                        source={product.highlights || ""}
+                        style={{ whiteSpace: "pre-wrap" }}
+                      />
                     </div>
                   </CardContent>
                 </Card>
@@ -1018,10 +1017,10 @@ const ProductDetails = () => {
               <Card className="border-[#6B2F1A]/10 shadow-sm">
                 <CardContent className="p-6">
                   <div className="prose max-w-none font-poppins">
-                  <ReactMarkdown rehypePlugins={[rehypeRaw]}>
-                                          {product.description || ""}
-                      </ReactMarkdown>
-                   
+                    <MDEditor.Markdown
+                      source={product.description || ""}
+                      style={{ whiteSpace: "pre-wrap" }}
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -1032,10 +1031,10 @@ const ProductDetails = () => {
                 <Card className="border-[#6B2F1A]/10 shadow-sm">
                   <CardContent className="p-6">
                     <div className="prose max-w-none font-poppins">
-                                        <ReactMarkdown rehypePlugins={[rehypeRaw]}>
-                                          {product.terms_condition || ""}
-                      </ReactMarkdown>
-                      
+                      <MDEditor.Markdown
+                        source={product.terms_condition || ""}
+                        style={{ whiteSpace: "pre-wrap" }}
+                      />
                     </div>
                   </CardContent>
                 </Card>

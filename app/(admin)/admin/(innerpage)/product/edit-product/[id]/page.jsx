@@ -120,7 +120,13 @@ const EditProductPage = () => {
   const [hasVariants, setHasVariants] = useState(false);
   const [variants, setVariants] = useState([]);
   const router = useRouter();
-
+  const [isMounted, setIsMounted] = useState(false);
+  
+  // Add this useEffect at the beginning to handle client-side only operations
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  
   // Initialize form with react-hook-form and zod validation
   const form = useForm({
     resolver: zodResolver(createProductSchema),
@@ -362,13 +368,15 @@ const EditProductPage = () => {
 
   // Handle image selection for product
   const handleImageSelection = (e) => {
+    if (!isMounted) return;
+    
     const files = Array.from(e.target.files);
     if (files.length > 0) {
       // Update form value
       const currentImages = form.getValues("images") || [];
       form.setValue("images", [...currentImages, ...files]);
 
-      // Create preview URLs
+      // Create preview URLs only on client
       const newPreviews = files.map((file) => ({
         name: file.name,
         url: URL.createObjectURL(file),
@@ -380,6 +388,7 @@ const EditProductPage = () => {
 
   // Handle removing a product image preview
   const handleRemoveProductImagePreview = (index) => {
+    if (!isMounted) return;
     const currentImages = form.getValues("images");
     const updatedImages = [...currentImages];
     updatedImages.splice(index, 1);
@@ -547,6 +556,8 @@ const EditProductPage = () => {
 
   // Handle variant image selection
   const handleVariantImageSelection = (variantIndex, e) => {
+    if (!isMounted) return;
+
     const files = Array.from(e.target.files);
     if (files.length > 0) {
       const updatedVariants = [...variants];
@@ -1082,22 +1093,26 @@ const EditProductPage = () => {
                       Description <span className="text-red-500">*</span>
                     </Label>
                     <div className="border rounded-lg border-blue-200 dark:border-blue-900/50 overflow-hidden">
-                      <Controller
-                        name="description"
-                        control={form.control}
-                        render={({ field }) => (
-                          <MDEditor
-                            autoCapitalize="none"
-                            value={field.value || ""} // Add this fallback
-                            onChange={field.onChange}
-                            preview="edit"
-                            height={300}
-                            visibleDragbar={false}
-                            className="md-editor-custom"
-                            hideToolbar={false}
-                          />
-                        )}
-                      />
+                    {isMounted ? (
+    <Controller
+      name="description"
+      control={form.control}
+      render={({ field }) => (
+        <MDEditor
+          autoCapitalize="none"
+          value={field.value ?? ""} // Use nullish coalescing
+          onChange={field.onChange}
+          preview="edit"
+          height={300}
+          visibleDragbar={false}
+          className="md-editor-custom"
+          hideToolbar={false}
+        />
+      )}
+    />
+  ) : (
+    <div className="h-[300px] bg-gray-100 dark:bg-gray-800 animate-pulse"></div>
+  )}
                     </div>
                     {form.formState.errors.description && (
                       <p className="text-sm text-red-500">
@@ -1562,7 +1577,7 @@ const EditProductPage = () => {
                       {form.formState.errors.images?.message}
                     </FormMessage>
 
-                    {productImagePreviews.length > 0 && (
+                    {isMounted && productImagePreviews.length > 0 && (
                       <div className="grid grid-cols-2 gap-4 mt-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                         {productImagePreviews.map((preview, index) => (
                           <div key={index} className="relative group">
@@ -2319,13 +2334,14 @@ const EditProductPage = () => {
                         Product Highlights
                       </Label>
                       <div className="border rounded-lg border-blue-200 dark:border-blue-900/50 overflow-hidden">
+                      {isMounted ? (
                         <Controller
                           name="highlights"
                           control={form.control}
                           render={({ field }) => (
                             <MDEditor
                               autoCapitalize="none"
-                              value={field.value || ""} // Add this fallback
+                              value={field.value ?? ""} // Use nullish coalescing
                               onChange={field.onChange}
                               preview="edit"
                               height={200}
@@ -2335,6 +2351,9 @@ const EditProductPage = () => {
                             />
                           )}
                         />
+                      ) : (
+                        <div className="h-[300px] bg-gray-100 dark:bg-gray-800 animate-pulse"></div>
+                      )}
                       </div>
                       {form.formState.errors.highlights && (
                         <p className="text-sm text-red-500">
@@ -2352,13 +2371,14 @@ const EditProductPage = () => {
                         Terms & Conditions
                       </Label>
                       <div className="border rounded-lg border-blue-200 dark:border-blue-900/50 overflow-hidden">
+                      {isMounted ? (
                         <Controller
                           name="terms_condition"
                           control={form.control}
                           render={({ field }) => (
                             <MDEditor
                               autoCapitalize="none"
-                              value={field.value || ""} // Add this fallback
+                              value={field.value ?? ""} // Use nullish coalescing
                               onChange={field.onChange}
                               preview="edit"
                               height={200}
@@ -2368,6 +2388,9 @@ const EditProductPage = () => {
                             />
                           )}
                         />
+                      ) : (
+                        <div className="h-[300px] bg-gray-100 dark:bg-gray-800 animate-pulse"></div>
+                      )}
                       </div>
                       {form.formState.errors.terms_condition && (
                         <p className="text-sm text-red-500">
