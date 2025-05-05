@@ -1871,3 +1871,33 @@ export async function sendOrderInvoice(orderId) {
     };
   }
 }
+
+// Add this function to your actions/order.js file
+export async function updateShippingDetails(orderId, shippingData) {
+  try {
+    // Your implementation
+    const updatedShipping = await db.shippingDetail.upsert({
+      where: { order_id: parseInt(orderId) },
+      update: {
+        courier_name: shippingData.courier_name,
+        tracking_id: shippingData.tracking_id,
+        tracking_url: shippingData.tracking_url,
+        shipping_date: shippingData.shipping_date ? new Date(shippingData.shipping_date) : null,
+        status: shippingData.status,
+      },
+      create: {
+        order_id: parseInt(orderId),
+        courier_name: shippingData.courier_name,
+        tracking_id: shippingData.tracking_id,
+        tracking_url: shippingData.tracking_url || null,
+        shipping_date: shippingData.shipping_date ? new Date(shippingData.shipping_date) : null,
+        status: shippingData.status || 'processing',
+      },
+    });
+    
+    return { success: true, shipping: updatedShipping };
+  } catch (error) {
+    console.error("Error updating shipping details:", error);
+    return { success: false, error: error.message };
+  }
+}
