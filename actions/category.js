@@ -779,6 +779,7 @@ export async function searchProducts(query, limit = 5) {
       select: {
         id: true,
         title: true,
+        slug:true,
         description: true,
         price_rupees: true,
         price_dollars: true,
@@ -798,6 +799,7 @@ export async function searchProducts(query, limit = 5) {
       id: product.id,
       tax:product.tax,
       title: product.title || 'Untitled Product',
+      slug:product.slug,
       description: product.description 
         ? (product.description.substring(0, 100) + (product.description.length > 100 ? '...' : '')) 
         : '',
