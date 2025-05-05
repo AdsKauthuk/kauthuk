@@ -1,14 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Keep your existing webpack config for SSH2
   webpack: (config, { isServer }) => {
     if (isServer) {
       config.externals.push("ssh2");
     }
     return config;
   },
-  
-  // Keep your existing image config
   images: {
     remotePatterns: [
       {
@@ -23,29 +20,21 @@ const nextConfig = {
       },
     ],
   },
-  
-  // Keep server actions config but add hydration-related settings
   experimental: {
     serverActions: {
       bodySizeLimit: '100mb',
     },
-    // Add these to help with hydration issues
+    // These experimental features are supported in Next.js 15
     optimizeCss: true,
     scrollRestoration: true,
   },
+  // Remove the unsupported options:
+  // - swcMinify (now default in Next.js 15)
+  // - outputFileTracing (now default)
+  // - compiler.styledComponents (needs different approach in Next.js 15)
   
-  // Add these properties to help with hydration issues
+  // Add React Strict Mode (recommended for Next.js 15)
   reactStrictMode: true,
-  swcMinify: true,
-  
-  // This helps with consistent rendering between server and client
-  compiler: {
-    // Enables the styled-components SWC transform if you're using styled-components
-    styledComponents: true
-  },
-  
-  // Optional: Adjust how Next.js handles client/server differences
-  outputFileTracing: true,
 };
 
 export default nextConfig;
